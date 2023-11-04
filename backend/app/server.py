@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from langserve import add_routes
+from gizmo_agent import agent
 
 app = FastAPI()
 
-# Edit this to add the chain you want to add
-add_routes(app, NotImplemented)
+add_routes(app, agent, config_keys=["configurable"])
 
 if __name__ == "__main__":
     import uvicorn
