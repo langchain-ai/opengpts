@@ -11,6 +11,7 @@ from langchain.schema.runnable import (
     ConfigurableFieldMultiOption,
     ConfigurableFieldSingleOption,
 )
+from langchain.schema.messages import AnyMessage
 from langchain.tools import BaseTool
 
 from . import agent_types_v1 as agent_types
@@ -74,10 +75,11 @@ class ConfigurableAgent(RunnableBinding):
 
 
 class AgentInput(BaseModel):
-    messages: Sequence = Field(..., extra={"widget": {"type": "chat"}})
+    messages: Sequence[AnyMessage] = Field(..., extra={"widget": {"type": "chat"}})
 
 
 class AgentOutput(BaseModel):
+    messages: Sequence[AnyMessage] = Field(..., extra={"widget": {"type": "chat"}})
     output: str
 
 
