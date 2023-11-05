@@ -1,14 +1,20 @@
-from typing import List, Tuple
+from typing import Any, Mapping, Optional, Sequence
 
 from langchain.agents import AgentExecutor
-from langchain.agents.format_scratchpad import format_to_openai_functions
-from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.pydantic_v1 import BaseModel, Field, root_validator
-from langchain.chat_models import ChatAnthropic, ChatFireworks
+from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools.tavily_search import TavilySearchResults
 from langchain.utilities.tavily_search import TavilySearchAPIWrapper
+from langchain.schema.language_model import BaseLanguageModel
+from langchain.schema.runnable import (
+    RunnableBinding,
+    ConfigurableField,
+    ConfigurableFieldMultiOption,
+    ConfigurableFieldSingleOption,
+)
+from langchain.tools import BaseTool
+
+from . import agent_types_v1 as agent_types
+from . import llms
 
 # Create the tool
 search = TavilySearchAPIWrapper()
@@ -22,25 +28,9 @@ tavily_tool = TavilySearchResults(api_wrapper=search, description=description)
 
 tools = [tavily_tool]
 
-from pprint import pprint
-from typing import Any, Mapping, Optional, Sequence
-
-from langchain.agents import initialize_agent, AgentType
-from langchain.callbacks.base import BaseCallbackManager
-from langchain.chains import LLMMathChain
-from langchain.chat_models.openai import ChatOpenAI
-from langchain.schema.language_model import BaseLanguageModel
-from langchain.schema.runnable import (
-    RunnableBinding,
-    ConfigurableField,
-    ConfigurableFieldMultiOption,
-    ConfigurableFieldSingleOption,
-)
-from langchain.tools import BaseTool, Tool
-from . import agent_types_v1 as agent_types
-from . import llms
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
+
 
 class ConfigurableAgent(RunnableBinding):
     tools: Sequence[BaseTool]
@@ -71,7 +61,6 @@ class ConfigurableAgent(RunnableBinding):
             tools=tools,
             handle_parsing_errors=True,
             max_iterations=10,
-
         )
         super().__init__(
             tools=tools,
@@ -84,39 +73,39 @@ class ConfigurableAgent(RunnableBinding):
         )
 
 
-
-from langchain.schema.messages import BaseMessage, HumanMessage
-from langchain.load import load
-from typing import Sequence
 class AgentInput(BaseModel):
     messages: Sequence = Field(..., extra={"widget": {"type": "chat"}})
+
 
 class AgentOutput(BaseModel):
     output: str
 
 
-agent = ConfigurableAgent(
-    llm=llms._get_llm_gpt_35_turbo(),
-    agent=agent_types.GizmoAgentType.OPENAI_FUNCTIONS,
-    tools=tools,
-    system_message=DEFAULT_SYSTEM_MESSAGE,
-).configurable_fields(
-
-    agent=ConfigurableField(id="agent_type", name="agent_type"),
-    system_message=ConfigurableField(id="system_message", name="system_message"),
-    llm=ConfigurableFieldSingleOption(
-        id="llm",
-        options={
-            "gpt-3.5-turbo": llms._get_llm_gpt_35_turbo(),
-            "gpt-4": llms._get_llm_gpt_4(),
-            "claude-2": llms._get_llm_claude2(),
-            "zephyr": llms._get_llm_zephyr(),
-        },
-        default="gpt-3.5-turbo",
-    ),
-    tools=ConfigurableFieldMultiOption(
-        id="tools",
-        options={tool.name: tool for tool in tools},
-        default=[],
-    ),
-).with_types(input_type=AgentInput, output_type=AgentOutput)
+agent = (
+    ConfigurableAgent(
+        llm=llms._get_llm_gpt_35_turbo(),
+        agent=agent_types.GizmoAgentType.OPENAI_FUNCTIONS,
+        tools=tools,
+        system_message=DEFAULT_SYSTEM_MESSAGE,
+    )
+    .configurable_fields(
+        agent=ConfigurableField(id="agent_type", name="agent_type"),
+        system_message=ConfigurableField(id="system_message", name="system_message"),
+        llm=ConfigurableFieldSingleOption(
+            id="llm",
+            options={
+                "gpt-3.5-turbo": llms._get_llm_gpt_35_turbo(),
+                "gpt-4": llms._get_llm_gpt_4(),
+                "claude-2": llms._get_llm_claude2(),
+                "zephyr": llms._get_llm_zephyr(),
+            },
+            default="gpt-3.5-turbo",
+        ),
+        tools=ConfigurableFieldMultiOption(
+            id="tools",
+            options={tool.name: tool for tool in tools},
+            default=[],
+        ),
+    )
+    .with_types(input_type=AgentInput, output_type=AgentOutput)
+)
