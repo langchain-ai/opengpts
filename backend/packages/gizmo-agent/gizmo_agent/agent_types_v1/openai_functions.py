@@ -29,6 +29,7 @@ def get_openai_function_agent(llm, tools, system_message):
         [
             ("system", system_message),
             MessagesPlaceholder(variable_name="messages"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
     )
     if tools:
@@ -37,7 +38,10 @@ def get_openai_function_agent(llm, tools, system_message):
         llm_with_tools = llm
     agent = (
         {
-            "messages": lambda x: [load(m) for m in x['messages']]
+            "messages": lambda x: x['messages'],
+            "agent_scratchpad": lambda x: format_to_openai_functions(
+                x["intermediate_steps"]
+            ),
         }
         | prompt
         | llm_with_tools

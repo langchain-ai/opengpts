@@ -1,17 +1,10 @@
 from langchain.chat_models import ChatOpenAI
-from langchain.chat_models import ChatAnthropic, ChatFireworks
+from langchain.chat_models import ChatAnthropic, ChatFireworks, ChatOllama
 
-def _get_llm_gpt_35_turbo():
-    return ChatOpenAI(model_name="gpt-3.5-turbo")
-
-
-def _get_llm_gpt_4():
-    return ChatOpenAI(model_name="gpt-4")
-
-
-def _get_llm_claude2():
-    return ChatAnthropic(model_name="claude-2")
-
-
-def _get_llm_zephyr():
-    return ChatFireworks(model="accounts/fireworks/models/zephyr-7b-beta")
+LLM_OPTIONS = {
+            "gpt-3.5-turbo": ChatOpenAI(model_name="gpt-3.5-turbo"),
+            "gpt-4": ChatOpenAI(model_name="gpt-4"),
+            "claude-2": ChatAnthropic(model_name="claude-2"),
+            "zephyr-fireworks": ChatFireworks(model="accounts/fireworks/models/zephyr-7b-beta"),
+            "zephyr-ollama": ChatOllama(model="zephyr")
+        }

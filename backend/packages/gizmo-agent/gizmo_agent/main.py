@@ -5,8 +5,7 @@ from langchain.agents.format_scratchpad import format_to_openai_functions
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.pydantic_v1 import BaseModel, Field, root_validator
-from langchain.chat_models import ChatAnthropic, ChatFireworks
+from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools.tavily_search import TavilySearchResults
 from langchain.utilities.tavily_search import TavilySearchAPIWrapper
 
@@ -37,15 +36,16 @@ from langchain.schema.runnable import (
     ConfigurableFieldSingleOption,
 )
 from langchain.tools import BaseTool, Tool
-from . import agent_types_v1 as agent_types
-from . import llms
+from gizmo_agent.agent_types_v1 import GizmoAgentType, get_xml_agent, get_openai_function_agent
+from gizmo_agent.llms import LLM_OPTIONS
+from gizmo_agent.tools import TOOL_OPTIONS
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
 class ConfigurableAgent(RunnableBinding):
     tools: Sequence[BaseTool]
     llm: BaseLanguageModel
-    agent: agent_types.GizmoAgentType
+    agent: GizmoAgentType
     system_message: str = DEFAULT_SYSTEM_MESSAGE
 
     def __init__(
@@ -53,17 +53,17 @@ class ConfigurableAgent(RunnableBinding):
         *,
         tools: Sequence[BaseTool],
         llm: BaseLanguageModel,
-        agent: agent_types.GizmoAgentType = agent_types.GizmoAgentType.OPENAI_FUNCTIONS,
+        agent: GizmoAgentType = GizmoAgentType.OPENAI_FUNCTIONS,
         system_message: str = DEFAULT_SYSTEM_MESSAGE,
         kwargs: Optional[Mapping[str, Any]] = None,
         config: Optional[Mapping[str, Any]] = None,
         **others: Any,
     ) -> None:
         others.pop("bound", None)
-        if agent == agent_types.GizmoAgentType.OPENAI_FUNCTIONS:
-            _agent = agent_types.get_openai_function_agent(llm, tools, system_message)
-        elif agent == agent_types.GizmoAgentType.XML:
-            _agent = agent_types.get_xml_agent(llm, tools, system_message)
+        if agent == GizmoAgentType.OPENAI_FUNCTIONS:
+            _agent = get_openai_function_agent(llm, tools, system_message)
+        elif agent == GizmoAgentType.XML:
+            _agent = get_xml_agent(llm, tools, system_message)
         else:
             raise ValueError("Unexpected agent type")
         agent_executor = AgentExecutor(
@@ -89,16 +89,16 @@ from langchain.schema.messages import BaseMessage, HumanMessage
 from langchain.load import load
 from typing import Sequence
 class AgentInput(BaseModel):
-    messages: Sequence = Field(..., extra={"widget": {"type": "chat"}})
+    messages: List[BaseMessage] = Field(..., extra={"widget": {"type": "chat"}})
 
 class AgentOutput(BaseModel):
     output: str
 
 
 agent = ConfigurableAgent(
-    llm=llms._get_llm_gpt_35_turbo(),
-    agent=agent_types.GizmoAgentType.OPENAI_FUNCTIONS,
-    tools=tools,
+    llm=LLM_OPTIONS["claude-2"],
+    agent=GizmoAgentType.XML,
+    tools=list(TOOL_OPTIONS.values()),
     system_message=DEFAULT_SYSTEM_MESSAGE,
 ).configurable_fields(
 
@@ -106,17 +106,14 @@ agent = ConfigurableAgent(
     system_message=ConfigurableField(id="system_message", name="system_message"),
     llm=ConfigurableFieldSingleOption(
         id="llm",
-        options={
-            "gpt-3.5-turbo": llms._get_llm_gpt_35_turbo(),
-            "gpt-4": llms._get_llm_gpt_4(),
-            "claude-2": llms._get_llm_claude2(),
-            "zephyr": llms._get_llm_zephyr(),
-        },
-        default="gpt-3.5-turbo",
+        options=LLM_OPTIONS,
+        default="zephyr-ollama",
     ),
     tools=ConfigurableFieldMultiOption(
         id="tools",
-        options={tool.name: tool for tool in tools},
-        default=[],
+        options=TOOL_OPTIONS,
+        default=list(TOOL_OPTIONS.keys()),
     ),
-).with_types(input_type=AgentInput, output_type=AgentOutput)
+)#.with_types(input_type=AgentInput)
+
+print(agent.invoke({"messages": [HumanMessage(content="what is the weather in SF?")]}))
