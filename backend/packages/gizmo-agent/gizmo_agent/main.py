@@ -5,7 +5,7 @@ from langchain.agents.format_scratchpad import format_to_openai_functions
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.pydantic_v1 import BaseModel, Field
+from langchain.pydantic_v1 import BaseModel, Field, root_validator
 from langchain.chat_models import ChatAnthropic, ChatFireworks
 from langchain.tools.tavily_search import TavilySearchResults
 from langchain.utilities.tavily_search import TavilySearchAPIWrapper
@@ -37,7 +37,7 @@ from langchain.schema.runnable import (
     ConfigurableFieldSingleOption,
 )
 from langchain.tools import BaseTool, Tool
-from . import agent_types
+from . import agent_types_v1 as agent_types
 from . import llms
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
@@ -85,10 +85,15 @@ class ConfigurableAgent(RunnableBinding):
 
 
 
-
+from langchain.schema.messages import BaseMessage, HumanMessage
+from langchain.load import load
+from typing import Sequence
 class AgentInput(BaseModel):
-    input: str
-    chat_history: List[Tuple[str, str]] = Field(..., extra={"widget": {"type": "chat"}})
+    messages: Sequence = Field(..., extra={"widget": {"type": "chat"}})
+
+class AgentOutput(BaseModel):
+    output: str
+
 
 agent = ConfigurableAgent(
     llm=llms._get_llm_gpt_35_turbo(),
@@ -114,4 +119,4 @@ agent = ConfigurableAgent(
         options={tool.name: tool for tool in tools},
         default=[],
     ),
-).with_types(input_type=AgentInput)
+).with_types(input_type=AgentInput, output_type=AgentOutput)
