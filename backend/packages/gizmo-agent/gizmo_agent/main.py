@@ -1,6 +1,6 @@
 from typing import Any, Mapping, Optional, Sequence
 
-from langchain.agents import AgentExecutor
+from agent_executor.agent import AgentExecutor
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools.tavily_search import TavilySearchResults
 from langchain.utilities.tavily_search import TavilySearchAPIWrapper
