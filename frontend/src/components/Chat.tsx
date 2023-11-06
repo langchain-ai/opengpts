@@ -4,6 +4,8 @@ import { StreamStateProps } from "../hooks/useStreamState";
 import { str } from "../utils/str";
 import TypingBox from "./TypingBox";
 import { cn } from "../utils/cn";
+import { marked } from "marked";
+import DOMPurify from "dompurify";
 
 interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
   chat: ChatType;
@@ -19,13 +21,13 @@ function Function(props: { call: boolean; name?: string; args?: string }) {
         </span>
       )}
       {props.name && (
-        <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 relative -top-[1px] mr-2">
+        <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 relative -top-[1px] mr-2 mb-2">
           {props.name}
         </span>
       )}
       {props.args && (
-        <div className="text-gray-900 whitespace-pre-wrap break-words">
-          <div className="mt-2 ring-1 ring-gray-300 rounded">
+        <div className="text-gray-900 whitespace-pre-wrap break-words mb-8">
+          <div className="ring-1 ring-gray-300 rounded">
             <table className="divide-y divide-gray-300">
               <tbody>
                 {Object.entries(JSON.parse(props.args)).map(
@@ -60,22 +62,30 @@ function Function(props: { call: boolean; name?: string; args?: string }) {
 }
 
 function Message(props: MessageType) {
+  const content = props.content
+    ? DOMPurify.sanitize(marked(props.content))
+    : "";
   return (
-    <div className="leading-6 mb-4">
-      <span className="font-medium text-sm text-gray-400 uppercase mr-2">
+    <div className="leading-6 flex flex-row">
+      <div className="font-medium text-sm text-gray-400 uppercase mr-2 mt-1 w-24">
         {props.type}
-      </span>
-      {props.type === "function" && <Function call={false} name={props.name} />}
-      {props.additional_kwargs?.function_call && (
-        <Function
-          call={true}
-          name={props.additional_kwargs.function_call.name}
-          args={props.additional_kwargs.function_call.arguments}
+      </div>
+      <div className="flex-1">
+        {props.type === "function" && (
+          <Function call={false} name={props.name} />
+        )}
+        {props.additional_kwargs?.function_call && (
+          <Function
+            call={true}
+            name={props.additional_kwargs.function_call.name}
+            args={props.additional_kwargs.function_call.arguments}
+          />
+        )}
+        <div
+          className="text-gray-900 prose"
+          dangerouslySetInnerHTML={{ __html: content }}
         />
-      )}
-      <span className="text-gray-900 whitespace-pre-wrap break-words">
-        {props.content}
-      </span>
+      </div>
     </div>
   );
 }
