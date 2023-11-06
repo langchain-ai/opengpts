@@ -1,6 +1,6 @@
 # OpenGPTs
 
-This is an open source effort to create a similar experience as OpenAI's Gizmo.
+This is an open source effort to create a similar experience as OpenAI's GPTs.
 This builds upon [LangChain](https://github.com/langchain-ai/langchain), [LangServe](https://github.com/langchain-ai/langserve) and [LangSmith](https://smith.langchain.com/)
 This gives you more control over the LLM you use (choose between the 60+ that LangChain offers),
 the prompts you use (use LangSmith to debug those), and the tools you give it (choose from LangChain's 100+ tools, or easily write your own).
