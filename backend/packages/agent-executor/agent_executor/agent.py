@@ -705,19 +705,6 @@ class AgentExecutor1(RunnableSerializable):
 
         return True
 
-    def _prepare_intermediate_steps(
-        self, intermediate_steps: List[Tuple[AgentAction, str]]
-    ) -> List[Tuple[AgentAction, str]]:
-        if (
-            isinstance(self.trim_intermediate_steps, int)
-            and self.trim_intermediate_steps > 0
-        ):
-            return intermediate_steps[-self.trim_intermediate_steps :]
-        elif callable(self.trim_intermediate_steps):
-            return self.trim_intermediate_steps(intermediate_steps)
-        else:
-            return intermediate_steps
-
     @property
     def name_to_tool_map(self) -> Dict[str, BaseTool]:
         return {tool.name: tool for tool in self.tools}
@@ -805,7 +792,6 @@ class AgentExecutor1(RunnableSerializable):
         Override this to take control of how the agent makes and acts on choices.
         """
         try:
-            intermediate_steps = self._prepare_intermediate_steps(intermediate_steps)
 
             _inputs = {**{"intermediate_steps": intermediate_steps}, **inputs}
             # Call the LLM to see what to do.
@@ -852,51 +838,32 @@ class AgentExecutor1(RunnableSerializable):
             yield output
             return
 
-        actions: List[AgentAction]
-        if isinstance(output, AgentAction):
-            actions = [output]
+        yield output
+
+        if run_manager:
+            await run_manager.on_agent_action(
+                output, color="green"
+            )
+        # Otherwise we lookup the tool
+        if output.tool in name_to_tool_map:
+            tool = name_to_tool_map[output.tool]
+            color = color_mapping[output.tool]
+            # We then call the tool on the tool input to get an observation
+            observation = await tool.arun(
+                output.tool_input,
+                color=color,
+                callbacks=run_manager.get_child() if run_manager else None,
+            )
         else:
-            actions = output
-        for agent_action in actions:
-            yield agent_action
-
-        async def _aperform_agent_action(
-            agent_action: AgentAction,
-        ) -> AgentStep:
-            if run_manager:
-                await run_manager.on_agent_action(
-                    agent_action,  color="green"
-                )
-            # Otherwise we lookup the tool
-            if agent_action.tool in name_to_tool_map:
-                tool = name_to_tool_map[agent_action.tool]
-                return_direct = tool.return_direct
-                color = color_mapping[agent_action.tool]
-                # We then call the tool on the tool input to get an observation
-                observation = await tool.arun(
-                    agent_action.tool_input,
-                    color=color,
-                    callbacks=run_manager.get_child() if run_manager else None,
-                )
-            else:
-                observation = await InvalidTool().arun(
-                    {
-                        "requested_tool_name": agent_action.tool,
-                        "available_tool_names": list(name_to_tool_map.keys()),
-                    },
-                    color=None,
-                    callbacks=run_manager.get_child() if run_manager else None,
-                )
-            return AgentStep(action=agent_action, observation=observation)
-
-        # Use asyncio.gather to run multiple tool.arun() calls concurrently
-        result = await asyncio.gather(
-            *[_aperform_agent_action(agent_action) for agent_action in actions]
-        )
-
-        # TODO This could yield each result as it becomes available
-        for chunk in result:
-            yield chunk
+            observation = await InvalidTool().arun(
+                {
+                    "requested_tool_name": output.tool,
+                    "available_tool_names": list(name_to_tool_map.keys()),
+                },
+                color=None,
+                callbacks=run_manager.get_child() if run_manager else None,
+            )
+        yield AgentStep(action=output, observation=observation)
 
     async def _astop(self, inputs, intermediate_steps, run_manager: AsyncCallbackManagerForChainRun) -> AddableDict:
         """
@@ -922,22 +889,6 @@ class AgentExecutor1(RunnableSerializable):
                 (a.action, a.observation) for a in values if isinstance(a, AgentStep)
             ]
 
-    async def _aareturn(
-        self,
-        output: AgentFinish,
-        intermediate_steps: list,
-        run_manager: Optional[AsyncCallbackManagerForChainRun] = None,
-    ) -> Dict[str, Any]:
-        if run_manager:
-            await run_manager.on_agent_finish(
-                output, color="green"
-            )
-        final_output = output.return_values
-        if self.return_intermediate_steps:
-            final_output["intermediate_steps"] = intermediate_steps
-        return final_output
-
-
 
 
     async def _areturn(
@@ -946,12 +897,16 @@ class AgentExecutor1(RunnableSerializable):
         """
         Return the final output of the async iterator.
         """
-        returned_output = await self._aareturn(
-            output, intermediate_steps, run_manager=run_manager
-        )
-        returned_output["messages"] = output.messages
-        await run_manager.on_chain_end(returned_output)
-        return returned_output
+        if run_manager:
+            await run_manager.on_agent_finish(
+                output, color="green"
+            )
+        final_output = output.return_values
+        if self.return_intermediate_steps:
+            final_output["intermediate_steps"] = intermediate_steps
+        final_output["messages"] = output.messages
+        await run_manager.on_chain_end(final_output)
+        return final_output
 
 
     async def astream(

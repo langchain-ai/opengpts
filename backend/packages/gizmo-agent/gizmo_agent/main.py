@@ -106,7 +106,7 @@ agent = (
         tools=ConfigurableFieldMultiOption(
             id="tools",
             options={tool.name: tool for tool in tools},
-            default=[],
+            default=[t.name for t in tools],
         ),
     )
     .with_types(input_type=AgentInput, output_type=AgentOutput)
