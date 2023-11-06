@@ -18,7 +18,14 @@ function Message(props: {
       <span className="font-medium text-sm text-gray-400 uppercase mr-2">
         {props.type}
       </span>{" "}
-      <span className="text-gray-900">{props.content}</span>
+      <span className="text-gray-900 whitespace-pre-wrap break-words">
+        {props.content}
+      </span>
+      {Object.keys(props.additional_kwargs ?? {}).length > 0 && (
+        <span className="text-gray-900 whitespace-pre-wrap break-words">
+          {str(props.additional_kwargs)}
+        </span>
+      )}
     </div>
   );
 }
