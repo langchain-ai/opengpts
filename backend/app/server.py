@@ -1,16 +1,10 @@
-import aiosqlite
 from fastapi import FastAPI
 from langserve import add_routes
 from gizmo_agent import agent
 
 app = FastAPI()
 
-add_routes(
-    app,
-    agent,
-    config_keys=["configurable"],
-    storage=aiosqlite.connect("./langserve.sqlite"),
-)
+add_routes(app, agent, config_keys=["configurable"])
 
 if __name__ == "__main__":
     import uvicorn
