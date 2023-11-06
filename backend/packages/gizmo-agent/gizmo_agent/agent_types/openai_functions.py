@@ -1,29 +1,17 @@
-from typing import List, Tuple
-
-from langchain.agents.format_scratchpad import format_to_openai_functions
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.schema.messages import AIMessage, HumanMessage
 from langchain.tools.render import format_tool_to_openai_function
+from langchain.agents.format_scratchpad import format_to_openai_functions
 
 assistant_system_message = """You are a helpful assistant. \
 Use tools (only if necessary) to best answer the users questions."""
-
-
-def _format_chat_history(chat_history: List[Tuple[str, str]]):
-    buffer = []
-    for human, ai in chat_history:
-        buffer.append(HumanMessage(content=human))
-        buffer.append(AIMessage(content=ai))
-    return buffer
 
 
 def get_openai_function_agent(llm, tools, system_message):
     prompt = ChatPromptTemplate.from_messages(
         [
             ("system", system_message),
-            MessagesPlaceholder(variable_name="chat_history"),
-            ("user", "{input}"),
+            MessagesPlaceholder(variable_name="messages"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
     )
@@ -35,8 +23,7 @@ def get_openai_function_agent(llm, tools, system_message):
         llm_with_tools = llm
     agent = (
         {
-            "input": lambda x: x["input"],
-            "chat_history": lambda x: _format_chat_history(x["chat_history"]),
+            "messages": lambda x: x["messages"],
             "agent_scratchpad": lambda x: format_to_openai_functions(
                 x["intermediate_steps"]
             ),

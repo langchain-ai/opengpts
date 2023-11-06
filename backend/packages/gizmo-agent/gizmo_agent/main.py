@@ -1,47 +1,11 @@
-from typing import Any, Mapping, Optional, Sequence
-
-
-from agent_executor.agent import AgentExecutor1
-from langchain.agents.format_scratchpad import format_to_openai_functions
-from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
+from agent_executor import AgentExecutor
 from langchain.pydantic_v1 import BaseModel, Field
-from langchain.tools.tavily_search import TavilySearchResults
-from langchain.utilities.tavily_search import TavilySearchAPIWrapper
-from langchain.schema.language_model import BaseLanguageModel
-from langchain.schema.runnable import (
-    RunnableBinding,
-    ConfigurableField,
-    ConfigurableFieldMultiOption,
-    ConfigurableFieldSingleOption,
-)
+
 from langchain.schema.messages import AnyMessage
-from langchain.tools import BaseTool
-
-from . import agent_types_v1 as agent_types
-from . import llms
-
-# Create the tool
-search = TavilySearchAPIWrapper()
-description = """"A search engine optimized for comprehensive, accurate, \
-and trusted results. Useful for when you need to answer questions \
-about current events or about recent information. \
-Input should be a search query. \
-If the user is asking about something that you don't know about, \
-you should probably use this tool to see if that can provide any information."""
-tavily_tool = TavilySearchResults(api_wrapper=search, description=description)
-
-tools = [tavily_tool]
 
 
-from pprint import pprint
 from typing import Any, Mapping, Optional, Sequence
 
-from langchain.agents import initialize_agent, AgentType
-from langchain.callbacks.base import BaseCallbackManager
-from langchain.chains import LLMMathChain
-from langchain.chat_models.openai import ChatOpenAI
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.schema.runnable import (
     RunnableBinding,
@@ -49,8 +13,12 @@ from langchain.schema.runnable import (
     ConfigurableFieldMultiOption,
     ConfigurableFieldSingleOption,
 )
-from langchain.tools import BaseTool, Tool
-from gizmo_agent.agent_types_v1 import GizmoAgentType, get_xml_agent, get_openai_function_agent
+from langchain.tools import BaseTool
+from gizmo_agent.agent_types import (
+    GizmoAgentType,
+    get_xml_agent,
+    get_openai_function_agent,
+)
 from gizmo_agent.llms import LLM_OPTIONS
 from gizmo_agent.tools import TOOL_OPTIONS
 
@@ -81,7 +49,7 @@ class ConfigurableAgent(RunnableBinding):
             _agent = get_xml_agent(llm, tools, system_message)
         else:
             raise ValueError("Unexpected agent type")
-        agent_executor = AgentExecutor1(
+        agent_executor = AgentExecutor(
             agent=_agent,
             tools=tools,
             handle_parsing_errors=True,
@@ -107,54 +75,26 @@ class AgentOutput(BaseModel):
     output: str
 
 
-
-# agent = (
-#     ConfigurableAgent(
-#         llm=llms._get_llm_gpt_35_turbo(),
-#         agent=agent_types.GizmoAgentType.OPENAI_FUNCTIONS,
-#         tools=tools,
-#         system_message=DEFAULT_SYSTEM_MESSAGE,
-#     )
-#     .configurable_fields(
-#         agent=ConfigurableField(id="agent_type", name="agent_type"),
-#         system_message=ConfigurableField(id="system_message", name="system_message"),
-#         llm=ConfigurableFieldSingleOption(
-#             id="llm",
-#             options={
-#                 "gpt-3.5-turbo": llms._get_llm_gpt_35_turbo(),
-#                 "gpt-4": llms._get_llm_gpt_4(),
-#                 "claude-2": llms._get_llm_claude2(),
-#                 "zephyr": llms._get_llm_zephyr(),
-#             },
-#             default="gpt-3.5-turbo",
-#         ),
-#         tools=ConfigurableFieldMultiOption(
-#             id="tools",
-#             options={tool.name: tool for tool in tools},
-#             default=[t.name for t in tools],
-#         ),
-#     )
-#     .with_types(input_type=AgentInput, output_type=AgentOutput)
-# )
-
-agent = ConfigurableAgent(
-    llm=LLM_OPTIONS["gpt-3.5-turbo"],
-    agent=GizmoAgentType.OPENAI_FUNCTIONS,
-    tools=list(TOOL_OPTIONS.values()),
-    system_message=DEFAULT_SYSTEM_MESSAGE,
-).configurable_fields(
-
-    agent=ConfigurableField(id="agent_type", name="agent_type"),
-    system_message=ConfigurableField(id="system_message", name="system_message"),
-    llm=ConfigurableFieldSingleOption(
-        id="llm",
-        options=LLM_OPTIONS,
-        default="gpt-3.5-turbo",
-    ),
-    tools=ConfigurableFieldMultiOption(
-        id="tools",
-        options=TOOL_OPTIONS,
-        default=list(TOOL_OPTIONS.keys()),
-    ),
-).with_types(input_type=AgentInput, output_type=AgentOutput)
-
+agent = (
+    ConfigurableAgent(
+        llm=LLM_OPTIONS["gpt-3.5-turbo"],
+        agent=GizmoAgentType.OPENAI_FUNCTIONS,
+        tools=list(TOOL_OPTIONS.values()),
+        system_message=DEFAULT_SYSTEM_MESSAGE,
+    )
+    .configurable_fields(
+        agent=ConfigurableField(id="agent_type", name="agent_type"),
+        system_message=ConfigurableField(id="system_message", name="system_message"),
+        llm=ConfigurableFieldSingleOption(
+            id="llm",
+            options=LLM_OPTIONS,
+            default="gpt-3.5-turbo",
+        ),
+        tools=ConfigurableFieldMultiOption(
+            id="tools",
+            options=TOOL_OPTIONS,
+            default=list(TOOL_OPTIONS.keys()),
+        ),
+    )
+    .with_types(input_type=AgentInput, output_type=AgentOutput)
+)
