@@ -1,18 +1,7 @@
-from typing import List, Tuple
-
-from langchain.agents.format_scratchpad import format_xml
-from langchain.schema import AIMessage, HumanMessage
 from langchain.tools.render import render_text_description
+from langchain.agents.format_scratchpad import format_xml
 
 from .prompts import conversational_prompt, parse_output
-
-
-def _format_chat_history(chat_history: List[Tuple[str, str]]):
-    buffer = []
-    for human, ai in chat_history:
-        buffer.append(HumanMessage(content=human))
-        buffer.append(AIMessage(content=ai))
-    return buffer
 
 
 def get_xml_agent(model, tools, system_message):
@@ -25,9 +14,8 @@ def get_xml_agent(model, tools, system_message):
 
     agent = (
         {
-            "question": lambda x: x["question"],
+            "messages": lambda x: x["messages"],
             "agent_scratchpad": lambda x: format_xml(x["intermediate_steps"]),
-            "chat_history": lambda x: _format_chat_history(x["chat_history"]),
         }
         | prompt
         | llm_with_stop
