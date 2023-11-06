@@ -75,7 +75,7 @@ class AgentOutput(BaseModel):
 
 agent = (
     ConfigurableAgent(
-        agent=GizmoAgentType.AZURE_OPENAI,
+        agent=GizmoAgentType.GPT_35_TURBO,
         tools=list(TOOL_OPTIONS.values()),
         system_message=DEFAULT_SYSTEM_MESSAGE,
     )

@@ -1,0 +1,3 @@
+langchain-cli
+-e packages/gizmo-agent
+-e packages/agent-executor

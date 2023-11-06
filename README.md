@@ -9,9 +9,13 @@ the prompts you use (use LangSmith to debug those), and the tools you give it (c
 
 **1. Start the backend**
 
+By default, this uses OpenAI, but there are also options for Azure OpenAI and Anthropic.
+If you are using those, you may need to set different environment variables.
+
 ```shell
 cd backend
-pip install -e .
+pip install -r requirements.txt
+export OPENAI_API_KEY="sk-..."
 langchain serve
 ```
 
