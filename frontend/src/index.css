@@ -6,6 +6,6 @@ html, body, #root {
   height: 100%;
 }
 
-#root {
+body {
   background: #f5f5f5;
 }

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Chat as ChatType } from "../hooks/useChatList";
 import { StreamStateProps } from "../hooks/useStreamState";
 import { str } from "../utils/str";
@@ -37,6 +38,12 @@ export function Chat(props: ChatProps) {
       (msg) => !props.chat.messages.includes(msg)
     ) ?? []),
   ];
+  useEffect(() => {
+    scrollTo({
+      top: document.body.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [props.chat.messages, props.stream?.messages]);
   return (
     <div className="flex-1 flex flex-col items-stretch pb-[76px] pt-2">
       {messages.map((msg, i) => (
