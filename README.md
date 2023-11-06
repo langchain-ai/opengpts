@@ -35,7 +35,7 @@ export LANGCHAIN_API_KEY=...
 Start the backend server
 
 ```shell
-langchain serve
+langchain serve --port=8100
 ```
 
 **2. Start the frontend**
