@@ -80,10 +80,11 @@ agent = (
         system_message=DEFAULT_SYSTEM_MESSAGE,
     )
     .configurable_fields(
-        agent=ConfigurableField(id="agent_type", name="agent_type"),
-        system_message=ConfigurableField(id="system_message", name="system_message"),
+        agent=ConfigurableField(id="agent_type", name="Agent Type"),
+        system_message=ConfigurableField(id="system_message", name="System Message"),
         tools=ConfigurableFieldMultiOption(
             id="tools",
+            name="Tools",
             options=TOOL_OPTIONS,
             default=list(TOOL_OPTIONS.keys()),
         ),

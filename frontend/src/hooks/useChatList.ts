@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { useStatePersist } from "./useStatePersist";
+import { Config } from "./useConfigList";
 
 export interface Message {
   type: string;
@@ -19,12 +20,17 @@ export interface Chat {
   created_at: string;
   updated_at: string;
   messages: Message[];
+  config: Config;
 }
 
 export interface ChatListProps {
   chats: Chat[];
   currentChat: Chat | null;
-  createChat: (name: string, messages: Message[]) => Promise<Chat>;
+  createChat: (
+    name: string,
+    messages: Message[],
+    config: Config
+  ) => Promise<Chat>;
   updateChat: (id: string, update: Partial<Chat>) => Promise<void>;
   enterChat: (id: string | null) => void;
 }
@@ -34,13 +40,14 @@ export function useChatList(): ChatListProps {
   const [current, setCurrent] = useState<string | null>(null);
 
   const createChat = useCallback(
-    async (name: string, messages: Message[]) => {
+    async (name: string, messages: Message[], config: Config) => {
       const chat = {
         id: Math.random().toString(36).substr(2, 9),
         name,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         messages: messages,
+        config,
       };
       setChats((chats) => [...chats, chat]);
       setCurrent(chat.id);

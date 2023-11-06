@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useStatePersist } from "./useStatePersist";
+import { Schemas } from "./useSchemas";
 
 export interface Config {
   key: string;
-  config: Record<string, unknown>;
+  config: {
+    configurable?: {
+      [key: string]: unknown;
+    };
+  };
 }
 
 export interface ConfigListProps {
@@ -36,6 +41,7 @@ export function useConfigListServer(): ConfigListProps {
         ...configs.filter((c) => c.key !== saved.key),
         saved,
       ]);
+      setCurrent(saved.key);
     },
     []
   );
@@ -52,9 +58,11 @@ export function useConfigListServer(): ConfigListProps {
   };
 }
 
-export function useConfigList(): ConfigListProps {
-  const [configs, setConfigs] = useStatePersist<Config[]>([], "configs");
-  const [current, setCurrent] = useState<string | null>(null);
+export function useConfigList(
+  configDefaults: Schemas["configDefaults"]
+): ConfigListProps {
+  const [savedConfigs, setConfigs] = useStatePersist<Config[]>([], "configs");
+  const [current, setCurrent] = useState<string | null>("Default");
 
   const saveConfig = useCallback(
     async (key: string, config: Config["config"]) => {
@@ -71,6 +79,16 @@ export function useConfigList(): ConfigListProps {
   const enterConfig = useCallback((key: string | null) => {
     setCurrent(key);
   }, []);
+
+  const configs = useMemo(
+    () => [
+      ...(configDefaults
+        ? [{ key: "Default", config: configDefaults, readOnly: true }]
+        : []),
+      ...savedConfigs,
+    ],
+    [savedConfigs, configDefaults]
+  );
 
   return {
     configs,
