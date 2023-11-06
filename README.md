@@ -7,11 +7,11 @@ the prompts you use (use LangSmith to debug those), and the tools you give it (c
 
 <div style="display: flex;">
   <figure>
-    <img src="_static/configure.png" alt="Configure" style="width: 100%;">
+    <img src="_static/configure.png" alt="Configure" style="width: 50%;">
     <figcaption>Configure bots with different models, system messages, and tools.</figcaption>
   </figure>
   <figure>
-    <img src="_static/chat.png" alt="Chat" style="width: 100%;">
+    <img src="_static/chat.png" alt="Chat" style="width: 50%;">
     <figcaption>Chat with bots after you've configured them, have them use tools.</figcaption>
   </figure>
 </div>
