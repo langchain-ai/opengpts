@@ -1,6 +1,6 @@
 from typing import Any, Mapping, Optional, Sequence
 
-from agent_executor.agent import AgentExecutor
+from agent_executor.agent import AgentExecutor1
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools.tavily_search import TavilySearchResults
 from langchain.utilities.tavily_search import TavilySearchAPIWrapper
@@ -57,7 +57,7 @@ class ConfigurableAgent(RunnableBinding):
             _agent = agent_types.get_xml_agent(llm, tools, system_message)
         else:
             raise ValueError("Unexpected agent type")
-        agent_executor = AgentExecutor(
+        agent_executor = AgentExecutor1(
             agent=_agent,
             tools=tools,
             handle_parsing_errors=True,

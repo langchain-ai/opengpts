@@ -124,23 +124,6 @@ class AgentExecutorIterator:
             f"Agent Iterations: {self.iterations} ({self.time_elapsed:.2f}s elapsed)"
         )
 
-    def make_final_outputs(
-        self,
-        outputs: Dict[str, Any],
-        run_manager: Union[CallbackManagerForChainRun, AsyncCallbackManagerForChainRun],
-    ) -> AddableDict:
-        # have access to intermediate steps by design in iterator,
-        # so return only outputs may as well always be true.
-
-        prepared_outputs = AddableDict(
-            self.agent_executor.prep_outputs(
-                self.inputs, outputs, return_only_outputs=True
-            )
-        )
-        if self.include_run_info:
-            prepared_outputs[RUN_KEY] = RunInfo(run_id=run_manager.run_id)
-        return prepared_outputs
-
     def __iter__(self: "AgentExecutorIterator") -> Iterator[AddableDict]:
         logger.debug("Initialising AgentExecutorIterator")
         self.reset()
@@ -359,18 +342,6 @@ class AgentExecutorIterator:
         )
         return await self._areturn(output, run_manager=run_manager)
 
-    def _return(
-        self, output: AgentFinish, run_manager: CallbackManagerForChainRun
-    ) -> AddableDict:
-        """
-        Return the final output of the iterator.
-        """
-        returned_output = self.agent_executor._return(
-            output, self.intermediate_steps, run_manager=run_manager
-        )
-        returned_output["messages"] = output.messages
-        run_manager.on_chain_end(returned_output)
-        return self.make_final_outputs(returned_output, run_manager)
 
     async def _areturn(
         self, output: AgentFinish, run_manager: AsyncCallbackManagerForChainRun
@@ -383,4 +354,4 @@ class AgentExecutorIterator:
         )
         returned_output["messages"] = output.messages
         await run_manager.on_chain_end(returned_output)
-        return self.make_final_outputs(returned_output, run_manager)
+        return returned_output
