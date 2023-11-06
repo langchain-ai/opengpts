@@ -3,6 +3,7 @@ import { Chat as ChatType, Message as MessageType } from "../hooks/useChatList";
 import { StreamStateProps } from "../hooks/useStreamState";
 import { str } from "../utils/str";
 import TypingBox from "./TypingBox";
+import { cn } from "../utils/cn";
 
 interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
   chat: ChatType;
@@ -14,23 +15,45 @@ function Function(props: { call: boolean; name?: string; args?: string }) {
     <>
       {props.call && (
         <span className="text-gray-900 whitespace-pre-wrap break-words mr-2">
-          Call function
+          Use
         </span>
       )}
       {props.name && (
-        <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 relative -top-0.5 mr-2">
+        <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 relative -top-[1px] mr-2">
           {props.name}
         </span>
       )}
-      {props.call && (
-        <span className="text-gray-900 whitespace-pre-wrap break-words mr-2">
-          with
-        </span>
-      )}
       {props.args && (
-        <span className="text-gray-900 whitespace-pre-wrap break-words">
-          {str(props.args)}
-        </span>
+        <div className="text-gray-900 whitespace-pre-wrap break-words">
+          <div className="mt-2 ring-1 ring-gray-300 rounded">
+            <table className="divide-y divide-gray-300">
+              <tbody>
+                {Object.entries(JSON.parse(props.args)).map(
+                  ([key, value], i) => (
+                    <tr key={i}>
+                      <td
+                        className={cn(
+                          i === 0 ? "" : "border-t border-transparent",
+                          "py-1 px-3 table-cell text-sm border-r border-r-gray-300"
+                        )}
+                      >
+                        <div className="font-medium text-gray-500">{key}</div>
+                      </td>
+                      <td
+                        className={cn(
+                          i === 0 ? "" : "border-t border-gray-200",
+                          "py-1 px-3 table-cell"
+                        )}
+                      >
+                        {str(value)}
+                      </td>
+                    </tr>
+                  )
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </>
   );
