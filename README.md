@@ -5,9 +5,16 @@ This builds upon [LangChain](https://github.com/langchain-ai/langchain), [LangSe
 This gives you more control over the LLM you use (choose between the 60+ that LangChain offers),
 the prompts you use (use LangSmith to debug those), and the tools you give it (choose from LangChain's 100+ tools, or easily write your own).
 
-Configure Bots          |  Chat with Bots
-:-------------------------:|:-------------------------:
-![](_static/configure.png)  |  ![](_static/chat.png)
+<p align="center">
+  <figure>
+    <img alt="Image1" src="_static/configure.png" width="45%" style="margin-right: 10px;" />
+    <figcaption>Caption for the first image</figcaption>
+  </figure>
+  <figure>
+    <img alt="Image2" src="_static/chat.png" width="45%" />
+    <figcaption>Caption for the second image</figcaption>
+  </figure>
+</p>
 
 ## Quickstart
 
