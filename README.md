@@ -1,7 +1,7 @@
 # LangGizmo
 
 This is an open source effort to create a similar experience as OpenAI's Gizmo.
-This builds upon [LangChain](https://github.com/langchain-ai/langchain), [LangServe](https://github.com/langchain-ai/langserve) and LangSmith(https://smith.langchain.com/)
+This builds upon [LangChain](https://github.com/langchain-ai/langchain), [LangServe](https://github.com/langchain-ai/langserve) and [LangSmith](https://smith.langchain.com/)
 This gives you more control over the LLM you use (choose between the 60+ that LangChain offers),
 the prompts you use (use LangSmith to debug those), and the tools you give it (choose from LangChain's 100+ tools, or easily write your own).
 
@@ -9,13 +9,32 @@ the prompts you use (use LangSmith to debug those), and the tools you give it (c
 
 **1. Start the backend**
 
-By default, this uses OpenAI, but there are also options for Azure OpenAI and Anthropic.
-If you are using those, you may need to set different environment variables.
+Install requirements
 
 ```shell
 cd backend
 pip install -r requirements.txt
+```
+
+By default, this uses OpenAI, but there are also options for Azure OpenAI and Anthropic.
+If you are using those, you may need to set different environment variables.
+
+```shell
 export OPENAI_API_KEY="sk-..."
+```
+
+Set up [LangSmith](https://smith.langchain.com/).
+This is optional, but it will help with debugging, logging, monitoring.
+Sign up at the link above and then set the relevant environment variables
+
+```shell
+export LANGCHAIN_TRACING_V2="true"
+export LANGCHAIN_API_KEY=...
+```
+
+Start the backend server
+
+```shell
 langchain serve
 ```
 
@@ -84,6 +103,26 @@ We have expose four agent types by default:
 We will work to add more when we have confidence they can work well.
 
 If you want to add your own LLM or agent configuration, or want to edit the existing ones, you can find them in `backend/packages/gizmo-agent/gizmo_agent/agent_types`
+
+#### Claude 2
+
+If using Claude 2, you will need to set the following environment variable:
+
+```shell
+export ANTHROPIC_API_KEY=sk-...
+```
+
+#### Azure OpenAI
+
+If using Azure OpenAI, you will need to set the following environment variables:
+
+```shell
+export OPENAI_API_BASE=...
+export OPENAI_API_VERSION=...
+export OPENAI_API_KEY=...
+export OPENAI_DEPLOYMENT_NAME=...
+```
+
 
 ### Tools
 
