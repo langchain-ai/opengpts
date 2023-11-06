@@ -685,11 +685,6 @@ class AgentExecutor1(RunnableSerializable):
         int, Callable[[List[Tuple[AgentAction, str]]], List[Tuple[AgentAction, str]]]
     ] = -1
     yield_actions: bool =True
-    intermediate_steps: list[tuple[AgentAction, str]] = []
-    iterations = 0
-    # maybe better to start these on the first __anext__ call?
-    time_elapsed = 0.0
-    start_time = 0
 
     class Config:
         """Configuration for this pydantic object."""
@@ -698,18 +693,6 @@ class AgentExecutor1(RunnableSerializable):
 
     def invoke(self, input: Input, config: Optional[RunnableConfig] = None) -> Output:
         raise ValueError
-
-    def reset(self) -> None:
-        """
-        Reset the iterator to its initial state, clearing intermediate steps,
-        iterations, and time elapsed.
-        """
-        logger.debug("(Re)setting AgentExecutorIterator to fresh state")
-        self.intermediate_steps: list[tuple[AgentAction, str]] = []
-        self.iterations = 0
-        # maybe better to start these on the first __anext__ call?
-        self.time_elapsed = 0.0
-        self.start_time = time.time()
 
     def _should_continue(self, iterations: int, time_elapsed: float) -> bool:
         if self.max_iterations is not None and iterations >= self.max_iterations:
@@ -783,6 +766,7 @@ class AgentExecutor1(RunnableSerializable):
     async def _aprocess_next_step_output(
         self,
         next_step_output: Union[AgentFinish, List[Tuple[AgentAction, str]]],
+        intermediate_steps,
         run_manager: AsyncCallbackManagerForChainRun,
     ) -> AddableDict:
         """
@@ -794,9 +778,9 @@ class AgentExecutor1(RunnableSerializable):
             logger.debug(
                 "Hit AgentFinish: _areturn -> on_chain_end -> run final output logic"
             )
-            return await self._areturn(next_step_output, run_manager=run_manager)
+            return await self._areturn(next_step_output, intermediate_steps, run_manager=run_manager)
 
-        self.intermediate_steps.extend(next_step_output)
+        intermediate_steps.extend(next_step_output)
         logger.debug("Updated intermediate_steps with step output")
 
         # Check for tool return
@@ -804,7 +788,7 @@ class AgentExecutor1(RunnableSerializable):
             next_step_action = next_step_output[0]
             tool_return = self._get_tool_return(next_step_action)
             if tool_return is not None:
-                return await self._areturn(tool_return, run_manager=run_manager)
+                return await self._areturn(tool_return, intermediate_steps, run_manager=run_manager)
 
         return AddableDict(intermediate_step=next_step_output)
 
@@ -914,7 +898,7 @@ class AgentExecutor1(RunnableSerializable):
         for chunk in result:
             yield chunk
 
-    async def _astop(self, inputs, run_manager: AsyncCallbackManagerForChainRun) -> AddableDict:
+    async def _astop(self, inputs, intermediate_steps, run_manager: AsyncCallbackManagerForChainRun) -> AddableDict:
         """
         Stop the async iterator and raise a StopAsyncIteration exception with
         the stopped response.
@@ -922,10 +906,10 @@ class AgentExecutor1(RunnableSerializable):
         logger.warning("Stopping agent prematurely due to triggering stop condition")
         output = self.return_stopped_response(
             self.early_stopping_method,
-            self.intermediate_steps,
+            intermediate_steps,
             **inputs,
         )
-        return await self._areturn(output, run_manager=run_manager)
+        return await self._areturn(output, intermediate_steps, run_manager=run_manager)
 
     def _consume_next_step(
         self, values: NextStepOutput
@@ -957,27 +941,18 @@ class AgentExecutor1(RunnableSerializable):
 
 
     async def _areturn(
-        self, output: AgentFinish, run_manager: AsyncCallbackManagerForChainRun
+        self, output: AgentFinish, intermediate_steps, run_manager: AsyncCallbackManagerForChainRun
     ) -> AddableDict:
         """
         Return the final output of the async iterator.
         """
         returned_output = await self._aareturn(
-            output, self.intermediate_steps, run_manager=run_manager
+            output, intermediate_steps, run_manager=run_manager
         )
         returned_output["messages"] = output.messages
         await run_manager.on_chain_end(returned_output)
         return returned_output
 
-    def update_iterations(self) -> None:
-        """
-        Increment the number of iterations and update the time elapsed.
-        """
-        self.iterations += 1
-        self.time_elapsed = time.time() - self.start_time
-        logger.debug(
-            f"Agent Iterations: {self.iterations} ({self.time_elapsed:.2f}s elapsed)"
-        )
 
     async def astream(
         self,
@@ -988,8 +963,11 @@ class AgentExecutor1(RunnableSerializable):
         """Enables streaming over steps taken to reach final output."""
         config = config or {}
         run_name = config.get("run_name")
+        iterations = 0
+        start_time = time.time()
+        time_elapsed = 0
+        intermediate_steps = []
         logger.debug("Initialising AgentExecutorIterator (async)")
-        self.reset()
         callback_manager = AsyncCallbackManager.configure(
             inheritable_callbacks=config.get("callbacks"),
         )
@@ -1001,7 +979,7 @@ class AgentExecutor1(RunnableSerializable):
         try:
             async with asyncio_timeout(self.max_execution_time):
                 while self._should_continue(
-                        self.iterations, self.time_elapsed
+                        iterations, time_elapsed
                 ):
                     # take the next step: this plans next action, executes it,
                     # yielding action and observation as they are generated
@@ -1010,7 +988,7 @@ class AgentExecutor1(RunnableSerializable):
                             self.name_to_tool_map,
                             self.color_mapping,
                             input,
-                            self.intermediate_steps,
+                            intermediate_steps,
                             run_manager,
                     ):
                         next_step_seq.append(chunk)
@@ -1029,10 +1007,11 @@ class AgentExecutor1(RunnableSerializable):
                     # convert iterator output to format handled by _process_next_step
                     next_step = self._consume_next_step(next_step_seq)
                     # update iterations and time elapsed
-                    self.update_iterations()
+                    iterations += 1
+                    time_elapsed = time.time() - start_time
                     # decide if this is the final output
                     output = await self._aprocess_next_step_output(
-                        next_step, run_manager
+                        next_step, intermediate_steps, run_manager
                     )
                     is_final = "intermediate_step" not in output
                     # yield the final output always
@@ -1043,11 +1022,11 @@ class AgentExecutor1(RunnableSerializable):
                     if is_final:
                         return
         except (TimeoutError, asyncio.TimeoutError):
-            yield await self._astop(input, run_manager)
+            yield await self._astop(input, intermediate_steps, run_manager)
             return
         except BaseException as e:
             await run_manager.on_chain_error(e)
             raise
 
         # if we got here means we exhausted iterations or time
-        yield await self._astop(input, run_manager)
+        yield await self._astop(input, intermediate_steps, run_manager)
