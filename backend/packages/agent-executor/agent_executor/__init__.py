@@ -410,9 +410,15 @@ class AgentExecutor(RunnableSerializable):
                         # do not yield AgentFinish, which will be handled below
                         if self.yield_actions:
                             if isinstance(chunk, AgentAction):
-                                yield AddableDict(
-                                    actions=[chunk], messages=chunk.messages
-                                )
+                                if isinstance(chunk, AgentActionMessageLog):
+                                    yield AddableDict(
+                                        actions=[chunk], messages=chunk.message_log
+                                    )
+                                else:
+                                    yield AddableDict(
+                                        actions=[chunk], messages=[AIMessage(content=chunk.log)]
+                                    )
+
                             elif isinstance(chunk, AgentStep):
                                 yield AddableDict(
                                     steps=[chunk], messages=chunk.messages

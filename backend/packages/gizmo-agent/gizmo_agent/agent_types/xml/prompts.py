@@ -24,7 +24,7 @@ Assistant: Hi! How are you?
 Human: What is the weather in SF?
 Assistant: <tool>search</tool><tool_input>weather in SF</tool_input>
 <observation>64 degrees</observation>
-It is 64 degress in SF
+It is 64 degrees in SF
 
 
 Begin!"""  # noqa: E501

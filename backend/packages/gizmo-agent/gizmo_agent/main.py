@@ -6,12 +6,10 @@ from langchain.schema.messages import AnyMessage
 
 from typing import Any, Mapping, Optional, Sequence
 
-from langchain.schema.language_model import BaseLanguageModel
 from langchain.schema.runnable import (
     RunnableBinding,
     ConfigurableField,
     ConfigurableFieldMultiOption,
-    ConfigurableFieldSingleOption,
 )
 from langchain.tools import BaseTool
 from gizmo_agent.agent_types import (
@@ -19,7 +17,6 @@ from gizmo_agent.agent_types import (
     get_xml_agent,
     get_openai_function_agent,
 )
-from gizmo_agent.llms import LLM_OPTIONS
 from gizmo_agent.tools import TOOL_OPTIONS
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
@@ -27,7 +24,6 @@ DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
 class ConfigurableAgent(RunnableBinding):
     tools: Sequence[BaseTool]
-    llm: BaseLanguageModel
     agent: GizmoAgentType
     system_message: str = DEFAULT_SYSTEM_MESSAGE
 
@@ -35,18 +31,19 @@ class ConfigurableAgent(RunnableBinding):
         self,
         *,
         tools: Sequence[BaseTool],
-        llm: BaseLanguageModel,
-        agent: GizmoAgentType = GizmoAgentType.OPENAI_FUNCTIONS,
+        agent: GizmoAgentType = GizmoAgentType.GPT_35_TURBO,
         system_message: str = DEFAULT_SYSTEM_MESSAGE,
         kwargs: Optional[Mapping[str, Any]] = None,
         config: Optional[Mapping[str, Any]] = None,
         **others: Any,
     ) -> None:
         others.pop("bound", None)
-        if agent == GizmoAgentType.OPENAI_FUNCTIONS:
-            _agent = get_openai_function_agent(llm, tools, system_message)
-        elif agent == GizmoAgentType.XML:
-            _agent = get_xml_agent(llm, tools, system_message)
+        if agent == GizmoAgentType.GPT_35_TURBO:
+            _agent = get_openai_function_agent(tools, system_message)
+        elif agent == GizmoAgentType.GPT_35_TURBO:
+            _agent = get_openai_function_agent(tools, system_message, gpt_4=True)
+        elif agent == GizmoAgentType.CLAUDE2:
+            _agent = get_xml_agent(tools, system_message)
         else:
             raise ValueError("Unexpected agent type")
         agent_executor = AgentExecutor(
@@ -57,7 +54,6 @@ class ConfigurableAgent(RunnableBinding):
         )
         super().__init__(
             tools=tools,
-            llm=llm,
             agent=agent,
             system_message=system_message,
             bound=agent_executor,
@@ -77,19 +73,13 @@ class AgentOutput(BaseModel):
 
 agent = (
     ConfigurableAgent(
-        llm=LLM_OPTIONS["gpt-3.5-turbo"],
-        agent=GizmoAgentType.OPENAI_FUNCTIONS,
+        agent=GizmoAgentType.CLAUDE2,
         tools=list(TOOL_OPTIONS.values()),
         system_message=DEFAULT_SYSTEM_MESSAGE,
     )
     .configurable_fields(
         agent=ConfigurableField(id="agent_type", name="agent_type"),
         system_message=ConfigurableField(id="system_message", name="system_message"),
-        llm=ConfigurableFieldSingleOption(
-            id="llm",
-            options=LLM_OPTIONS,
-            default="gpt-3.5-turbo",
-        ),
         tools=ConfigurableFieldMultiOption(
             id="tools",
             options=TOOL_OPTIONS,
