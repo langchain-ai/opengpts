@@ -6,6 +6,7 @@ from enum import Enum
 class GizmoAgentType(str, Enum):
     GPT_35_TURBO = "GPT 3.5 Turbo"
     GPT_4= "GPT 4"
+    AZURE_OPENAI = "Azure OpenAI"
     CLAUDE2 = "Claude 2"
 
 
