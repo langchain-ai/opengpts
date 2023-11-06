@@ -26,7 +26,7 @@ function Function(props: { call: boolean; name?: string; args?: string }) {
         </span>
       )}
       {props.args && (
-        <div className="text-gray-900 whitespace-pre-wrap break-words mb-8">
+        <div className="text-gray-900 whitespace-pre-wrap break-words">
           <div className="ring-1 ring-gray-300 rounded">
             <table className="divide-y divide-gray-300">
               <tbody>
@@ -62,11 +62,8 @@ function Function(props: { call: boolean; name?: string; args?: string }) {
 }
 
 function Message(props: MessageType) {
-  const content = props.content
-    ? DOMPurify.sanitize(marked(props.content))
-    : "";
   return (
-    <div className="leading-6 flex flex-row">
+    <div className="leading-6 flex flex-row mb-8">
       <div className="font-medium text-sm text-gray-400 uppercase mr-2 mt-1 w-24">
         {props.type}
       </div>
@@ -81,10 +78,16 @@ function Message(props: MessageType) {
             args={props.additional_kwargs.function_call.arguments}
           />
         )}
-        <div
-          className="text-gray-900 prose"
-          dangerouslySetInnerHTML={{ __html: content }}
-        />
+        {typeof props.content === "string" ? (
+          <div
+            className="text-gray-900 prose"
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(marked(props.content)).trim(),
+            }}
+          />
+        ) : (
+          <div className="text-gray-900 prose">{str(props.content)}</div>
+        )}
       </div>
     </div>
   );

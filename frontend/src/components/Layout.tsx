@@ -1,20 +1,20 @@
-import { Fragment, useState } from "react";
+import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
 export function Layout(props: {
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
   sidebar: React.ReactNode;
   children: React.ReactNode;
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
   return (
     <>
-      <Transition.Root show={sidebarOpen} as={Fragment}>
+      <Transition.Root show={props.sidebarOpen} as={Fragment}>
         <Dialog
           as="div"
           className="relative z-50 lg:hidden"
-          onClose={setSidebarOpen}
+          onClose={props.setSidebarOpen}
         >
           <Transition.Child
             as={Fragment}
@@ -52,7 +52,7 @@ export function Layout(props: {
                     <button
                       type="button"
                       className="-m-2.5 p-2.5"
-                      onClick={() => setSidebarOpen(false)}
+                      onClick={() => props.setSidebarOpen(false)}
                     >
                       <span className="sr-only">Close sidebar</span>
                       <XMarkIcon
@@ -88,11 +88,11 @@ export function Layout(props: {
         </div>
       </div>
 
-      <div className="sticky top-0 z-40 flex items-center gap-x-6 bg-white px-4 py-4 shadow-sm sm:px-6">
+      <div className="fixed left-0 right-0 top-0 z-40 flex items-center gap-x-6 bg-white px-4 py-4 shadow-sm sm:px-6">
         <button
           type="button"
           className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
-          onClick={() => setSidebarOpen(true)}
+          onClick={() => props.setSidebarOpen(true)}
         >
           <span className="sr-only">Open sidebar</span>
           <Bars3Icon className="h-6 w-6" aria-hidden="true" />
@@ -102,7 +102,7 @@ export function Layout(props: {
         </div>
       </div>
 
-      <main className="pt-4 lg:pl-72 flex flex-col min-h-[calc(100%-56px)]">
+      <main className="pt-20 lg:pl-72 flex flex-col min-h-[calc(100%-56px)]">
         <div className="px-4 sm:px-6 lg:px-8 flex-1">{props.children}</div>
       </main>
     </>

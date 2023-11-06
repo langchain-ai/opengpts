@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Chat } from "./components/Chat";
 import { ChatList } from "./components/ChatList";
 import { Layout } from "./components/Layout";
@@ -8,6 +8,7 @@ import { useSchemas } from "./hooks/useSchemas";
 import { useStreamState } from "./hooks/useStreamState";
 
 function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { configSchema, inputSchema, configDefaults, inputDefaults } =
     useSchemas();
   const { chats, currentChat, createChat, updateChat, enterChat } =
@@ -39,6 +40,17 @@ function App() {
     [currentChat, startStream, configDefaults, updateChat]
   );
 
+  const selectChat = useCallback(
+    async (id: string | null) => {
+      stopStream?.();
+      enterChat(id);
+      if (sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    },
+    [enterChat, stopStream, sidebarOpen]
+  );
+
   useEffect(() => {
     if (stream?.status === "done" && currentChat) {
       updateChat(currentChat.id, {
@@ -53,11 +65,13 @@ function App() {
 
   return (
     <Layout
+      sidebarOpen={sidebarOpen}
+      setSidebarOpen={setSidebarOpen}
       sidebar={
         <ChatList
           chats={chats}
           currentChat={currentChat}
-          enterChat={enterChat}
+          enterChat={selectChat}
         />
       }
     >
