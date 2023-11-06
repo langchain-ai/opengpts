@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useStatePersist } from "./useStatePersist";
 
 export interface Config {
   key: string;
@@ -12,7 +13,7 @@ export interface ConfigListProps {
   enterConfig: (id: string | null) => void;
 }
 
-export function useConfigList(): ConfigListProps {
+export function useConfigListServer(): ConfigListProps {
   const [configs, setConfigs] = useState<Config[]>([]);
   const [current, setCurrent] = useState<string | null>(null);
 
@@ -37,6 +38,34 @@ export function useConfigList(): ConfigListProps {
       ]);
     },
     []
+  );
+
+  const enterConfig = useCallback((key: string | null) => {
+    setCurrent(key);
+  }, []);
+
+  return {
+    configs,
+    currentConfig: configs.find((c) => c.key === current) || null,
+    saveConfig,
+    enterConfig,
+  };
+}
+
+export function useConfigList(): ConfigListProps {
+  const [configs, setConfigs] = useStatePersist<Config[]>([], "configs");
+  const [current, setCurrent] = useState<string | null>(null);
+
+  const saveConfig = useCallback(
+    async (key: string, config: Config["config"]) => {
+      const saved = { key, config };
+
+      setConfigs((configs) => [
+        ...configs.filter((c) => c.key !== saved.key),
+        saved,
+      ]);
+    },
+    [setConfigs]
   );
 
   const enterConfig = useCallback((key: string | null) => {
