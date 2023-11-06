@@ -5,7 +5,7 @@ This builds upon [LangChain](https://github.com/langchain-ai/langchain), [LangSe
 This gives you more control over the LLM you use (choose between the 60+ that LangChain offers),
 the prompts you use (use LangSmith to debug those), and the tools you give it (choose from LangChain's 100+ tools, or easily write your own).
 
-<div style="display: flex;">
+<div style="display: flex; gap: 20px;">
   <figure>
     <img src="_static/configure.png" alt="Configure" style="width: 50%;">
     <figcaption>Configure bots with different models, system messages, and tools.</figcaption>
