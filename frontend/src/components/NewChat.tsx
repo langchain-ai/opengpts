@@ -1,28 +1,40 @@
 import { ConfigList } from "./ConfigList";
-import { useConfigList } from "../hooks/useConfigList";
+import { Schemas } from "../hooks/useSchemas";
 import TypingBox from "./TypingBox";
+import { Config } from "./Config";
+import { ConfigListProps } from "../hooks/useConfigList";
 
-export function NewChat(props: {
+interface NewChatProps extends ConfigListProps {
+  configSchema: Schemas["configSchema"];
+  configDefaults: Schemas["configDefaults"];
   startChat: (message: string) => Promise<void>;
-}) {
-  const { configs, currentConfig, saveConfig, enterConfig } = useConfigList();
+}
+
+export function NewChat(props: NewChatProps) {
   return (
     <div className="flex flex-col items-stretch">
-      <div className="flex-1 flex flex-col lg:flex-row lg:items-stretch self-stretch">
+      <div className="flex-1 flex flex-col md:flex-row lg:items-stretch self-stretch">
         <div className="w-72 border-r border-gray-200 pr-6">
           <ConfigList
-            configs={configs}
-            currentConfig={currentConfig}
-            enterConfig={enterConfig}
+            configs={props.configs}
+            currentConfig={props.currentConfig}
+            enterConfig={props.enterConfig}
           />
         </div>
 
         <main className="flex-1">
-          <div className="px-4">[Config fields go here]</div>
+          <div className="px-4">
+            <Config
+              config={props.currentConfig}
+              configSchema={props.configSchema}
+              configDefaults={props.configDefaults}
+              saveConfig={props.saveConfig}
+            />
+          </div>
         </main>
       </div>
       <div className="fixed left-0 lg:left-72 bottom-0 right-0 p-4">
-        <TypingBox onSubmit={props.startChat} />
+        <TypingBox onSubmit={props.startChat} disabled={!props.currentConfig} />
       </div>
     </div>
   );

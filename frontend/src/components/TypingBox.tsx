@@ -2,6 +2,7 @@ import {
   PaperAirplaneIcon,
   ChatBubbleLeftIcon,
 } from "@heroicons/react/20/solid";
+import { cn } from "../utils/cn";
 
 export default function TypingBox(props: {
   onSubmit: (message: string) => void;
@@ -9,7 +10,10 @@ export default function TypingBox(props: {
 }) {
   return (
     <form
-      className="mt-2 flex rounded-md shadow-sm"
+      className={cn(
+        "mt-2 flex rounded-md shadow-sm",
+        props.disabled && "opacity-50 cursor-not-allowed"
+      )}
       onSubmit={(e) => {
         e.preventDefault();
         if (props.disabled) return;

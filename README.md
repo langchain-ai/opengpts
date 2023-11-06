@@ -52,25 +52,25 @@ Navigate to [http://localhost:5173/](http://localhost:5173/) and enjoy!
 
 As much as possible, we are striving for feature parity with OpenAI.
 
-- [x]  Sandbox - Provides an environment to import, test, and modify existing chatbots.
-    - The chatbots used are all in code, so are easily editable
-- [x]  Custom Actions - Define additional functionality for your chatbot using OpenAPI specifications
-    - Supported by adding tools
-- [ ]  Knowledge Files - attach additional files that your chatbot can reference
-    - Coming soon
-- [x]  Tools - Provides basic tools for web browsing, image creation, etc.
-    - Basic DuckDuckGo and PythonREPL tools enabled by default
-    - Image creation coming soon
-- [x]  Analytics - View and analyze chatbot usage data
-    - Use LangSmith for this
-- [x]  Drafts - Save and share drafts of chatbots you're creating
-    - Supports saving of configurations
-- [x]  Publishing - publicly distribute your completed chatbot
-    - Can do by deploying via LangServe
-- [x]  Sharing - Set up and manage chatbot sharing
-    - Can do by deploying via LangServe
-- [ ]  Marketplace - Search and deploy chatbots created by other users
-    - Coming soon
+- [x] Sandbox - Provides an environment to import, test, and modify existing chatbots.
+  - The chatbots used are all in code, so are easily editable
+- [x] Custom Actions - Define additional functionality for your chatbot using OpenAPI specifications
+  - Supported by adding tools
+- [ ] Knowledge Files - attach additional files that your chatbot can reference
+  - Coming soon
+- [x] Tools - Provides basic tools for web browsing, image creation, etc.
+  - Basic DuckDuckGo and PythonREPL tools enabled by default
+  - Image creation coming soon
+- [x] Analytics - View and analyze chatbot usage data
+  - Use LangSmith for this
+- [x] Drafts - Save and share drafts of chatbots you're creating
+  - Supports saving of configurations
+- [x] Publishing - publicly distribute your completed chatbot
+  - Can do by deploying via LangServe
+- [x] Sharing - Set up and manage chatbot sharing
+  - Can do by deploying via LangServe
+- [ ] Marketplace - Search and deploy chatbots created by other users
+  - Coming soon
 
 ## Repo Structure
 
@@ -136,3 +136,19 @@ In practice, most teams we see define their own tools.
 This is easy to do within LangChain.
 See [this guide](https://python.langchain.com/docs/modules/agents/tools/custom_tools) for details on how to best do this.
 
+## Deployment
+
+**1. Build the frontend**
+
+```shell
+cd frontend
+yarn
+yarn build
+```
+
+**2. Deploy to Google Cloud Run**
+
+```shell
+cd backend
+make deploy_gcp
+```
