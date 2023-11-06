@@ -4,7 +4,13 @@ import { useStatePersist } from "./useStatePersist";
 export interface Message {
   type: string;
   content: string;
-  additional_kwargs?: object;
+  name?: string;
+  additional_kwargs?: {
+    function_call?: {
+      name?: string;
+      arguments?: string;
+    };
+  };
 }
 
 export interface Chat {

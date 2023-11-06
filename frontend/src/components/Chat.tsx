@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Chat as ChatType } from "../hooks/useChatList";
+import { Chat as ChatType, Message as MessageType } from "../hooks/useChatList";
 import { StreamStateProps } from "../hooks/useStreamState";
 import { str } from "../utils/str";
 import TypingBox from "./TypingBox";
@@ -9,24 +9,50 @@ interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
   startStream: (message: string) => Promise<void>;
 }
 
-function Message(props: {
-  type: string;
-  content: string;
-  additional_kwargs?: object;
-}) {
+function Function(props: { call: boolean; name?: string; args?: string }) {
   return (
-    <div className="leading-6 mb-2">
+    <>
+      {props.call && (
+        <span className="text-gray-900 whitespace-pre-wrap break-words mr-2">
+          Call function
+        </span>
+      )}
+      {props.name && (
+        <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 relative -top-0.5 mr-2">
+          {props.name}
+        </span>
+      )}
+      {props.call && (
+        <span className="text-gray-900 whitespace-pre-wrap break-words mr-2">
+          with
+        </span>
+      )}
+      {props.args && (
+        <span className="text-gray-900 whitespace-pre-wrap break-words">
+          {str(props.args)}
+        </span>
+      )}
+    </>
+  );
+}
+
+function Message(props: MessageType) {
+  return (
+    <div className="leading-6 mb-4">
       <span className="font-medium text-sm text-gray-400 uppercase mr-2">
         {props.type}
-      </span>{" "}
+      </span>
+      {props.type === "function" && <Function call={false} name={props.name} />}
+      {props.additional_kwargs?.function_call && (
+        <Function
+          call={true}
+          name={props.additional_kwargs.function_call.name}
+          args={props.additional_kwargs.function_call.arguments}
+        />
+      )}
       <span className="text-gray-900 whitespace-pre-wrap break-words">
         {props.content}
       </span>
-      {Object.keys(props.additional_kwargs ?? {}).length > 0 && (
-        <span className="text-gray-900 whitespace-pre-wrap break-words">
-          {str(props.additional_kwargs)}
-        </span>
-      )}
     </div>
   );
 }
