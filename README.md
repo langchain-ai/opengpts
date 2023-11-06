@@ -7,11 +7,11 @@ the prompts you use (use LangSmith to debug those), and the tools you give it (c
 
 <p align="center">
   <figure>
-    <img alt="Image1" src="_static/configure.png" width="45%" style="margin-right: 10px;" />
+    <img alt="Image1" src="_static/configure.png" width="40%" />
     <figcaption>Caption for the first image</figcaption>
   </figure>
   <figure>
-    <img alt="Image2" src="_static/chat.png" width="45%" />
+    <img alt="Image2" src="_static/chat.png" width="40%" />
     <figcaption>Caption for the second image</figcaption>
   </figure>
 </p>
