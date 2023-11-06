@@ -1,4 +1,5 @@
 from langchain.tools.render import render_text_description
+from langchain.agents.format_scratchpad import format_xml
 
 from .prompts import conversational_prompt, parse_output
 
@@ -11,5 +12,13 @@ def get_xml_agent(model, tools, system_message):
     )
     llm_with_stop = model.bind(stop=["</tool_input>"])
 
-    agent = prompt | llm_with_stop | parse_output
+    agent = (
+            {
+                "messages": lambda x: x["messages"],
+                "agent_scratchpad": lambda x: format_xml(x["intermediate_steps"]),
+            }
+        | prompt
+        | llm_with_stop
+        | parse_output
+    )
     return agent
