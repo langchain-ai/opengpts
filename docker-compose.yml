@@ -1,0 +1,26 @@
+version: '3.7'
+services:
+  opengpts-backend:
+    container_name: opengpts-backend
+    build:
+      dockerfile: Dockerfile.backend
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_DEPLOYMENT_NAME=${OPENAI_DEPLOYMENT_NAME}
+      - OPENAI_API_VERSION=${OPENAI_API_VERSION}
+      - OPENAI_API_BASE=${OPENAI_API_BASE}
+      - PORT=${PORT}
+    ports:
+  opengpts-frontend:
+    container_name: opengpts-frontend
+    build:
+      dockerfile: Dockerfile.frontend
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_DEPLOYMENT_NAME=${OPENAI_DEPLOYMENT_NAME}
+      - OPENAI_API_VERSION=${OPENAI_API_VERSION}
+      - OPENAI_API_BASE=${OPENAI_API_BASE}
+      - PORT=${PORT}
+    ports:
+      - 8100:${PORT}
+  

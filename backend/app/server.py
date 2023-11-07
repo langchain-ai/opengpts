@@ -7,7 +7,7 @@ app = FastAPI()
 
 add_routes(app, agent, config_keys=["configurable"])
 
-app.mount("", StaticFiles(directory="ui", html=True), name="ui")
+# app.mount("", StaticFiles(directory="ui", html=True), name="ui")
 
 if __name__ == "__main__":
     import uvicorn

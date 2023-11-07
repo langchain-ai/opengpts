@@ -1,0 +1,10 @@
+FROM node:slim
+
+COPY ./frontend /ui
+
+WORKDIR /ui
+
+WORKDIR /ui
+RUN yarn install
+# RUN yarn build  # If you want to build the dist instead
+CMD yarn dev
