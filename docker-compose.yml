@@ -10,7 +10,8 @@ services:
       - OPENAI_API_VERSION=${OPENAI_API_VERSION}
       - OPENAI_API_BASE=${OPENAI_API_BASE}
       - PORT=${PORT}
-    ports:
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
   opengpts-frontend:
     container_name: opengpts-frontend
     build:
@@ -21,6 +22,9 @@ services:
       - OPENAI_API_VERSION=${OPENAI_API_VERSION}
       - OPENAI_API_BASE=${OPENAI_API_BASE}
       - PORT=${PORT}
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
     ports:
-      - 8100:${PORT}
-  
+      - 5173:5173
+    depends_on:
+      - opengpts-backend
