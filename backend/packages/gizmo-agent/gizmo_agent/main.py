@@ -52,7 +52,9 @@ class ConfigurableAgent(RunnableBinding):
         _tools = []
         for _tool in tools:
             if _tool == AvailableTools.RETRIEVAL:
-                _tools.append(get_retrieval_tool(config["configurable"]["assistant_id"]))
+                _tools.append(
+                    get_retrieval_tool(config["configurable"]["assistant_id"])
+                )
             else:
                 _tools.append(TOOLS[_tool])
         if agent == GizmoAgentType.GPT_35_TURBO:
@@ -90,23 +92,19 @@ class AgentOutput(BaseModel):
     output: str
 
 
-agent = (
-    ConfigurableAgent(
-        agent=GizmoAgentType.GPT_35_TURBO,
-        tools=[],
-        system_message=DEFAULT_SYSTEM_MESSAGE,
-    )
-    .configurable_fields(
-        agent=ConfigurableField(id="agent_type", name="Agent Type"),
-        system_message=ConfigurableField(id="system_message", name="System Message"),
-        tools=ConfigurableFieldMultiOption(
-            id="tools",
-            name="Tools",
-            options=TOOL_OPTIONS,
-            default=[],
-        ),
-    )
-
+agent = ConfigurableAgent(
+    agent=GizmoAgentType.GPT_35_TURBO,
+    tools=[],
+    system_message=DEFAULT_SYSTEM_MESSAGE,
+).configurable_fields(
+    agent=ConfigurableField(id="agent_type", name="Agent Type"),
+    system_message=ConfigurableField(id="system_message", name="System Message"),
+    tools=ConfigurableFieldMultiOption(
+        id="tools",
+        name="Tools",
+        options=TOOL_OPTIONS,
+        default=[],
+    ),
 )
 agent = RunnableWithMessageHistory(
     agent,
@@ -118,3 +116,16 @@ agent = RunnableWithMessageHistory(
     output_key="messages",
     history_key="messages",
 ).with_types(input_type=AgentInput, output_type=AgentOutput)
+
+if __name__ == "__main__":
+    import asyncio
+    from langchain.schema.messages import HumanMessage
+
+    async def run():
+        async for m in agent.astream_log(
+            {"input": HumanMessage(content="whats my name")},
+            config={"configurable": {"session_id": "test1"}},
+        ):
+            print(m)
+
+    asyncio.run(run())
