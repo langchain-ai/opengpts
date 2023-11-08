@@ -52,7 +52,7 @@ class RunnableWithMessageHistory(RunnableBinding):
         input_type: Optional[BaseModel] = None,
         output_type: Optional[BaseModel] = None,
     ) -> RunnableBinding:
-        return super(RunnableBinding, self).with_types(input_type, output_type)
+        return super(RunnableBinding, self).with_types(input_type=input_type, output_type=output_type)
 
     def get_input_schema(
         self, config: Optional[RunnableConfig] = None

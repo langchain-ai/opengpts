@@ -82,7 +82,7 @@ class ConfigurableAgent(RunnableBinding):
 
 
 class AgentInput(BaseModel):
-    messages: Sequence[AnyMessage] = Field(..., extra={"widget": {"type": "chat"}})
+    input: AnyMessage
 
 
 class AgentOutput(BaseModel):
@@ -106,7 +106,7 @@ agent = (
             default=[],
         ),
     )
-    .with_types(input_type=AgentInput, output_type=AgentOutput)
+
 )
 agent = RunnableWithMessageHistory(
     agent,
@@ -117,4 +117,4 @@ agent = RunnableWithMessageHistory(
     input_key="input",
     output_key="messages",
     history_key="messages",
-)
+).with_types(input_type=AgentInput, output_type=AgentOutput)
