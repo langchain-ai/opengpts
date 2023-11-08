@@ -1,4 +1,7 @@
+import os
+
 from agent_executor import AgentExecutor
+from agent_executor.history import RunnableWithMessageHistory
 from langchain.pydantic_v1 import BaseModel, Field
 
 from langchain.schema.messages import AnyMessage
@@ -18,6 +21,14 @@ from gizmo_agent.agent_types import (
     get_openai_function_agent,
 )
 from gizmo_agent.tools import TOOL_OPTIONS
+from functools import partial
+
+from langchain.prompts.chat import SystemMessagePromptTemplate, MessagesPlaceholder
+from langchain.chat_models.openai import ChatOpenAI
+from langchain.schema.output_parser import StrOutputParser
+from langchain.memory.chat_message_histories import SQLChatMessageHistory
+from langchain.memory import RedisChatMessageHistory
+
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
@@ -90,4 +101,14 @@ agent = (
         ),
     )
     .with_types(input_type=AgentInput, output_type=AgentOutput)
+)
+agent = RunnableWithMessageHistory(
+    agent,
+    # first arg should be a function that
+    # - accepts a single arg "session_id"
+    # - returns a BaseChatMessageHistory instance
+    partial(RedisChatMessageHistory, url=os.environ["REDIS_URL"]),
+    input_key="input",
+    output_key="messages",
+    history_key="messages",
 )
