@@ -67,7 +67,7 @@ class RunnableWithMessageHistory(RunnableBinding):
     def _exit_history(self, run: Run, config: RunnableConfig) -> None:
         hist: BaseChatMessageHistory = config["configurable"]["message_history"]
         # Add the input message
-        hist.add_message(run.inputs[self.input_key][0])
+        hist.add_message(run.inputs[self.input_key])
         # Find the output messages
         for m in run.outputs[self.output_key]:
             hist.add_message(m)
