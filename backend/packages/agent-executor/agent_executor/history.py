@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 from typing import Any, Callable, Dict, List, Optional, Type
 
@@ -5,7 +7,6 @@ from langchain.callbacks.tracers.schemas import Run
 from langchain.pydantic_v1 import BaseModel, create_model
 from langchain.schema.chat_history import BaseChatMessageHistory
 from langchain.schema.messages import BaseMessage
-from langchain.schema.output import ChatGeneration, ChatResult, LLMResult
 from langchain.schema.runnable.base import Runnable, RunnableBinding, RunnableLambda
 from langchain.schema.runnable.config import RunnableConfig
 from langchain.schema.runnable.passthrough import RunnablePassthrough
@@ -26,6 +27,7 @@ class RunnableWithMessageHistory(RunnableBinding):
         input_key: str,
         output_key: Optional[str] = None,
         history_key: str = "history",
+        **kwargs: Any,
     ) -> None:
         bound = RunnablePassthrough.assign(
             **{history_key: RunnableLambda(self._enter_history, self._aenter_history)}
@@ -35,8 +37,15 @@ class RunnableWithMessageHistory(RunnableBinding):
             input_key=input_key,
             output_key=output_key,
             bound=bound,
-            kwargs={},
+            **kwargs,
         )
+
+    def with_config(
+        self,
+        config: Optional[RunnableConfig] = None,
+        **kwargs: Any,
+    ) -> RunnableWithMessageHistory:
+        return super(Runnable, self).with_config(config, **kwargs)
 
     def get_input_schema(
         self, config: Optional[RunnableConfig] = None
