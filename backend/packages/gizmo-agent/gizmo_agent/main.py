@@ -20,7 +20,7 @@ from gizmo_agent.agent_types import (
     get_xml_agent,
     get_openai_function_agent,
 )
-from gizmo_agent.tools import TOOL_OPTIONS
+from gizmo_agent.tools import AvailableTools, TOOLS, TOOL_OPTIONS, get_retrieval_tool
 from functools import partial
 
 from langchain.prompts.chat import SystemMessagePromptTemplate, MessagesPlaceholder
@@ -41,7 +41,7 @@ class ConfigurableAgent(RunnableBinding):
     def __init__(
         self,
         *,
-        tools: Sequence[BaseTool],
+        tools: Sequence[str],
         agent: GizmoAgentType = GizmoAgentType.GPT_35_TURBO,
         system_message: str = DEFAULT_SYSTEM_MESSAGE,
         kwargs: Optional[Mapping[str, Any]] = None,
@@ -49,19 +49,25 @@ class ConfigurableAgent(RunnableBinding):
         **others: Any,
     ) -> None:
         others.pop("bound", None)
+        _tools = []
+        for _tool in tools:
+            if _tool == AvailableTools.RETRIEVAL:
+                _tools.append(get_retrieval_tool(config["configurable"]["assistant_id"]))
+            else:
+                _tools.append(TOOLS[_tool])
         if agent == GizmoAgentType.GPT_35_TURBO:
-            _agent = get_openai_function_agent(tools, system_message)
+            _agent = get_openai_function_agent(_tools, system_message)
         elif agent == GizmoAgentType.GPT_35_TURBO:
-            _agent = get_openai_function_agent(tools, system_message, gpt_4=True)
+            _agent = get_openai_function_agent(_tools, system_message, gpt_4=True)
         # elif agent == GizmoAgentType.AZURE_OPENAI:
         #     _agent = get_openai_function_agent(tools, system_message, azure=True)
         elif agent == GizmoAgentType.CLAUDE2:
-            _agent = get_xml_agent(tools, system_message)
+            _agent = get_xml_agent(_tools, system_message)
         else:
             raise ValueError("Unexpected agent type")
         agent_executor = AgentExecutor(
             agent=_agent,
-            tools=tools,
+            tools=_tools,
             handle_parsing_errors=True,
             max_iterations=10,
         )
@@ -87,7 +93,7 @@ class AgentOutput(BaseModel):
 agent = (
     ConfigurableAgent(
         agent=GizmoAgentType.GPT_35_TURBO,
-        tools=list(TOOL_OPTIONS.values()),
+        tools=[],
         system_message=DEFAULT_SYSTEM_MESSAGE,
     )
     .configurable_fields(
@@ -97,7 +103,7 @@ agent = (
             id="tools",
             name="Tools",
             options=TOOL_OPTIONS,
-            default=list(TOOL_OPTIONS.keys()),
+            default=[],
         ),
     )
     .with_types(input_type=AgentInput, output_type=AgentOutput)
