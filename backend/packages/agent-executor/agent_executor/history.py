@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
 from langchain.callbacks.tracers.schemas import Run
 from langchain.pydantic_v1 import BaseModel, create_model
@@ -45,7 +45,14 @@ class RunnableWithMessageHistory(RunnableBinding):
         config: Optional[RunnableConfig] = None,
         **kwargs: Any,
     ) -> RunnableWithMessageHistory:
-        return super(Runnable, self).with_config(config, **kwargs)
+        return super(RunnableBinding, self).with_config(config, **kwargs)
+
+    def with_types(
+        self,
+        input_type: Optional[BaseModel] = None,
+        output_type: Optional[BaseModel] = None,
+    ) -> RunnableBinding:
+        return super(RunnableBinding, self).with_types(input_type, output_type)
 
     def get_input_schema(
         self, config: Optional[RunnableConfig] = None
