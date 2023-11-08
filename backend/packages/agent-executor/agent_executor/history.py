@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Callable, Dict, List, Optional, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Type
 
 from langchain.callbacks.tracers.schemas import Run
 from langchain.pydantic_v1 import BaseModel, create_model
@@ -10,6 +10,7 @@ from langchain.schema.messages import BaseMessage
 from langchain.schema.runnable.base import Runnable, RunnableBinding, RunnableLambda
 from langchain.schema.runnable.config import RunnableConfig
 from langchain.schema.runnable.passthrough import RunnablePassthrough
+from langchain.schema.runnable.utils import ConfigurableFieldSpec
 
 
 class RunnableWithMessageHistory(RunnableBinding):
@@ -40,6 +41,15 @@ class RunnableWithMessageHistory(RunnableBinding):
             **kwargs,
         )
 
+    @property
+    def config_specs(self) -> Sequence[ConfigurableFieldSpec]:
+        return super().config_specs + [
+            ConfigurableFieldSpec(
+                id="session_id",
+                annotation=str,
+            )
+        ]
+
     def with_config(
         self,
         config: Optional[RunnableConfig] = None,
@@ -52,7 +62,9 @@ class RunnableWithMessageHistory(RunnableBinding):
         input_type: Optional[BaseModel] = None,
         output_type: Optional[BaseModel] = None,
     ) -> RunnableBinding:
-        return super(RunnableBinding, self).with_types(input_type=input_type, output_type=output_type)
+        return super(RunnableBinding, self).with_types(
+            input_type=input_type, output_type=output_type
+        )
 
     def get_input_schema(
         self, config: Optional[RunnableConfig] = None
