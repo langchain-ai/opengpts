@@ -13,8 +13,7 @@ function App() {
   const { configSchema, configDefaults } = useSchemas();
   const { chats, currentChat, createChat, updateChat, enterChat } =
     useChatList();
-  const { configs, currentConfig, saveConfig, enterConfig } =
-    useConfigList(configDefaults);
+  const { configs, currentConfig, saveConfig, enterConfig } = useConfigList();
   const { startStream, stopStream, stream } = useStreamState();
 
   const startChat = useCallback(

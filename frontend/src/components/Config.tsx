@@ -137,11 +137,12 @@ export function Config(props: {
   useEffect(() => {
     setValues(props.config?.config ?? props.configDefaults);
   }, [props.config, props.configDefaults]);
-  const readonly = !!props.config;
+  const [inflight, setInflight] = useState(false);
+  const readonly = !!props.config && !inflight;
   return (
     <>
       <div className="font-semibold text-lg leading-6 text-gray-600 mb-4">
-        Bot: {props.config?.key ?? "New Bot"}{" "}
+        Bot: {props.config?.name ?? "New Bot"}{" "}
         <span className="font-normal">{props.config ? "(read-only)" : ""}</span>
       </div>
       <form
@@ -149,13 +150,15 @@ export function Config(props: {
           "flex flex-col gap-8",
           readonly && "opacity-50 cursor-not-allowed"
         )}
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           e.stopPropagation();
           const form = e.target as HTMLFormElement;
           const key = form.key.value;
           if (!key) return;
-          props.saveConfig(key, values!);
+          setInflight(true);
+          await props.saveConfig(key, values!);
+          setInflight(false);
         }}
       >
         {Object.entries(
@@ -235,7 +238,7 @@ export function Config(props: {
               type="submit"
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-r-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600"
             >
-              Save
+              {inflight ? "Saving..." : "Save"}
             </button>
           </div>
         )}
