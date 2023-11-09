@@ -3,7 +3,13 @@ from fastapi.staticfiles import StaticFiles
 from langserve import add_routes
 from gizmo_agent import agent, ingest_runnable
 
-from app.storage import list_assistants, put_assistant, list_threads, put_thread
+from app.storage import (
+    list_assistants,
+    put_assistant,
+    list_threads,
+    put_thread,
+    get_thread_messages,
+)
 
 app = FastAPI()
 
@@ -22,14 +28,19 @@ def put_assistant_endpoint(aid: str, payload: dict):
     return put_assistant(aid, name=payload["name"], config=payload["config"])
 
 
-@app.get("/assistants/{aid}/threads/")
-def list_threads_endpoint(aid: str):
-    return list_threads(aid)
+@app.get("/threads/")
+def list_threads_endpoint():
+    return list_threads()
 
 
-@app.put("/assistants/{aid}/threads/{tid}")
-def put_thread_endpoint(aid: str, tid: str, payload: dict):
-    return put_thread(aid, tid, name=payload["name"])
+@app.get("/threads/{tid}/messages")
+def get_thread_messages_endpoint(tid: str):
+    return get_thread_messages(tid)
+
+
+@app.put("/threads/{tid}")
+def put_thread_endpoint(tid: str, payload: dict):
+    return put_thread(tid, assistant_id=payload["assistant_id"], name=payload["name"])
 
 
 app.mount("", StaticFiles(directory="ui", html=True), name="ui")

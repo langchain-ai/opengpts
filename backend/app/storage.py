@@ -14,22 +14,22 @@ def assistant_key(assistant_id: str):
     return f"opengpts:assistant:{assistant_id}"
 
 
-def assistant_threads_list_key(assistant_id: str):
-    return f"opengpts:assistant:{assistant_id}:threads"
+def threads_list_key():
+    return "opengpts:threads"
 
 
-def assistant_thread_key(assistant_id: str, thread_id: str):
-    return f"opengpts:assistant:{assistant_id}:thread:{thread_id}"
+def thread_key(thread_id: str):
+    return f"opengpts:thread:{thread_id}"
 
 
-def assistant_thread_messages_key(assistant_id: str, thread_id: str):
+def thread_messages_key(thread_id: str):
     # Needs to match key used by RedisChatMessageHistory
     # TODO we probably want to align this with the others
     return f"message_store:{thread_id}"
 
 
-assistant_hash_keys = ["name", "config", "updated_at"]
-thread_hash_keys = ["name", "updated_at"]
+assistant_hash_keys = ["assistant_id", "name", "config", "updated_at"]
+thread_hash_keys = ["assistant_id", "thread_id", "name", "updated_at"]
 
 
 def list_assistants():
@@ -41,18 +41,16 @@ def list_assistants():
         assistants = pipe.execute()
     return [
         {
-            "assistant_id": id,
-            **{
-                key: orjson.loads(value) if value else None
-                for key, value in zip(assistant_hash_keys, values)
-            },
+            key: orjson.loads(value) if value else None
+            for key, value in zip(assistant_hash_keys, values)
         }
-        for id, values in zip(ids, assistants)
+        for values in assistants
     ]
 
 
 def put_assistant(assistant_id: str, *, name: str, config: dict):
     saved = {
+        "assistant_id": assistant_id,
         "name": name,
         "config": config,
         "updated_at": datetime.utcnow(),
@@ -65,61 +63,52 @@ def put_assistant(assistant_id: str, *, name: str, config: dict):
             mapping={k: orjson.dumps(v) for k, v in saved.items()},
         )
         pipe.execute()
+    return saved
+
+
+def list_threads():
+    client = get_client(os.environ.get("REDIS_URL"))
+    ids = [orjson.loads(id) for id in client.smembers(threads_list_key())]
+    with client.pipeline() as pipe:
+        for id in ids:
+            pipe.hmget(thread_key(id), *thread_hash_keys)
+        threads = pipe.execute()
+    return [
+        {
+            key: orjson.loads(value) if value else None
+            for key, value in zip(thread_hash_keys, values)
+        }
+        for values in threads
+    ]
+
+
+def get_thread_messages(thread_id: str):
+    client = get_client(os.environ.get("REDIS_URL"))
+    messages = client.lrange(thread_messages_key(thread_id), 0, -1)
     return {
-        "assistant_id": assistant_id,
-        **saved,
+        "messages": [
+            m.dict()
+            for m in messages_from_dict([orjson.loads(m) for m in messages[::-1]])
+        ],
     }
 
 
-def list_threads(assistant_id: str):
-    client = get_client(os.environ.get("REDIS_URL"))
-    ids = [
-        orjson.loads(id)
-        for id in client.smembers(assistant_threads_list_key(assistant_id))
-    ]
-    with client.pipeline() as pipe:
-        for id in ids:
-            pipe.hmget(assistant_thread_key(assistant_id, id), *thread_hash_keys)
-        for id in ids:
-            pipe.lrange(assistant_thread_messages_key(assistant_id, id), 0, -1)
-        results = pipe.execute()
-        threads = results[: len(ids)]
-        message_lists = results[len(ids) :]
-    return [
-        {
-            "assistant_id": assistant_id,
-            "thread_id": id,
-            "messages": [
-                m.dict()
-                for m in messages_from_dict([orjson.loads(m) for m in messages[::-1]])
-            ],
-            **{
-                key: orjson.loads(value) if value else None
-                for key, value in zip(thread_hash_keys, values)
-            },
-        }
-        for id, values, messages in zip(ids, threads, message_lists)
-    ]
-
-
-def put_thread(assistant_id: str, thread_id: str, *, name: str):
+def put_thread(thread_id: str, *, assistant_id: str, name: str):
     saved = {
+        "thread_id": thread_id,
+        "assistant_id": assistant_id,
         "name": name,
         "updated_at": datetime.utcnow(),
     }
     client = get_client(os.environ.get("REDIS_URL"))
     with client.pipeline() as pipe:
-        pipe.sadd(assistant_threads_list_key(assistant_id), orjson.dumps(thread_id))
+        pipe.sadd(threads_list_key(), orjson.dumps(thread_id))
         pipe.hset(
-            assistant_thread_key(assistant_id, thread_id),
+            thread_key(thread_id),
             mapping={k: orjson.dumps(v) for k, v in saved.items()},
         )
         pipe.execute()
-    return {
-        "assistant_id": assistant_id,
-        "thread_id": thread_id,
-        **saved,
-    }
+    return saved
 
 
 if __name__ == "__main__":
