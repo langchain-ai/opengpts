@@ -18,8 +18,8 @@ def list_assistants_endpoint():
 
 
 @app.put("/assistants/{aid}")
-def put_assistant_endpoint(aid: str, name: str, config: dict):
-    return put_assistant(aid, name, config)
+def put_assistant_endpoint(aid: str, payload: dict):
+    return put_assistant(aid, name=payload["name"], config=payload["config"])
 
 
 @app.get("/assistants/{aid}/threads/")
@@ -28,8 +28,8 @@ def list_threads_endpoint(aid: str):
 
 
 @app.put("/assistants/{aid}/threads/{tid}")
-def put_thread_endpoint(aid: str, tid: str, name: str):
-    return put_thread(aid, tid, name)
+def put_thread_endpoint(aid: str, tid: str, payload: dict):
+    return put_thread(aid, tid, name=payload["name"])
 
 
 app.mount("", StaticFiles(directory="ui", html=True), name="ui")

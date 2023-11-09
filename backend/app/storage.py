@@ -52,18 +52,23 @@ def list_assistants():
 
 
 def put_assistant(assistant_id: str, *, name: str, config: dict):
+    saved = {
+        "name": name,
+        "config": config,
+        "updated_at": datetime.utcnow(),
+    }
     client = get_client(os.environ.get("REDIS_URL"))
     with client.pipeline() as pipe:
         pipe.sadd(assistants_list_key(), orjson.dumps(assistant_id))
         pipe.hset(
             assistant_key(assistant_id),
-            mapping={
-                "name": orjson.dumps(name),
-                "config": orjson.dumps(config),
-                "updated_at": orjson.dumps(datetime.utcnow()),
-            },
+            mapping={k: orjson.dumps(v) for k, v in saved.items()},
         )
         pipe.execute()
+    return {
+        "assistant_id": assistant_id,
+        **saved,
+    }
 
 
 def list_threads(assistant_id: str):
@@ -98,17 +103,23 @@ def list_threads(assistant_id: str):
 
 
 def put_thread(assistant_id: str, thread_id: str, *, name: str):
+    saved = {
+        "name": name,
+        "updated_at": datetime.utcnow(),
+    }
     client = get_client(os.environ.get("REDIS_URL"))
     with client.pipeline() as pipe:
         pipe.sadd(assistant_threads_list_key(assistant_id), orjson.dumps(thread_id))
         pipe.hset(
             assistant_thread_key(assistant_id, thread_id),
-            mapping={
-                "name": orjson.dumps(name),
-                "updated_at": orjson.dumps(datetime.utcnow()),
-            },
+            mapping={k: orjson.dumps(v) for k, v in saved.items()},
         )
         pipe.execute()
+    return {
+        "assistant_id": assistant_id,
+        "thread_id": thread_id,
+        **saved,
+    }
 
 
 if __name__ == "__main__":
