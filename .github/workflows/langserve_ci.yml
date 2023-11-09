@@ -10,11 +10,7 @@ on:
       - '.github/workflows/_lint.yml'
       - '.github/workflows/_test.yml'
       - '.github/workflows/langserve_ci.yml'
-      - 'langserve/**'
-      - 'examples/**'
-      - 'pyproject.toml'
-      - 'poetry.lock'
-      - 'Makefile'
+      - 'backend/**'
   workflow_dispatch:  # Allows to trigger the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
@@ -39,12 +35,6 @@ jobs:
       working-directory: .
     secrets: inherit
 
-  pydantic-compatibility:
-    uses:
-      ./.github/workflows/_pydantic_compatibility.yml
-    with:
-      working-directory: .
-    secrets: inherit
   test:
     timeout-minutes: 5
     runs-on: ubuntu-latest
