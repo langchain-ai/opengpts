@@ -34,9 +34,10 @@ DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
 
 class ConfigurableAgent(RunnableBinding):
-    tools: Sequence[BaseTool]
+    tools: Sequence[str]
     agent: GizmoAgentType
     system_message: str = DEFAULT_SYSTEM_MESSAGE
+    assistant_id: Optional[str] = None
 
     def __init__(
         self,
@@ -44,6 +45,7 @@ class ConfigurableAgent(RunnableBinding):
         tools: Sequence[str],
         agent: GizmoAgentType = GizmoAgentType.GPT_35_TURBO,
         system_message: str = DEFAULT_SYSTEM_MESSAGE,
+        assistant_id: Optional[str] = None,
         kwargs: Optional[Mapping[str, Any]] = None,
         config: Optional[Mapping[str, Any]] = None,
         **others: Any,
@@ -52,9 +54,9 @@ class ConfigurableAgent(RunnableBinding):
         _tools = []
         for _tool in tools:
             if _tool == AvailableTools.RETRIEVAL:
-                _tools.append(
-                    get_retrieval_tool(config["configurable"]["assistant_id"])
-                )
+                if assistant_id is None:
+                    raise ValueError("assistant_id must be provided if Retrieval tool is used")
+                _tools.append(get_retrieval_tool(assistant_id))
             else:
                 _tools.append(TOOLS[_tool])
         if agent == GizmoAgentType.GPT_35_TURBO:
@@ -96,9 +98,11 @@ agent = ConfigurableAgent(
     agent=GizmoAgentType.GPT_35_TURBO,
     tools=[],
     system_message=DEFAULT_SYSTEM_MESSAGE,
+    assistant_id=None,
 ).configurable_fields(
     agent=ConfigurableField(id="agent_type", name="Agent Type"),
     system_message=ConfigurableField(id="system_message", name="System Message"),
+    assistant_id=ConfigurableField(id="assistant_id", name="Assistant ID"),
     tools=ConfigurableFieldMultiOption(
         id="tools",
         name="Tools",

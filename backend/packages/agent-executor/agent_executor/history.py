@@ -47,6 +47,9 @@ class RunnableWithMessageHistory(RunnableBinding):
             ConfigurableFieldSpec(
                 id="session_id",
                 annotation=str,
+                name="",
+                description="",
+                default="",
             )
         ]
 
