@@ -21,8 +21,7 @@ class IngestRunnable(RunnableSerializable):
         docs = self.text_splitter.create_documents(
             [input[self.input_key]], [{"namespace": self.namespace}]
         )
-        self.vectorstore.add_documents(docs)
-        return {}
+        return self.vectorstore.add_documents(docs)
 
     @property
     def config_specs(self) -> Sequence[ConfigurableFieldSpec]:

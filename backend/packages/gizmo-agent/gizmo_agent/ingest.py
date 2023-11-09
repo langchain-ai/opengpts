@@ -16,6 +16,7 @@ vstore = Redis(
     index_schema=index_schema,
 )
 
+
 ingest_runnable = IngestRunnable(
     text_splitter=RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200),
     vectorstore=vstore,
