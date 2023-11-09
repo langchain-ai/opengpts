@@ -32,7 +32,7 @@ jobs:
     uses:
       ./.github/workflows/_lint.yml
     with:
-      working-directory: .
+      working-directory: ${{ env.WORKDIR }}
     secrets: inherit
 
   test:
