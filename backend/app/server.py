@@ -1,11 +1,13 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from langserve import add_routes
-from gizmo_agent import agent
+from gizmo_agent import agent, ingest_runnable
 
 app = FastAPI()
 
 add_routes(app, agent, config_keys=["configurable"])
+
+add_routes(app, ingest_runnable, config_keys=["configurable"], path="/ingest")
 
 app.mount("", StaticFiles(directory="ui", html=True), name="ui")
 
