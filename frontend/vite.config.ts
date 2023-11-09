@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       "^/(config_schema|input_schema|stream)": {
-        target: "http://127.0.0.1:8100",
+        target: "http://opengpts-backend:8100",
         changeOrigin: true,
         rewrite: (path) => path.replace("/____LANGSERVE_BASE_URL", ""),
       },

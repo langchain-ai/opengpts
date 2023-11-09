@@ -14,15 +14,7 @@ Check out a simple hosted version [here](https://opengpts-example-vz4y4ooboq-uc.
 
 ## Quickstart
 
-**1. Start the backend**
-
-Install requirements
-
-```shell
-cd backend
-pip install -r requirements.txt
-```
-
+### **1. Start the backend**
 By default, this uses OpenAI, but there are also options for Azure OpenAI and Anthropic.
 If you are using those, you may need to set different environment variables.
 
@@ -30,7 +22,7 @@ If you are using those, you may need to set different environment variables.
 export OPENAI_API_KEY="sk-..."
 ```
 
-Set up [LangSmith](https://smith.langchain.com/).
+### Optional: Set up [LangSmith](https://smith.langchain.com/).
 This is optional, but it will help with debugging, logging, monitoring.
 Sign up at the link above and then set the relevant environment variables
 
@@ -39,18 +31,12 @@ export LANGCHAIN_TRACING_V2="true"
 export LANGCHAIN_API_KEY=...
 ```
 
-Start the backend server
+### **2. Start the services**
+You can use docker-compose to start the services:
 
 ```shell
-langchain serve --port=8100
-```
-
-**2. Start the frontend**
-
-```shell
-cd frontend
-yarn
-yarn dev
+docker-compose build
+docker-compose up -d
 ```
 
 Navigate to [http://localhost:5173/](http://localhost:5173/) and enjoy!
