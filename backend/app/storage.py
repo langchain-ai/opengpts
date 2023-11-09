@@ -1,7 +1,8 @@
-from datetime import datetime
 import os
+from datetime import datetime
 
 import orjson
+from langchain.schema.messages import messages_from_dict
 from langchain.utilities.redis import get_client
 
 
@@ -21,6 +22,12 @@ def assistant_thread_key(assistant_id: str, thread_id: str):
     return f"opengpts:assistant:{assistant_id}:thread:{thread_id}"
 
 
+def assistant_thread_messages_key(assistant_id: str, thread_id: str):
+    # Needs to match key used by RedisChatMessageHistory
+    # TODO we probably want to align this with the others
+    return f"message_store:{thread_id}"
+
+
 assistant_hash_keys = ["name", "config", "updated_at"]
 thread_hash_keys = ["name", "updated_at"]
 
@@ -34,7 +41,7 @@ def list_assistants():
         assistants = pipe.execute()
     return [
         {
-            "id": id,
+            "assistant_id": id,
             **{
                 key: orjson.loads(value) if value else None
                 for key, value in zip(assistant_hash_keys, values)
@@ -68,16 +75,25 @@ def list_threads(assistant_id: str):
     with client.pipeline() as pipe:
         for id in ids:
             pipe.hmget(assistant_thread_key(assistant_id, id), *thread_hash_keys)
-        threads = pipe.execute()
+        for id in ids:
+            pipe.lrange(assistant_thread_messages_key(assistant_id, id), 0, -1)
+        results = pipe.execute()
+        threads = results[: len(ids)]
+        message_lists = results[len(ids) :]
     return [
         {
-            "id": id,
+            "assistant_id": assistant_id,
+            "thread_id": id,
+            "messages": [
+                m.dict()
+                for m in messages_from_dict([orjson.loads(m) for m in messages[::-1]])
+            ],
             **{
                 key: orjson.loads(value) if value else None
                 for key, value in zip(thread_hash_keys, values)
             },
         }
-        for id, values in zip(ids, threads)
+        for id, values, messages in zip(ids, threads, message_lists)
     ]
 
 
@@ -99,4 +115,4 @@ if __name__ == "__main__":
     print(list_assistants())
     print(list_threads("i-am-a-test"))
     put_assistant("i-am-a-test", name="Test Agent", config={"tags": ["hello"]})
-    put_thread("i-am-a-test", "i-am-a-test-thread", name="Test Thread")
+    put_thread("i-am-a-test", "test1", name="Test Thread")
