@@ -13,14 +13,10 @@ tomli-w = "^1.0.0"
 uvicorn = "^0.23.2"
 fastapi = "^0.103.2"
 langserve = ">=0.0.16"
-gizmo-agent = {path = "packages/gizmo-agent", develop = true}
-agent-executor = {path = "packages/agent-executor", develop = true}
 
 [tool.poetry.group.dev.dependencies]
 uvicorn = "^0.23.2"
 pygithub = "^2.1.1"
-langchain = {path = "../../langchain/libs/langchain", develop = true}
-langserve = {path = "../../langserve", develop = true}
 
 [tool.poetry.group.lint.dependencies]
 ruff = "^0.1.4"
@@ -34,12 +30,6 @@ pytest-mock = "^3.11.1"
 pytest-socket = "^0.6.0"
 pytest-watch = "^4.2.0"
 pytest-timeout = "^2.2.0"
-
-[tool.ruff.isort]
-# TODO(Team): Temporary to make isort work with examples.
-# examples assume langserve is available as a 3rd party package
-# For simplicity we'll define it as first party for now can update later.
-known-first-party = ["langserve"]
 
 [tool.coverage.run]
 omit = [
