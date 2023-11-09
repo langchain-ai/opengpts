@@ -15,6 +15,8 @@ fastapi = "^0.103.2"
 langserve = ">=0.0.16"
 gizmo-agent = {path = "packages/gizmo-agent", develop = true}
 agent-executor = {path = "packages/agent-executor", develop = true}
+orjson = "^3.9.10"
+redis = "^5.0.1"
 
 [tool.poetry.group.dev.dependencies]
 uvicorn = "^0.23.2"
