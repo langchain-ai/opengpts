@@ -1,6 +1,7 @@
 import base64
 from typing import List, NotRequired, Optional, Sequence
 
+from langchain.schema import Document
 from langchain.document_loaders.base import BaseBlobParser
 from langchain.document_loaders.blob_loaders.schema import Blob
 from langchain.document_loaders.parsers import PyMuPDFParser
@@ -90,10 +91,14 @@ class IngestRunnable(RunnableSerializable[IngestionInput, IngestionOutput]):
         if not self.namespace:
             raise ValueError("namespace must be provided")
 
-        docs = self.text_splitter.create_documents(
-            [input[self.input_key]], [{"namespace": self.namespace}]
+        blob = _convert_ingestion_input_to_blob(input)
+        ingest_blob(
+            blob,
+            _get_default_parser(),
+            self.text_splitter,
+            self.vectorstore,
+            namespace=self.namespace,
         )
-        self.vectorstore.add_documents(docs)
         return {"success": True}
 
     @property
@@ -109,11 +114,17 @@ class IngestRunnable(RunnableSerializable[IngestionInput, IngestionOutput]):
         ]
 
 
+def _update_document_metadata(document: Document, namespace: str) -> None:
+    """Mutation in place that adds a namespace to the document metadata."""
+    document.metadata["namespace"] = namespace
+
+
 def ingest_blob(
     blob: Blob,
     parser: BaseBlobParser,
     text_splitter: TextSplitter,
     vectorstore: VectorStore,
+    namespace: str,
     *,
     batch_size: int = 100,
 ) -> List[str]:
@@ -121,7 +132,10 @@ def ingest_blob(
     docs_to_index = []
     ids = []
     for document in parser.lazy_parse(blob):
-        docs_to_index.extend(text_splitter.split_documents([document]))
+        docs = text_splitter.split_documents([document])
+        for doc in docs:
+            _update_document_metadata(doc, namespace)
+        docs_to_index.extend(docs)
         if len(docs_to_index) >= batch_size:
             ids.extend(vectorstore.add_documents(docs_to_index))
             docs_to_index = []
@@ -137,6 +151,7 @@ async def aingest_blob(
     parser: BaseBlobParser,
     text_splitter: TextSplitter,
     vectorstore: VectorStore,
+    namespace: str,
     *,
     batch_size: int = 100,
 ) -> List[str]:
@@ -144,7 +159,9 @@ async def aingest_blob(
     docs_to_index = []
     ids = []
     for document in parser.lazy_parse(blob):
-        docs_to_index.extend(text_splitter.split_documents([document]))
+        docs = text_splitter.split_documents([document])
+        for doc in docs:
+            _update_document_metadata(doc, namespace)
         if len(docs_to_index) >= batch_size:
             ids.extend(vectorstore.add_documents(docs_to_index))
             docs_to_index = []
