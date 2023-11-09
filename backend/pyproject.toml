@@ -7,22 +7,49 @@ readme = "README.md"
 packages = [{include = "app"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.8.1"
 sse-starlette = "^1.6.5"
 tomli-w = "^1.0.0"
 uvicorn = "^0.23.2"
 fastapi = "^0.103.2"
 langserve = ">=0.0.16"
-gizmo-agent = {path = "packages/gizmo-agent", develop = true}
-agent-executor = {path = "packages/agent-executor", develop = true}
 
 [tool.poetry.group.dev.dependencies]
 uvicorn = "^0.23.2"
 pygithub = "^2.1.1"
-langchain = {path = "../../langchain/libs/langchain", develop = true}
-langserve = {path = "../../langserve", develop = true}
+
+[tool.poetry.group.lint.dependencies]
+ruff = "^0.1.4"
+codespell = "^2.2.0"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.2.1"
+pytest-cov = "^4.0.0"
+pytest-asyncio = "^0.21.1"
+pytest-mock = "^3.11.1"
+pytest-socket = "^0.6.0"
+pytest-watch = "^4.2.0"
+pytest-timeout = "^2.2.0"
+
+[tool.coverage.run]
+omit = [
+    "tests/*",
+]
+
+[tool.pytest.ini_options]
+# --strict-markers will raise errors on unknown marks.
+# https://docs.pytest.org/en/7.1.x/how-to/mark.html#raising-errors-on-unknown-marks
+#
+# https://docs.pytest.org/en/7.1.x/reference/reference.html
+# --strict-config       any warnings encountered while parsing the `pytest`
+#                       section of the configuration file raise errors.
+addopts = "--strict-markers --strict-config --durations=5 -vv"
+# Global timeout for all tests. There shuold be a good reason for a test to
+# take more than 5 second
+timeout = 5
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
