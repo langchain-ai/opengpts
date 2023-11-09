@@ -4,21 +4,21 @@ from typing import Any, Mapping, Optional, Sequence
 
 from agent_executor import AgentExecutor
 from agent_executor.history import RunnableWithMessageHistory
-from gizmo_agent.agent_types import (
-    GizmoAgentType,
-    get_xml_agent,
-    get_openai_function_agent,
-)
-from gizmo_agent.tools import AvailableTools, TOOLS, TOOL_OPTIONS, get_retrieval_tool
 from langchain.memory import RedisChatMessageHistory
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.schema.messages import AnyMessage
 from langchain.schema.runnable import (
-    RunnableBinding,
     ConfigurableField,
     ConfigurableFieldMultiOption,
+    RunnableBinding,
 )
 
+from gizmo_agent.agent_types import (
+    GizmoAgentType,
+    get_openai_function_agent,
+    get_xml_agent,
+)
+from gizmo_agent.tools import TOOL_OPTIONS, TOOLS, AvailableTools, get_retrieval_tool
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
@@ -115,6 +115,7 @@ agent = RunnableWithMessageHistory(
 
 if __name__ == "__main__":
     import asyncio
+
     from langchain.schema.messages import HumanMessage
 
     async def run():

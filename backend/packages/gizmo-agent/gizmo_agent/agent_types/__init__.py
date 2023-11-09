@@ -1,6 +1,7 @@
+from enum import Enum
+
 from .openai import get_openai_function_agent
 from .xml.agent import get_xml_agent
-from enum import Enum
 
 
 class GizmoAgentType(str, Enum):

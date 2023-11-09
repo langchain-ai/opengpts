@@ -1,11 +1,9 @@
 from typing import Optional, Sequence
 
-from langchain.schema.runnable import RunnableSerializable, RunnableConfig
-from langchain.schema.runnable.utils import Input, Output
-from langchain.text_splitter import TextSplitter
+from langchain.schema.runnable import RunnableConfig, RunnableSerializable
+from langchain.schema.runnable.utils import ConfigurableFieldSpec, Input, Output
 from langchain.schema.vectorstore import VectorStore
-
-from langchain.schema.runnable.utils import ConfigurableFieldSpec
+from langchain.text_splitter import TextSplitter
 
 
 class IngestRunnable(RunnableSerializable):
@@ -20,8 +18,9 @@ class IngestRunnable(RunnableSerializable):
     def invoke(self, input: Input, config: Optional[RunnableConfig] = None) -> Output:
         if not self.namespace:
             raise ValueError("namespace must be provided")
-        docs = self.text_splitter.create_documents([input[self.input_key]],
-                                                   [{"namespace": self.namespace}])
+        docs = self.text_splitter.create_documents(
+            [input[self.input_key]], [{"namespace": self.namespace}]
+        )
         self.vectorstore.add_documents(docs)
         return {}
 

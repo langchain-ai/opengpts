@@ -15,30 +15,33 @@ from typing import (
     Tuple,
     Union,
 )
-from langchain.load.dump import dumpd
 
+from langchain.agents.agent import ExceptionTool
 from langchain.agents.tools import InvalidTool
+from langchain.callbacks.manager import (
+    AsyncCallbackManager,
+    AsyncCallbackManagerForChainRun,
+)
+from langchain.load.dump import dumpd
+from langchain.load.serializable import Serializable
 from langchain.schema import (
     AgentAction,
     AgentFinish,
     OutputParserException,
 )
-from langchain.load.serializable import Serializable
-from langchain.schema.messages import BaseMessage
-from langchain.agents.agent import ExceptionTool
+from langchain.schema.agent import AgentActionMessageLog
+from langchain.schema.messages import (
+    AIMessage,
+    BaseMessage,
+    FunctionMessage,
+    HumanMessage,
+)
 from langchain.schema.runnable import Runnable, RunnableSerializable
 from langchain.schema.runnable.config import RunnableConfig
 from langchain.schema.runnable.utils import AddableDict, Input, Output
 from langchain.tools.base import BaseTool
 from langchain.utilities.asyncio import asyncio_timeout
 from langchain.utils.input import get_color_mapping
-from langchain.callbacks.manager import (
-    AsyncCallbackManager,
-    AsyncCallbackManagerForChainRun,
-)
-from langchain.schema.messages import HumanMessage, FunctionMessage, AIMessage
-from langchain.schema.agent import AgentActionMessageLog
-
 
 logger = logging.getLogger(__name__)
 

@@ -1,12 +1,15 @@
 import os
+
+from langchain.agents.format_scratchpad import format_to_openai_functions
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
+from langchain.chat_models import AzureChatOpenAI, ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.tools.render import format_tool_to_openai_function
-from langchain.agents.format_scratchpad import format_to_openai_functions
-from langchain.chat_models import ChatOpenAI, AzureChatOpenAI
 
 
-def get_openai_function_agent(tools, system_message, gpt_4: bool = False, azure: bool = False):
+def get_openai_function_agent(
+    tools, system_message, gpt_4: bool = False, azure: bool = False
+):
     if not azure:
         if gpt_4:
             llm = ChatOpenAI(model="gpt-4", temperature=0)

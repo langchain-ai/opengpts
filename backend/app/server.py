@@ -1,14 +1,14 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from langserve import add_routes
 from gizmo_agent import agent, ingest_runnable
+from langserve import add_routes
 
 from app.storage import (
-    list_assistants,
-    put_assistant,
-    list_threads,
-    put_thread,
     get_thread_messages,
+    list_assistants,
+    list_threads,
+    put_assistant,
+    put_thread,
 )
 
 app = FastAPI()
