@@ -1,6 +1,6 @@
 # OpenGPTs
 
-This is an open source effort to create a similar experience as OpenAI's GPTs.
+This is an open-source effort to create a similar experience to OpenAI's GPTs.
 This builds upon [LangChain](https://github.com/langchain-ai/langchain), [LangServe](https://github.com/langchain-ai/langserve) and [LangSmith](https://smith.langchain.com/)
 This gives you more control over the LLM you use (choose between the 60+ that LangChain offers),
 the prompts you use (use LangSmith to debug those), and the tools you give it (choose from LangChain's 100+ tools, or easily write your own).
@@ -31,7 +31,7 @@ export OPENAI_API_KEY="sk-..."
 ```
 
 Set up [LangSmith](https://smith.langchain.com/).
-This is optional, but it will help with debugging, logging, monitoring.
+This is optional, but it will help with debugging, logging, and monitoring.
 Sign up at the link above and then set the relevant environment variables
 
 ```shell
@@ -73,9 +73,9 @@ As much as possible, we are striving for feature parity with OpenAI.
 - [x] Drafts - Save and share drafts of chatbots you're creating
   - Supports saving of configurations
 - [x] Publishing - publicly distribute your completed chatbot
-  - Can do by deploying via LangServe
+  - Can be done by deploying via LangServe
 - [x] Sharing - Set up and manage chatbot sharing
-  - Can do by deploying via LangServe
+  - Can be done by deploying via LangServe
 - [ ] Marketplace - Search and deploy chatbots created by other users
   - Coming soon
 
@@ -109,7 +109,7 @@ We have expose four agent types by default:
 
 We will work to add more when we have confidence they can work well.
 
-If you want to add your own LLM or agent configuration, or want to edit the existing ones, you can find them in `backend/packages/gizmo-agent/gizmo_agent/agent_types`
+If you want to add your own LLM or agent configuration or want to edit the existing ones, you can find them in `backend/packages/gizmo-agent/gizmo_agent/agent_types`
 
 #### Claude 2
 
@@ -138,7 +138,7 @@ We have enabled two tools by default:
 - DuckDuckGo Search
 - Python REPL (NOTE: this executes Python code directly in your environment and may not be safe)
 
-In practice, most teams we see define their own tools.
+In practice, most teams we see define their tools.
 This is easy to do within LangChain.
 See [this guide](https://python.langchain.com/docs/modules/agents/tools/custom_tools) for details on how to best do this.
 
@@ -156,7 +156,7 @@ yarn build
 
 You can deploy to GCP Cloud Run using the following command:
 
-First create a `.env.gcp.yaml` file with the contents from `.env.gcp.yaml.example` and fill in the values. Then run:
+First, create a `.env.gcp.yaml` file with the contents from `.env.gcp.yaml.example` and fill in the values. Then run:
 
 ```shell
 gcloud run deploy opengpts --source . --port 8001 --env-vars-file .env.gcp.yaml --allow-unauthenticated --region us-central1 --min-instances 1
