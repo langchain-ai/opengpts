@@ -3,6 +3,7 @@ import { Chat as ChatType } from "../hooks/useChatList";
 import { StreamStateProps } from "../hooks/useStreamState";
 import TypingBox from "./TypingBox";
 import { Message } from "./Message";
+import { useChatMessages } from "../hooks/useChatMessages";
 
 interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
   chat: ChatType;
@@ -10,21 +11,16 @@ interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
 }
 
 export function Chat(props: ChatProps) {
-  const messages = [
-    ...props.chat.messages,
-    ...(props.stream?.messages.filter(
-      (msg) => !props.chat.messages.includes(msg)
-    ) ?? []),
-  ];
+  const messages = useChatMessages(props.chat.thread_id, props.stream);
   useEffect(() => {
     scrollTo({
       top: document.body.scrollHeight,
       behavior: "smooth",
     });
-  }, [props.chat.messages, props.stream?.messages]);
+  }, [messages]);
   return (
     <div className="flex-1 flex flex-col items-stretch pb-[76px] pt-2">
-      {messages.map((msg, i) => (
+      {messages?.map((msg, i) => (
         <Message {...msg} key={i} />
       ))}
       {props.stream?.status === "inflight" && (

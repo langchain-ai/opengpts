@@ -3,23 +3,28 @@ import {
   ChatBubbleLeftIcon,
 } from "@heroicons/react/20/solid";
 import { cn } from "../utils/cn";
+import { useState } from "react";
 
 export default function TypingBox(props: {
-  onSubmit: (message: string) => void;
+  onSubmit: (message: string) => Promise<void>;
   disabled?: boolean;
 }) {
+  const [inflight, setInflight] = useState(false);
+  const disabled = props.disabled || inflight;
   return (
     <form
       className={cn(
         "mt-2 flex rounded-md shadow-sm",
         props.disabled && "opacity-50 cursor-not-allowed"
       )}
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
         if (props.disabled) return;
         const form = e.target as HTMLFormElement;
         const message = form.message.value;
-        props.onSubmit(message);
+        setInflight(true);
+        await props.onSubmit(message);
+        setInflight(false);
         form.message.value = "";
       }}
     >
@@ -38,6 +43,7 @@ export default function TypingBox(props: {
           autoComplete="off"
           className="block w-full rounded-none rounded-l-md border-0 py-1.5 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
           placeholder="Send a message"
+          readOnly={props.disabled}
         />
       </div>
       <button
@@ -49,7 +55,7 @@ export default function TypingBox(props: {
           className="-ml-0.5 h-5 w-5 text-gray-400"
           aria-hidden="true"
         />
-        Send
+        {inflight ? "Sending..." : "Send"}
       </button>
     </form>
   );

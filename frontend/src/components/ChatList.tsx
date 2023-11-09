@@ -40,9 +40,9 @@ export function ChatList(props: {
           .slice()
           .reverse()
           .map((chat) => (
-            <li key={chat.id}>
+            <li key={chat.thread_id}>
               <div
-                onClick={() => props.enterChat(chat.id)}
+                onClick={() => props.enterChat(chat.thread_id)}
                 className={cn(
                   chat === props.currentChat
                     ? "bg-gray-50 text-indigo-600"

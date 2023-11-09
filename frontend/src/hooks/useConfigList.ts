@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 export interface Config {
   assistant_id: string;
   name: string;
+  updated_at: string;
   config: {
     configurable?: {
       [key: string]: unknown;

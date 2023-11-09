@@ -19,7 +19,7 @@ class RunnableWithMessageHistory(RunnableBinding):
     input_key: str
 
     output_key: Optional[str]
-    history_key: str = "history"
+    history_key: str = "messages"
 
     def __init__(
         self,
@@ -27,7 +27,7 @@ class RunnableWithMessageHistory(RunnableBinding):
         factory: Callable[[str], BaseChatMessageHistory],
         input_key: str,
         output_key: Optional[str] = None,
-        history_key: str = "history",
+        history_key: str = "messages",
         **kwargs: Any,
     ) -> None:
         bound = RunnablePassthrough.assign(
@@ -45,13 +45,18 @@ class RunnableWithMessageHistory(RunnableBinding):
     def config_specs(self) -> Sequence[ConfigurableFieldSpec]:
         return super().config_specs + [
             ConfigurableFieldSpec(
-                id="session_id",
+                id="thread_id",
                 annotation=str,
                 name="",
                 description="",
                 default="",
             )
         ]
+
+    def config_schema(
+        self, *, include: Optional[Sequence[str]] = None
+    ) -> Type[BaseModel]:
+        return super(RunnableBinding, self).config_schema(include=include)
 
     def with_config(
         self,
@@ -105,21 +110,22 @@ class RunnableWithMessageHistory(RunnableBinding):
 
     def _merge_configs(self, *configs: Optional[RunnableConfig]) -> RunnableConfig:
         config = super()._merge_configs(*configs)
-        # extract session_id
+        print(config)
+        # extract thread_id
         config["configurable"] = config.get("configurable", {})
         try:
-            session_id = config["configurable"]["session_id"]
+            thread_id = config["configurable"]["thread_id"]
         except KeyError:
             example_input = {self.input_key: "foo"}
             raise ValueError(
-                "session_id is required when using .with_message_history()"
+                "thread_id is required when using .with_message_history()"
                 "\nPass it in as part of the config argument to .invoke() or .stream()"
-                f'\neg. chain.invoke({example_input}, {{"configurable": {{"session_id":'
+                f'\neg. chain.invoke({example_input}, {{"configurable": {{"thread_id":'
                 ' "123"}})'
             )
-        del config["configurable"]["session_id"]
+        del config["configurable"]["thread_id"]
         # attach message_history
         config["configurable"]["message_history"] = self.factory(  # type: ignore
-            session_id=session_id,
+            session_id=thread_id,
         )
         return config

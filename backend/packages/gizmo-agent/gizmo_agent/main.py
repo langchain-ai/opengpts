@@ -1,33 +1,23 @@
 import os
+from functools import partial
+from typing import Any, Mapping, Optional, Sequence
 
 from agent_executor import AgentExecutor
 from agent_executor.history import RunnableWithMessageHistory
-from langchain.pydantic_v1 import BaseModel, Field
-
-from langchain.schema.messages import AnyMessage
-
-
-from typing import Any, Mapping, Optional, Sequence
-
-from langchain.schema.runnable import (
-    RunnableBinding,
-    ConfigurableField,
-    ConfigurableFieldMultiOption,
-)
-from langchain.tools import BaseTool
 from gizmo_agent.agent_types import (
     GizmoAgentType,
     get_xml_agent,
     get_openai_function_agent,
 )
 from gizmo_agent.tools import AvailableTools, TOOLS, TOOL_OPTIONS, get_retrieval_tool
-from functools import partial
-
-from langchain.prompts.chat import SystemMessagePromptTemplate, MessagesPlaceholder
-from langchain.chat_models.openai import ChatOpenAI
-from langchain.schema.output_parser import StrOutputParser
-from langchain.memory.chat_message_histories import SQLChatMessageHistory
 from langchain.memory import RedisChatMessageHistory
+from langchain.pydantic_v1 import BaseModel, Field
+from langchain.schema.messages import AnyMessage
+from langchain.schema.runnable import (
+    RunnableBinding,
+    ConfigurableField,
+    ConfigurableFieldMultiOption,
+)
 
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
@@ -55,7 +45,9 @@ class ConfigurableAgent(RunnableBinding):
         for _tool in tools:
             if _tool == AvailableTools.RETRIEVAL:
                 if assistant_id is None:
-                    raise ValueError("assistant_id must be provided if Retrieval tool is used")
+                    raise ValueError(
+                        "assistant_id must be provided if Retrieval tool is used"
+                    )
                 _tools.append(get_retrieval_tool(assistant_id))
             else:
                 _tools.append(TOOLS[_tool])
@@ -127,8 +119,8 @@ if __name__ == "__main__":
 
     async def run():
         async for m in agent.astream_log(
-            {"input": HumanMessage(content="whats my name")},
-            config={"configurable": {"session_id": "test1"}},
+            {"input": HumanMessage(content="whats your name")},
+            config={"configurable": {"thread_id": "test1"}},
         ):
             print(m)
 

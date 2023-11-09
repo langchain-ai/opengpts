@@ -33,9 +33,11 @@ export function NewChat(props: NewChatProps) {
           </div>
         </main>
       </div>
-      <div className="fixed left-0 lg:left-72 bottom-0 right-0 p-4">
-        <TypingBox onSubmit={props.startChat} disabled={!props.currentConfig} />
-      </div>
+      {props.currentConfig && (
+        <div className="fixed left-0 lg:left-72 bottom-0 right-0 p-4">
+          <TypingBox onSubmit={props.startChat} />
+        </div>
+      )}
     </div>
   );
 }
