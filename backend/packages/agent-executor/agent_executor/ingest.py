@@ -40,37 +40,12 @@ def ingest_blob(
         for doc in docs:
             _update_document_metadata(doc, namespace)
         docs_to_index.extend(docs)
+
         if len(docs_to_index) >= batch_size:
             ids.extend(vectorstore.add_documents(docs_to_index))
             docs_to_index = []
 
-    if len(docs_to_index) >= batch_size:
-        ids.extend(vectorstore.add_documents(docs_to_index))
-
-    return ids
-
-
-async def aingest_blob(
-    blob: Blob,
-    parser: BaseBlobParser,
-    text_splitter: TextSplitter,
-    vectorstore: VectorStore,
-    namespace: str,
-    *,
-    batch_size: int = 100,
-) -> List[str]:
-    """Async ingest a document into the vectorstore."""
-    docs_to_index = []
-    ids = []
-    for document in parser.lazy_parse(blob):
-        docs = text_splitter.split_documents([document])
-        for doc in docs:
-            _update_document_metadata(doc, namespace)
-        if len(docs_to_index) >= batch_size:
-            ids.extend(vectorstore.add_documents(docs_to_index))
-            docs_to_index = []
-
-    if len(docs_to_index) >= batch_size:
+    if docs_to_index:
         ids.extend(vectorstore.add_documents(docs_to_index))
 
     return ids
