@@ -23,7 +23,7 @@ export function Chat(props: ChatProps) {
       {messages?.map((msg, i) => (
         <Message {...msg} key={i} />
       ))}
-      {props.stream?.status === "inflight" && (
+      {(props.stream?.status === "inflight" || messages === null) && (
         <div className="leading-6 mb-2 animate-pulse font-black text-gray-400 text-lg">
           ...
         </div>
