@@ -22,11 +22,6 @@ ingest_runnable = IngestRunnable(
     vectorstore=vstore,
     input_key="file_contents",
 ).configurable_fields(
-    user_id=ConfigurableField(
-        id="user_id",
-        annotation=str,
-        name="User ID",
-    ),
     assistant_id=ConfigurableField(
         id="assistant_id",
         annotation=str,

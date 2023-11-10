@@ -9,7 +9,6 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
     text_splitter: TextSplitter
     vectorstore: VectorStore
     input_key: str
-    user_id: Optional[str]
     assistant_id: Optional[str]
 
     class Config:
@@ -19,9 +18,7 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
     def namespace(self) -> str:
         if self.assistant_id is None:
             raise ValueError("assistant_id must be provided")
-        return (
-            f"{self.user_id}:{self.assistant_id}" if self.user_id else self.assistant_id
-        )
+        return self.assistant_id
 
     def invoke(
         self, input: BinaryIO, config: Optional[RunnableConfig] = None

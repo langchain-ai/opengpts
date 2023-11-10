@@ -10,6 +10,8 @@ export interface Config {
       [key: string]: unknown;
     };
   };
+  public: boolean;
+  mine?: boolean;
 }
 
 export interface ConfigListProps {
@@ -18,7 +20,8 @@ export interface ConfigListProps {
   saveConfig: (
     key: string,
     config: Config["config"],
-    files: File[]
+    files: File[],
+    isPublic: boolean
   ) => Promise<void>;
   enterConfig: (id: string | null) => void;
 }
@@ -44,12 +47,29 @@ export function useConfigList(): ConfigListProps {
 
   useEffect(() => {
     async function fetchConfigs() {
-      const configs = await fetch("/assistants/", {
-        headers: {
-          Accept: "application/json",
-        },
-      }).then((r) => r.json());
-      setConfigs(configs);
+      const searchParams = new URLSearchParams(window.location.search);
+      const shared_id = searchParams.get("shared_id");
+      const [myConfigs, publicConfigs] = await Promise.all([
+        fetch("/assistants/", {
+          headers: {
+            Accept: "application/json",
+          },
+        })
+          .then((r) => r.json())
+          .then((li) => li.map((c: Config) => ({ ...c, mine: true }))),
+        fetch(
+          "/assistants/public/" + (shared_id ? `?shared_id=${shared_id}` : ""),
+          {
+            headers: {
+              Accept: "application/json",
+            },
+          }
+        ).then((r) => r.json()),
+      ]);
+      setConfigs(myConfigs.concat(publicConfigs));
+      if (publicConfigs.find((a: Config) => a.assistant_id === shared_id)) {
+        setCurrent(shared_id);
+      }
     }
 
     fetchConfigs();
@@ -60,6 +80,7 @@ export function useConfigList(): ConfigListProps {
       name: string,
       config: Config["config"],
       files: File[],
+      isPublic: boolean,
       assistant_id: string = crypto.randomUUID()
     ) => {
       const formData = files.reduce((formData, file) => {
@@ -73,7 +94,7 @@ export function useConfigList(): ConfigListProps {
       const [saved] = await Promise.all([
         fetch(`/assistants/${assistant_id}`, {
           method: "PUT",
-          body: JSON.stringify({ name, config }),
+          body: JSON.stringify({ name, config, public: isPublic }),
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -86,7 +107,7 @@ export function useConfigList(): ConfigListProps {
             })
           : Promise.resolve(),
       ]);
-      setConfigs(saved);
+      setConfigs({ ...saved, mine: true });
       setCurrent(saved.assistant_id);
     },
     []

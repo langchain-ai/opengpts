@@ -142,6 +142,7 @@ export function Config(props: {
       "text/*": [".txt", ".csv"],
     },
   });
+  const [isPublic, setPublic] = useState(props.config?.public ?? false);
   useEffect(() => {
     setValues(props.config?.config ?? props.configDefaults);
   }, [props.config, props.configDefaults]);
@@ -154,10 +155,7 @@ export function Config(props: {
         <span className="font-normal">{props.config ? "(read-only)" : ""}</span>
       </div>
       <form
-        className={cn(
-          "flex flex-col gap-8",
-          readonly && "opacity-50 cursor-not-allowed"
-        )}
+        className={cn("flex flex-col gap-8")}
         onSubmit={async (e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -165,71 +163,113 @@ export function Config(props: {
           const key = form.key.value;
           if (!key) return;
           setInflight(true);
-          await props.saveConfig(key, values!, dropzone.acceptedFiles);
+          await props.saveConfig(
+            key,
+            values!,
+            dropzone.acceptedFiles,
+            isPublic
+          );
           setInflight(false);
         }}
       >
-        {Object.entries(
-          props.configSchema?.properties.configurable.properties ?? {}
-        ).map(([key, value]) => {
-          const title = value.title;
-          if (value.allOf?.length === 1) {
-            value = value.allOf[0];
-          }
-          if (key === "agent_type") {
-            return (
-              <SingleOptionField
-                key={key}
-                id={key}
-                field={value}
-                title={title}
-                value={values?.configurable?.[key] as string}
-                setValue={(value: string) =>
-                  setValues({
-                    ...values,
-                    configurable: { ...values!.configurable, [key]: value },
-                  })
-                }
-                readonly={readonly}
-              />
-            );
-          } else if (key === "system_message") {
-            return (
-              <StringField
-                key={key}
-                id={key}
-                field={value}
-                title={title}
-                value={values?.configurable?.[key] as string}
-                setValue={(value: string) =>
-                  setValues({
-                    ...values,
-                    configurable: { ...values!.configurable, [key]: value },
-                  })
-                }
-                readonly={readonly}
-              />
-            );
-          } else if (key === "tools") {
-            return (
-              <MultiOptionField
-                key={key}
-                id={key}
-                field={value}
-                title={title}
-                value={values?.configurable?.[key] as string[]}
-                setValue={(value: string[]) =>
-                  setValues({
-                    ...values,
-                    configurable: { ...values!.configurable, [key]: value },
-                  })
-                }
-                readonly={readonly}
-              />
-            );
-          }
-        })}
-        {!props.config && <FileUploadDropzone state={dropzone} />}
+        <div
+          className={cn(
+            "flex flex-col gap-8",
+            readonly && "opacity-50 cursor-not-allowed"
+          )}
+        >
+          {Object.entries(
+            props.configSchema?.properties.configurable.properties ?? {}
+          ).map(([key, value]) => {
+            const title = value.title;
+            if (value.allOf?.length === 1) {
+              value = value.allOf[0];
+            }
+            if (key === "agent_type") {
+              return (
+                <SingleOptionField
+                  key={key}
+                  id={key}
+                  field={value}
+                  title={title}
+                  value={values?.configurable?.[key] as string}
+                  setValue={(value: string) =>
+                    setValues({
+                      ...values,
+                      configurable: { ...values!.configurable, [key]: value },
+                    })
+                  }
+                  readonly={readonly}
+                />
+              );
+            } else if (key === "system_message") {
+              return (
+                <StringField
+                  key={key}
+                  id={key}
+                  field={value}
+                  title={title}
+                  value={values?.configurable?.[key] as string}
+                  setValue={(value: string) =>
+                    setValues({
+                      ...values,
+                      configurable: { ...values!.configurable, [key]: value },
+                    })
+                  }
+                  readonly={readonly}
+                />
+              );
+            } else if (key === "tools") {
+              return (
+                <MultiOptionField
+                  key={key}
+                  id={key}
+                  field={value}
+                  title={title}
+                  value={values?.configurable?.[key] as string[]}
+                  setValue={(value: string[]) =>
+                    setValues({
+                      ...values,
+                      configurable: { ...values!.configurable, [key]: value },
+                    })
+                  }
+                  readonly={readonly}
+                />
+              );
+            }
+          })}
+          {!props.config && <FileUploadDropzone state={dropzone} />}
+          <SingleOptionField
+            id="public"
+            field={{
+              type: "string",
+              title: "public",
+              description: "",
+              enum: ["Yes", "No"],
+            }}
+            title="Create a public link?"
+            value={isPublic ? "Yes" : "No"}
+            setValue={(value: string) => setPublic(value === "Yes")}
+            readonly={readonly}
+          />
+        </div>
+        {props.config?.public && (
+          <div
+            className="self-start rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigator.clipboard.writeText(
+                window.location.href +
+                  "?shared_id=" +
+                  props.config?.assistant_id
+              );
+              window.alert("Copied to clipboard!");
+            }}
+          >
+            Copy Public Link
+          </div>
+        )}
         {!props.config && (
           <div className="flex flex-row">
             <div className="relative flex flex-grow items-stretch focus-within:z-10">
