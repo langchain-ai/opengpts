@@ -21,7 +21,6 @@ def get_openai_function_agent(tools, system_message, gpt_4: bool = False, azure:
         [
             ("system", system_message),
             MessagesPlaceholder(variable_name="messages"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
     )
     if tools:
@@ -31,13 +30,7 @@ def get_openai_function_agent(tools, system_message, gpt_4: bool = False, azure:
     else:
         llm_with_tools = llm
     agent = (
-        {
-            "messages": lambda x: x["messages"],
-            "agent_scratchpad": lambda x: format_to_openai_functions(
-                x["intermediate_steps"]
-            ),
-        }
-        | prompt
+        prompt
         | llm_with_tools
         | OpenAIFunctionsAgentOutputParser()
     )
