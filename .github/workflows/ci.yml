@@ -8,7 +8,8 @@ on:
     paths:
       - '.github/actions/poetry_setup/action.yml'
       - '.github/workflows/_lint.yml'
-      - '.github/workflows/ci.yml'
+      - '.github/workflows/_test.yml'
+      - '.github/workflows/langserve_ci.yml'
       - 'backend/**'
   workflow_dispatch:  # Allows to trigger the workflow manually in GitHub UI
 
