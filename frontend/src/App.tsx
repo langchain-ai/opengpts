@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Chat } from "./components/Chat";
 import { ChatList } from "./components/ChatList";
 import { Layout } from "./components/Layout";
@@ -18,7 +18,7 @@ function App() {
   const startTurn = useCallback(
     async (message: string, chat: ChatType | null = currentChat) => {
       if (!chat) return;
-      const config = configs.find(
+      const config = configs?.find(
         (c) => c.assistant_id === chat.assistant_id
       )?.config;
       if (!config) return;
@@ -89,7 +89,12 @@ function App() {
       setSidebarOpen={setSidebarOpen}
       sidebar={
         <ChatList
-          chats={chats}
+          chats={useMemo(() => {
+            if (configs === null || chats === null) return null;
+            return chats.filter((c) =>
+              configs.some((config) => config.assistant_id === c.assistant_id)
+            );
+          }, [chats, configs])}
           currentChat={currentChat}
           enterChat={selectChat}
         />

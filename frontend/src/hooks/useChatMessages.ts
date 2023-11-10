@@ -48,13 +48,7 @@ export function useChatMessages(
   }, [stream?.status]);
 
   return useMemo(() => {
-    console.log(
-      "useMemo",
-      stream?.messages,
-      messages?.slice(-(stream?.messages?.length ?? 0)),
-      JSON.stringify(stream?.messages),
-      JSON.stringify(messages?.slice(-(stream?.messages?.length ?? 0)))
-    );
+    // TODO replace this with less hacky logic
     const ignoreStream =
       !stream ||
       JSON.stringify(stream.messages) ===
