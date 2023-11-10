@@ -62,8 +62,8 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          echo "Running extended tests, installing dependencies with poetry..."
-          poetry install --with test,lint --extras all
+          echo "Running tests, installing dependencies with poetry..."
+          poetry install --with test,lint
 
       - name: Run tests
         run: make test
