@@ -3,6 +3,13 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from tests.unit_tests.fixtures import get_sample_paths
 from tests.unit_tests.utils import InMemoryVectorStore
+import base64
+
+
+def _create_file_contents(content: str) -> str:
+    """Create file contents."""
+    # lots of overhead here so that it can be passed as JSON...
+    return base64.b64encode(content.encode("utf-8")).decode("utf-8")
 
 
 def test_ingestion_runnable() -> None:
@@ -15,7 +22,9 @@ def test_ingestion_runnable() -> None:
         input_key="file_contents",
         namespace="test1",
     )
-    ids = runnable.invoke({"file_contents": "This is a test file."})
+    ids = runnable.invoke(
+        {"file_contents": _create_file_contents("This is a test file.")}
+    )
     assert len(ids) == 1
 
 
