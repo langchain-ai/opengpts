@@ -1,5 +1,4 @@
-from uuid import uuid4
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from gizmo_agent import agent, ingest_runnable
 from langserve import add_routes
