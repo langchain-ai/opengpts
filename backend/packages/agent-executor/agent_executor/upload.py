@@ -3,8 +3,11 @@
 For now this code assumes that the content is a base64 encoded string.
 
 The details here might change in the future.
+
+For the time being, upload and ingestion are coupled
 """
 from __future__ import annotations
+
 import base64
 from typing import Optional, Sequence
 
@@ -13,7 +16,6 @@ from langchain.schema.runnable import RunnableConfig, RunnableSerializable
 from langchain.schema.runnable.utils import ConfigurableFieldSpec
 from langchain.schema.vectorstore import VectorStore
 from langchain.text_splitter import TextSplitter
-
 from typing_extensions import NotRequired, TypedDict
 
 from agent_executor.ingest import ingest_blob
@@ -36,7 +38,7 @@ def _guess_mimetype(file_bytes: bytes) -> str:
 
 def _convert_ingestion_input_to_blob(ingestion_input: IngestionInput) -> Blob:
     """Convert ingestion input to blob."""
-    base64_file = ingestion_input["base64_file"]
+    base64_file = ingestion_input["file_contents"]
     file_data = base64.decodebytes(base64_file.encode("utf-8"))
     mimetype = _guess_mimetype(file_data)
     filename = ingestion_input["filename"] if "filename" in ingestion_input else None
@@ -53,7 +55,8 @@ def _convert_ingestion_input_to_blob(ingestion_input: IngestionInput) -> Blob:
 class IngestionInput(TypedDict):
     """Input to the ingestion runnable."""
 
-    file_contents: str  # base64 encoded file
+    # For now the file contents are base 64 encoded files
+    file_contents: str
     filename: NotRequired[str]
 
 

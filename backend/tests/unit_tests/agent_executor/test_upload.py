@@ -1,5 +1,4 @@
-from agent_executor.parsing import _guess_mimetype
-from agent_executor.upload import IngestRunnable
+from agent_executor.upload import IngestRunnable, _guess_mimetype
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from tests.unit_tests.fixtures import get_sample_paths
