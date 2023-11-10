@@ -20,7 +20,6 @@ vstore = Redis(
 ingest_runnable = IngestRunnable(
     text_splitter=RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200),
     vectorstore=vstore,
-    input_key="file_contents",
 ).configurable_fields(
     namespace=ConfigurableField(id="namespace", name="Namespace"),
 )

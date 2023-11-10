@@ -1,31 +1,23 @@
-import base64
-from typing import List, Optional, Sequence
+"""API to deal with file uploads via a runnable.
 
-from langchain.document_loaders.base import BaseBlobParser
+For now this code assumes that the content is a base64 encoded string.
+
+The details here might change in the future.
+"""
+from __future__ import annotations
+import base64
+from typing import Optional, Sequence
+
 from langchain.document_loaders.blob_loaders.schema import Blob
-from langchain.schema import Document
 from langchain.schema.runnable import RunnableConfig, RunnableSerializable
 from langchain.schema.runnable.utils import ConfigurableFieldSpec
 from langchain.schema.vectorstore import VectorStore
 from langchain.text_splitter import TextSplitter
 
-# PUBLIC API
 from typing_extensions import NotRequired, TypedDict
 
+from agent_executor.ingest import ingest_blob
 from agent_executor.parsing import MIMETYPE_BASED_PARSER
-
-
-class IngestionInput(TypedDict):
-    """Input to the ingestion runnable."""
-
-    base64_file: str
-    filename: NotRequired[str]
-
-
-class IngestionOutput(TypedDict):
-    """Output of the ingestion runnable."""
-
-    success: bool
 
 
 def _guess_mimetype(file_bytes: bytes) -> str:
@@ -55,10 +47,25 @@ def _convert_ingestion_input_to_blob(ingestion_input: IngestionInput) -> Blob:
     )
 
 
+# PUBLIC API
+
+
+class IngestionInput(TypedDict):
+    """Input to the ingestion runnable."""
+
+    file_contents: str  # base64 encoded file
+    filename: NotRequired[str]
+
+
+class IngestionOutput(TypedDict):
+    """Output of the ingestion runnable."""
+
+    success: bool
+
+
 class IngestRunnable(RunnableSerializable[IngestionInput, IngestionOutput]):
     text_splitter: TextSplitter
     vectorstore: VectorStore
-    input_key: str
     namespace: str = ""
 
     class Config:
@@ -83,7 +90,8 @@ class IngestRunnable(RunnableSerializable[IngestionInput, IngestionOutput]):
 
     @property
     def config_specs(self) -> Sequence[ConfigurableFieldSpec]:
-        return super().config_specs + [
+        """Configurable fields for this runnable."""
+        return list(super().config_specs) + [
             ConfigurableFieldSpec(
                 id="namespace",
                 annotation=str,
@@ -92,61 +100,3 @@ class IngestRunnable(RunnableSerializable[IngestionInput, IngestionOutput]):
                 default="",
             )
         ]
-
-
-def _update_document_metadata(document: Document, namespace: str) -> None:
-    """Mutation in place that adds a namespace to the document metadata."""
-    document.metadata["namespace"] = namespace
-
-
-def ingest_blob(
-    blob: Blob,
-    parser: BaseBlobParser,
-    text_splitter: TextSplitter,
-    vectorstore: VectorStore,
-    namespace: str,
-    *,
-    batch_size: int = 100,
-) -> List[str]:
-    """Ingest a document into the vectorstore."""
-    docs_to_index = []
-    ids = []
-    for document in parser.lazy_parse(blob):
-        docs = text_splitter.split_documents([document])
-        for doc in docs:
-            _update_document_metadata(doc, namespace)
-        docs_to_index.extend(docs)
-        if len(docs_to_index) >= batch_size:
-            ids.extend(vectorstore.add_documents(docs_to_index))
-            docs_to_index = []
-
-    if len(docs_to_index) >= batch_size:
-        ids.extend(vectorstore.add_documents(docs_to_index))
-
-    return ids
-
-
-async def aingest_blob(
-    blob: Blob,
-    parser: BaseBlobParser,
-    text_splitter: TextSplitter,
-    vectorstore: VectorStore,
-    namespace: str,
-    *,
-    batch_size: int = 100,
-) -> List[str]:
-    """Async ingest a document into the vectorstore."""
-    docs_to_index = []
-    ids = []
-    for document in parser.lazy_parse(blob):
-        docs = text_splitter.split_documents([document])
-        for doc in docs:
-            _update_document_metadata(doc, namespace)
-        if len(docs_to_index) >= batch_size:
-            ids.extend(vectorstore.add_documents(docs_to_index))
-            docs_to_index = []
-
-    if len(docs_to_index) >= batch_size:
-        ids.extend(vectorstore.add_documents(docs_to_index))
-
-    return ids
