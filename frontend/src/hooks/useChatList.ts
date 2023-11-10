@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
+import orderBy from "lodash/orderBy";
 
 export interface Message {
   type: string;
@@ -31,8 +32,19 @@ export interface ChatListProps {
   enterChat: (id: string | null) => void;
 }
 
+function chatsReducer(state: Chat[], action: Chat | Chat[]): Chat[] {
+  if (!Array.isArray(action)) {
+    const newChat = action;
+    action = [
+      ...state.filter((c) => c.thread_id !== newChat.thread_id),
+      newChat,
+    ];
+  }
+  return orderBy(action, "updated_at", "desc");
+}
+
 export function useChatList(): ChatListProps {
-  const [chats, setChats] = useState<Chat[]>([]);
+  const [chats, setChats] = useReducer(chatsReducer, []);
   const [current, setCurrent] = useState<string | null>(null);
 
   useEffect(() => {
@@ -62,10 +74,7 @@ export function useChatList(): ChatListProps {
           Accept: "application/json",
         },
       }).then((r) => r.json());
-      setChats((chats) => [
-        ...chats.filter((c) => c.thread_id !== saved.thread_id),
-        saved,
-      ]);
+      setChats(saved);
       setCurrent(saved.thread_id);
       return saved;
     },

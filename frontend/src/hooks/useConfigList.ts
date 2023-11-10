@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
+import orderBy from "lodash/orderBy";
 
 export interface Config {
   assistant_id: string;
@@ -18,8 +19,19 @@ export interface ConfigListProps {
   enterConfig: (id: string | null) => void;
 }
 
+function configsReducer(state: Config[], action: Config | Config[]): Config[] {
+  if (!Array.isArray(action)) {
+    const newConfig = action;
+    action = [
+      ...state.filter((c) => c.assistant_id !== newConfig.assistant_id),
+      newConfig,
+    ];
+  }
+  return orderBy(action, "updated_at", "desc");
+}
+
 export function useConfigList(): ConfigListProps {
-  const [configs, setConfigs] = useState<Config[]>([]);
+  const [configs, setConfigs] = useReducer(configsReducer, []);
   const [current, setCurrent] = useState<string | null>(null);
 
   useEffect(() => {
@@ -49,10 +61,7 @@ export function useConfigList(): ConfigListProps {
           Accept: "application/json",
         },
       }).then((r) => r.json());
-      setConfigs((configs) => [
-        ...configs.filter((c) => c.assistant_id !== saved.assistant_id),
-        saved,
-      ]);
+      setConfigs(saved);
       setCurrent(saved.assistant_id);
     },
     []
