@@ -48,7 +48,6 @@ def _convert_ingestion_input_to_blob(data: BinaryIO) -> Blob:
 class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
     text_splitter: TextSplitter
     vectorstore: VectorStore
-    input_key: str
     assistant_id: Optional[str]
 
     class Config:
