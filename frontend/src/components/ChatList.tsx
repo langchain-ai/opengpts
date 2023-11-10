@@ -36,7 +36,7 @@ export function ChatList(props: {
         Your chats
       </div>
       <ul role="list" className="-mx-2 mt-2 space-y-1">
-        {props.chats.map((chat) => (
+        {props.chats?.map((chat) => (
           <li key={chat.thread_id}>
             <div
               onClick={() => props.enterChat(chat.thread_id)}
@@ -60,7 +60,11 @@ export function ChatList(props: {
               <span className="truncate">{chat.name}</span>
             </div>
           </li>
-        ))}
+        )) ?? (
+          <li className="leading-6 p-2 animate-pulse font-black text-gray-400 text-lg">
+            ...
+          </li>
+        )}
       </ul>
     </>
   );

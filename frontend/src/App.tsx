@@ -18,7 +18,7 @@ function App() {
   const startTurn = useCallback(
     async (message: string, chat: ChatType | null = currentChat) => {
       if (!chat) return;
-      const config = configs.find(
+      const config = configs?.find(
         (c) => c.assistant_id === chat.assistant_id
       )?.config;
       if (!config) return;

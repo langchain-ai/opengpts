@@ -36,7 +36,7 @@ export function ConfigList(props: {
         Your Saved Bots
       </div>
       <ul role="list" className="-mx-2 mt-2 space-y-1">
-        {props.configs.map((assistant) => (
+        {props.configs?.map((assistant) => (
           <li key={assistant.assistant_id}>
             <div
               onClick={() => props.enterConfig(assistant.assistant_id)}
@@ -60,7 +60,11 @@ export function ConfigList(props: {
               <span className="truncate">{assistant.name}</span>
             </div>
           </li>
-        ))}
+        )) ?? (
+          <li className="leading-6 p-2 animate-pulse font-black text-gray-400 text-lg">
+            ...
+          </li>
+        )}
       </ul>
     </>
   );

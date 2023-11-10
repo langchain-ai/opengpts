@@ -22,7 +22,7 @@ export interface Chat {
 }
 
 export interface ChatListProps {
-  chats: Chat[];
+  chats: Chat[] | null;
   currentChat: Chat | null;
   createChat: (
     name: string,
@@ -32,7 +32,11 @@ export interface ChatListProps {
   enterChat: (id: string | null) => void;
 }
 
-function chatsReducer(state: Chat[], action: Chat | Chat[]): Chat[] {
+function chatsReducer(
+  state: Chat[] | null,
+  action: Chat | Chat[]
+): Chat[] | null {
+  state = state ?? [];
   if (!Array.isArray(action)) {
     const newChat = action;
     action = [
@@ -44,7 +48,7 @@ function chatsReducer(state: Chat[], action: Chat | Chat[]): Chat[] {
 }
 
 export function useChatList(): ChatListProps {
-  const [chats, setChats] = useReducer(chatsReducer, []);
+  const [chats, setChats] = useReducer(chatsReducer, null);
   const [current, setCurrent] = useState<string | null>(null);
 
   useEffect(() => {
@@ -87,7 +91,7 @@ export function useChatList(): ChatListProps {
 
   return {
     chats,
-    currentChat: chats.find((c) => c.thread_id === current) || null,
+    currentChat: chats?.find((c) => c.thread_id === current) || null,
     createChat,
     enterChat,
   };

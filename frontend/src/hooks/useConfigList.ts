@@ -13,13 +13,17 @@ export interface Config {
 }
 
 export interface ConfigListProps {
-  configs: Config[];
+  configs: Config[] | null;
   currentConfig: Config | null;
   saveConfig: (key: string, config: Config["config"]) => Promise<void>;
   enterConfig: (id: string | null) => void;
 }
 
-function configsReducer(state: Config[], action: Config | Config[]): Config[] {
+function configsReducer(
+  state: Config[] | null,
+  action: Config | Config[]
+): Config[] | null {
+  state = state ?? [];
   if (!Array.isArray(action)) {
     const newConfig = action;
     action = [
@@ -31,7 +35,7 @@ function configsReducer(state: Config[], action: Config | Config[]): Config[] {
 }
 
 export function useConfigList(): ConfigListProps {
-  const [configs, setConfigs] = useReducer(configsReducer, []);
+  const [configs, setConfigs] = useReducer(configsReducer, null);
   const [current, setCurrent] = useState<string | null>(null);
 
   useEffect(() => {
@@ -73,7 +77,7 @@ export function useConfigList(): ConfigListProps {
 
   return {
     configs,
-    currentConfig: configs.find((c) => c.assistant_id === current) || null,
+    currentConfig: configs?.find((c) => c.assistant_id === current) || null,
     saveConfig,
     enterConfig,
   };
