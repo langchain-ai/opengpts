@@ -1,9 +1,9 @@
+from agent_executor.parsing import _guess_mimetype
+from agent_executor.upload import IngestRunnable
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-from agent_executor.upload import IngestRunnable
-from agent_executor.upload import _guess_mimetype
-from tests.unit_tests.agent_executor.utils import InMemoryVectorStore
-from tests.unit_tests.fixtures import list_fixtures
+from tests.unit_tests.fixtures import get_sample_paths
+from tests.unit_tests.utils import InMemoryVectorStore
 
 
 def test_ingestion_runnable() -> None:
@@ -23,13 +23,13 @@ def test_ingestion_runnable() -> None:
 def test_mimetype_guessing() -> None:
     """Verify mimetype guessing for all fixtures."""
     name_to_mime = {}
-    for file in sorted(list_fixtures()):
+    for file in sorted(get_sample_paths()):
         data = file.read_bytes()
         name_to_mime[file.name] = _guess_mimetype(data)
 
     assert {
         "sample.docx": (
-            "application/vnd.openxmlformats-officedocument." "wordprocessingml.document"
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         ),
         "sample.epub": "application/epub+zip",
         "sample.html": "text/html",

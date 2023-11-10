@@ -3,19 +3,29 @@ from typing import List, Optional, Sequence
 
 from langchain.document_loaders.base import BaseBlobParser
 from langchain.document_loaders.blob_loaders.schema import Blob
-from langchain.document_loaders.parsers import PyMuPDFParser
-from langchain.document_loaders.parsers.generic import MimeTypeBasedParser
-from langchain.document_loaders.parsers.html import BS4HTMLParser
-from langchain.document_loaders.parsers.msword import MsWordParser
-from langchain.document_loaders.parsers.txt import TextParser
 from langchain.schema import Document
 from langchain.schema.runnable import RunnableConfig, RunnableSerializable
 from langchain.schema.runnable.utils import ConfigurableFieldSpec
 from langchain.schema.vectorstore import VectorStore
 from langchain.text_splitter import TextSplitter
-from typing_extensions import NotRequired
+
 # PUBLIC API
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
+
+from agent_executor.parsing import MIMETYPE_BASED_PARSER
+
+
+class IngestionInput(TypedDict):
+    """Input to the ingestion runnable."""
+
+    base64_file: str
+    filename: NotRequired[str]
+
+
+class IngestionOutput(TypedDict):
+    """Output of the ingestion runnable."""
+
+    success: bool
 
 
 def _guess_mimetype(file_bytes: bytes) -> str:
@@ -30,35 +40,6 @@ def _guess_mimetype(file_bytes: bytes) -> str:
     mime = magic.Magic(mime=True)
     mime_type = mime.from_buffer(file_bytes)
     return mime_type
-
-
-def _get_default_parser() -> BaseBlobParser:
-    """Get default mime-type based parser."""
-    return MimeTypeBasedParser(
-        handlers={
-            "application/pdf": PyMuPDFParser(),
-            "text/plain": TextParser(),
-            "text/html": BS4HTMLParser(),
-            "application/msword": MsWordParser(),
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": (
-                MsWordParser()
-            ),
-        },
-        fallback_parser=None,
-    )
-
-
-class IngestionInput(TypedDict):
-    """Input to the ingestion runnable."""
-
-    base64_file: str
-    filename: NotRequired[str]
-
-
-class IngestionOutput(TypedDict):
-    """Output of the ingestion runnable."""
-
-    success: bool
 
 
 def _convert_ingestion_input_to_blob(ingestion_input: IngestionInput) -> Blob:
@@ -93,7 +74,7 @@ class IngestRunnable(RunnableSerializable[IngestionInput, IngestionOutput]):
         blob = _convert_ingestion_input_to_blob(input)
         ingest_blob(
             blob,
-            _get_default_parser(),
+            MIMETYPE_BASED_PARSER,
             self.text_splitter,
             self.vectorstore,
             namespace=self.namespace,

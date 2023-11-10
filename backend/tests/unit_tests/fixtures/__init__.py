@@ -6,6 +6,6 @@ HERE = Path(__file__).parent
 # PUBLIC API
 
 
-def list_fixtures() -> List[Path]:
+def get_sample_paths() -> List[Path]:
     """List all fixtures."""
     return list(HERE.glob("sample.*"))
