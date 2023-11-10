@@ -68,8 +68,6 @@ export function useStreamState(): StreamStateProps {
     [controller]
   );
 
-  console.log("useStreamState", current);
-
   return {
     startStream,
     stopStream: controller ? stopStream : undefined,
