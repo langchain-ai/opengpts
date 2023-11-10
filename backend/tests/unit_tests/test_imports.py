@@ -1,5 +1,4 @@
 """Shallow tests that make sure we can at least import the code."""
-import os
 
 import pytest
 from pytest import MonkeyPatch
