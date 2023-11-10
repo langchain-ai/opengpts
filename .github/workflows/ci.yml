@@ -80,7 +80,12 @@ jobs:
       - name: Run tests
         run: make test
         env:
-          REDIS_URL: "redis://redis:6379"
+          # Adding a DB number to match unit tests
+          # Unit tests use DB 3, so user doesn't accidentally wipe their data
+          # if they run the tests against a real redis instance.
+          # Need to follow up and swap out default port numbers and add `test`
+          # password
+          REDIS_URL: "redis://redis:6379/3"
       - name: Ensure the tests did not create any additional files
         shell: bash
         run: |
