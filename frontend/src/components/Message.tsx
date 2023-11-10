@@ -78,7 +78,7 @@ function Function(props: {
   );
 }
 
-export function Message(props: MessageType) {
+export function Message(props: MessageType & { runId?: string }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="leading-6 flex flex-row mb-8">
@@ -89,6 +89,10 @@ export function Message(props: MessageType) {
         )}
       >
         {props.type}
+        {/* TODO display feedback buttons and run link */}
+        {/* {props.runId && (
+          <span className="text-gray-500 ml-1">({props.runId})</span>
+        )} */}
       </div>
       <div className="flex-1">
         {props.type === "function" && (

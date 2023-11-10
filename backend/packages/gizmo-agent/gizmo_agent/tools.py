@@ -3,6 +3,7 @@ from enum import Enum
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import DuckDuckGoSearchRun
 from langchain.tools.retriever import create_retriever_tool
+from langchain.vectorstores.redis import RedisFilter
 
 from gizmo_agent.ingest import vstore
 
@@ -21,7 +22,11 @@ If the user is referencing particular files, that is often a good hint that info
 
 def get_retrieval_tool(assistant_id: str):
     return create_retriever_tool(
-        vstore.as_retriever(), "Retriever", RETRIEVER_DESCRIPTION
+        vstore.as_retriever(
+            search_kwargs={"filter": RedisFilter.tag("namespace") == assistant_id}
+        ),
+        "Retriever",
+        RETRIEVER_DESCRIPTION,
     )
 
 

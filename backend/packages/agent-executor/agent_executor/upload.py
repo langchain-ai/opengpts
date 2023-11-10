@@ -10,6 +10,18 @@ from __future__ import annotations
 
 import base64
 from typing import Optional, Sequence
+import base64
+from typing import Optional, Sequence
+
+from langchain.document_loaders.blob_loaders.schema import Blob
+from langchain.schema.runnable import RunnableConfig, RunnableSerializable
+from langchain.schema.runnable.utils import ConfigurableFieldSpec
+from langchain.schema.vectorstore import VectorStore
+from langchain.text_splitter import TextSplitter
+from typing_extensions import NotRequired, TypedDict
+
+from agent_executor.ingest import ingest_blob
+from agent_executor.parsing import MIMETYPE_BASED_PARSER
 
 from langchain.document_loaders.blob_loaders.schema import Blob
 from langchain.schema.runnable import RunnableConfig, RunnableSerializable
@@ -49,57 +61,89 @@ def _convert_ingestion_input_to_blob(ingestion_input: IngestionInput) -> Blob:
     )
 
 
-# PUBLIC API
 
 
-class IngestionInput(TypedDict):
-    """Input to the ingestion runnable."""
+from typing import Any, BinaryIO, List, Optional
 
-    # For now the file contents are base 64 encoded files
-    file_contents: str
-    filename: NotRequired[str]
-
-
-class IngestionOutput(TypedDict):
-    """Output of the ingestion runnable."""
-
-    success: bool
+from langchain.schema.runnable import RunnableConfig, RunnableSerializable
+from langchain.schema.vectorstore import VectorStore
+from langchain.text_splitter import TextSplitter
 
 
-class IngestRunnable(RunnableSerializable[IngestionInput, IngestionOutput]):
+class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
     text_splitter: TextSplitter
     vectorstore: VectorStore
-    namespace: str = ""
+    input_key: str
+    assistant_id: Optional[str]
 
     class Config:
         arbitrary_types_allowed = True
 
-    def invoke(
-        self, input: IngestionInput, config: Optional[RunnableConfig] = None
-    ) -> IngestionOutput:
-        """Ingest a document into the vectorstore."""
-        if not self.namespace:
-            raise ValueError("namespace must be provided")
+    @property
+    def namespace(self) -> str:
+        if self.assistant_id is None:
+            raise ValueError("assistant_id must be provided")
+        return self.assistant_id
 
-        blob = _convert_ingestion_input_to_blob(input)
-        ingest_blob(
-            blob,
-            MIMETYPE_BASED_PARSER,
-            self.text_splitter,
-            self.vectorstore,
-            namespace=self.namespace,
+    def invoke(
+        self, input: BinaryIO, config: Optional[RunnableConfig] = None
+    ) -> List[str]:
+        return self.batch([input], config)
+
+    def batch(
+        self,
+        inputs: List[BinaryIO],
+        config: RunnableConfig | List[RunnableConfig] | None = None,
+        *,
+        return_exceptions: bool = False,
+        **kwargs: Any | None,
+    ) -> List:
+        docs = self.text_splitter.create_documents(
+            # TODO change this line to accept binary formats
+            [part.read().decode() for part in inputs],
+            [{"namespace": self.namespace}],
         )
-        return {"success": True}
+        return self.vectorstore.add_documents(docs)
+
+
+from typing import Any, BinaryIO, List, Optional
+
+from langchain.schema.runnable import RunnableConfig, RunnableSerializable
+from langchain.schema.vectorstore import VectorStore
+from langchain.text_splitter import TextSplitter
+
+
+class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
+    text_splitter: TextSplitter
+    vectorstore: VectorStore
+    input_key: str
+    assistant_id: Optional[str]
+
+    class Config:
+        arbitrary_types_allowed = True
 
     @property
-    def config_specs(self) -> Sequence[ConfigurableFieldSpec]:
-        """Configurable fields for this runnable."""
-        return list(super().config_specs) + [
-            ConfigurableFieldSpec(
-                id="namespace",
-                annotation=str,
-                name="",
-                description="",
-                default="",
-            )
-        ]
+    def namespace(self) -> str:
+        if self.assistant_id is None:
+            raise ValueError("assistant_id must be provided")
+        return self.assistant_id
+
+    def invoke(
+        self, input: BinaryIO, config: Optional[RunnableConfig] = None
+    ) -> List[str]:
+        return self.batch([input], config)
+
+    def batch(
+        self,
+        inputs: List[BinaryIO],
+        config: RunnableConfig | List[RunnableConfig] | None = None,
+        *,
+        return_exceptions: bool = False,
+        **kwargs: Any | None,
+    ) -> List:
+        docs = self.text_splitter.create_documents(
+            # TODO change this line to accept binary formats
+            [part.read().decode() for part in inputs],
+            [{"namespace": self.namespace}],
+        )
+        return self.vectorstore.add_documents(docs)
