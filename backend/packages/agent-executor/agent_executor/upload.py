@@ -77,11 +77,13 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
         ids = []
         for data in inputs:
             blob = _convert_ingestion_input_to_blob(data)
-            ids.extend(ingest_blob(
-                blob,
-                MIMETYPE_BASED_PARSER,
-                self.text_splitter,
-                self.vectorstore,
-                self.namespace,
-            ))
+            ids.extend(
+                ingest_blob(
+                    blob,
+                    MIMETYPE_BASED_PARSER,
+                    self.text_splitter,
+                    self.vectorstore,
+                    self.namespace,
+                )
+            )
         return ids
