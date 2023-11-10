@@ -35,7 +35,6 @@ jobs:
     secrets: inherit
 
   test:
-    name: Python ${{ matrix.python-version }} tests
     timeout-minutes: 5
     runs-on: ubuntu-latest
     defaults:
@@ -63,6 +62,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    name: Python ${{ matrix.python-version }} tests
     steps:
       - name: "Check redis is reachable"
         run: redis-cli -h localhost -p 5432 ping
