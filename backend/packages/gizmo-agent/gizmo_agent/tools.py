@@ -19,7 +19,8 @@ RETRIEVER_DESCRIPTION = """Can be used to look up information that was uploaded 
 If the user is referencing particular files, that is often a good hint that information may be here."""
 
 
-def get_retrieval_tool(assistant_id: str):
+def get_retrieval_tool(user_id: str, assistant_id: str):
+    # TODO convert ids to filters
     return create_retriever_tool(
         vstore.as_retriever(), "Retriever", RETRIEVER_DESCRIPTION
     )

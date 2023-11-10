@@ -7,13 +7,16 @@ from langchain.callbacks.tracers.schemas import Run
 from langchain.pydantic_v1 import BaseModel, create_model
 from langchain.schema.chat_history import BaseChatMessageHistory
 from langchain.schema.messages import BaseMessage
-from langchain.schema.runnable.base import Runnable, RunnableBinding, RunnableLambda
+from langchain.schema.runnable.base import Runnable, RunnableBindingBase, RunnableLambda
 from langchain.schema.runnable.config import RunnableConfig
 from langchain.schema.runnable.passthrough import RunnablePassthrough
-from langchain.schema.runnable.utils import ConfigurableFieldSpec
+from langchain.schema.runnable.utils import (
+    ConfigurableFieldSpec,
+    get_unique_config_specs,
+)
 
 
-class RunnableWithMessageHistory(RunnableBinding):
+class RunnableWithMessageHistory(RunnableBindingBase):
     factory: Callable[[str], BaseChatMessageHistory]
 
     input_key: str
@@ -43,35 +46,24 @@ class RunnableWithMessageHistory(RunnableBinding):
 
     @property
     def config_specs(self) -> Sequence[ConfigurableFieldSpec]:
-        return super().config_specs + [
-            ConfigurableFieldSpec(
-                id="thread_id",
-                annotation=str,
-                name="",
-                description="",
-                default="",
-            )
-        ]
-
-    def config_schema(
-        self, *, include: Optional[Sequence[str]] = None
-    ) -> Type[BaseModel]:
-        return super(RunnableBinding, self).config_schema(include=include)
-
-    def with_config(
-        self,
-        config: Optional[RunnableConfig] = None,
-        **kwargs: Any,
-    ) -> RunnableWithMessageHistory:
-        return super(RunnableBinding, self).with_config(config, **kwargs)
-
-    def with_types(
-        self,
-        input_type: Optional[BaseModel] = None,
-        output_type: Optional[BaseModel] = None,
-    ) -> RunnableBinding:
-        return super(RunnableBinding, self).with_types(
-            input_type=input_type, output_type=output_type
+        return get_unique_config_specs(
+            super().config_specs
+            + [
+                ConfigurableFieldSpec(
+                    id="user_id",
+                    annotation=str,
+                    name="User ID",
+                    description=None,
+                    default=None,
+                ),
+                ConfigurableFieldSpec(
+                    id="thread_id",
+                    annotation=str,
+                    name="Thread ID",
+                    description=None,
+                    default="",
+                ),
+            ]
         )
 
     def get_input_schema(
@@ -110,11 +102,11 @@ class RunnableWithMessageHistory(RunnableBinding):
 
     def _merge_configs(self, *configs: Optional[RunnableConfig]) -> RunnableConfig:
         config = super()._merge_configs(*configs)
-        print(config)
         # extract thread_id
         config["configurable"] = config.get("configurable", {})
         try:
             thread_id = config["configurable"]["thread_id"]
+            user_id = config["configurable"].get("user_id")
         except KeyError:
             example_input = {self.input_key: "foo"}
             raise ValueError(
@@ -123,9 +115,8 @@ class RunnableWithMessageHistory(RunnableBinding):
                 f'\neg. chain.invoke({example_input}, {{"configurable": {{"thread_id":'
                 ' "123"}})'
             )
-        del config["configurable"]["thread_id"]
         # attach message_history
         config["configurable"]["message_history"] = self.factory(  # type: ignore
-            session_id=thread_id,
+            session_id=thread_id if user_id is None else f"{user_id}:{thread_id}",
         )
         return config
