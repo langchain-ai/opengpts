@@ -211,6 +211,7 @@ class AgentExecutor(RunnableSerializable):
         next_step_output: Union[AgentFinish, List[Tuple[AgentAction, str]]],
         intermediate_steps,
         run_manager: AsyncCallbackManagerForChainRun,
+        acc_output: AddableDict,
     ) -> Optional[AddableDict]:
         """
         Process the output of the next async step,
@@ -221,7 +222,9 @@ class AgentExecutor(RunnableSerializable):
             logger.debug(
                 "Hit AgentFinish: _areturn -> on_chain_end -> run final output logic"
             )
-            return await self._areturn(next_step_output, run_manager=run_manager)
+            return await self._areturn(
+                next_step_output, run_manager=run_manager, acc_output=acc_output
+            )
 
         intermediate_steps.extend(next_step_output)
         logger.debug("Updated intermediate_steps with step output")
@@ -231,7 +234,9 @@ class AgentExecutor(RunnableSerializable):
             next_step_action = next_step_output[0]
             tool_return = self._get_tool_return(next_step_action)
             if tool_return is not None:
-                return await self._areturn(tool_return, run_manager=run_manager)
+                return await self._areturn(
+                    tool_return, run_manager=run_manager, acc_output=acc_output
+                )
 
     async def _aiter_next_step(
         self,
@@ -317,7 +322,11 @@ class AgentExecutor(RunnableSerializable):
         yield AgentStep(action=output, observation=observation)
 
     async def _astop(
-        self, inputs, intermediate_steps, run_manager: AsyncCallbackManagerForChainRun
+        self,
+        inputs,
+        intermediate_steps,
+        run_manager: AsyncCallbackManagerForChainRun,
+        acc_output: AddableDict,
     ) -> AddableDict:
         """
         Stop the async iterator and raise a StopAsyncIteration exception with
@@ -329,7 +338,9 @@ class AgentExecutor(RunnableSerializable):
             intermediate_steps,
             **inputs,
         )
-        return await self._areturn(output, run_manager=run_manager)
+        return await self._areturn(
+            output, run_manager=run_manager, acc_output=acc_output
+        )
 
     def _consume_next_step(
         self, values: NextStepOutput
@@ -346,15 +357,16 @@ class AgentExecutor(RunnableSerializable):
         self,
         output: AgentFinish,
         run_manager: AsyncCallbackManagerForChainRun,
+        acc_output: AddableDict,
     ) -> AddableDict:
         """
         Return the final output of the async iterator.
         """
         if run_manager:
             await run_manager.on_agent_finish(output, color="green")
-        final_output = output.return_values
+        final_output = AddableDict(output.return_values)
         final_output["messages"] = [AIMessage(content=output.log)]
-        await run_manager.on_chain_end(final_output)
+        await run_manager.on_chain_end(acc_output + final_output)
         return final_output
 
     async def astream(
@@ -383,6 +395,7 @@ class AgentExecutor(RunnableSerializable):
         )
         try:
             async with asyncio_timeout(self.max_execution_time):
+                acc_output = AddableDict()
                 while self._should_continue(iterations, time_elapsed):
                     # take the next step: this plans next action, executes it,
                     # yielding action and observation as they are generated
@@ -398,17 +411,25 @@ class AgentExecutor(RunnableSerializable):
                         # do not yield AgentFinish, which will be handled below
                         if isinstance(chunk, AgentAction):
                             if isinstance(chunk, AgentActionMessageLog):
-                                yield AddableDict(
+                                next_output = AddableDict(
                                     actions=[chunk], messages=chunk.message_log
                                 )
+                                acc_output += next_output
+                                yield next_output
                             else:
-                                yield AddableDict(
+                                next_output = AddableDict(
                                     actions=[chunk],
                                     messages=[AIMessage(content=chunk.log)],
                                 )
+                                acc_output += next_output
+                                yield next_output
 
                         elif isinstance(chunk, AgentStep):
-                            yield AddableDict(steps=[chunk], messages=chunk.messages)
+                            next_output = AddableDict(
+                                steps=[chunk], messages=chunk.messages
+                            )
+                            acc_output += next_output
+                            yield next_output
 
                     # convert iterator output to format handled by _process_next_step
                     next_step = self._consume_next_step(next_step_seq)
@@ -417,16 +438,16 @@ class AgentExecutor(RunnableSerializable):
                     time_elapsed = time.time() - start_time
                     # decide if this is the final output
                     if output := await self._aprocess_next_step_output(
-                        next_step, intermediate_steps, run_manager
+                        next_step, intermediate_steps, run_manager, acc_output
                     ):
                         yield output
                         return
         except (TimeoutError, asyncio.TimeoutError):
-            yield await self._astop(input, intermediate_steps, run_manager)
+            yield await self._astop(input, intermediate_steps, run_manager, acc_output)
             return
         except BaseException as e:
             await run_manager.on_chain_error(e)
             raise
 
         # if we got here means we exhausted iterations or time
-        yield await self._astop(input, intermediate_steps, run_manager)
+        yield await self._astop(input, intermediate_steps, run_manager, acc_output)
