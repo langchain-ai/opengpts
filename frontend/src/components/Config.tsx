@@ -2,6 +2,8 @@ import { ConfigListProps } from "../hooks/useConfigList";
 import { SchemaField, Schemas } from "../hooks/useSchemas";
 import { useEffect, useState } from "react";
 import { cn } from "../utils/cn";
+import { useDropzone } from "react-dropzone";
+import { FileUploadDropzone } from "./FileUpload";
 
 function Label(props: { id: string; title: string }) {
   return (
@@ -134,6 +136,12 @@ export function Config(props: {
   const [values, setValues] = useState(
     props.config?.config ?? props.configDefaults
   );
+  const dropzone = useDropzone({
+    multiple: true,
+    accept: {
+      "text/*": [".txt", ".csv"],
+    },
+  });
   useEffect(() => {
     setValues(props.config?.config ?? props.configDefaults);
   }, [props.config, props.configDefaults]);
@@ -157,7 +165,7 @@ export function Config(props: {
           const key = form.key.value;
           if (!key) return;
           setInflight(true);
-          await props.saveConfig(key, values!);
+          await props.saveConfig(key, values!, dropzone.acceptedFiles);
           setInflight(false);
         }}
       >
@@ -221,6 +229,7 @@ export function Config(props: {
             );
           }
         })}
+        {!props.config && <FileUploadDropzone state={dropzone} />}
         {!props.config && (
           <div className="flex flex-row">
             <div className="relative flex flex-grow items-stretch focus-within:z-10">

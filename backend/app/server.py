@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Request
+import orjson
+from fastapi import FastAPI, Form, Request, UploadFile
 from fastapi.staticfiles import StaticFiles
 from gizmo_agent import agent, ingest_runnable
 from langserve import add_routes
@@ -29,13 +30,15 @@ add_routes(
     per_req_config_modifier=attach_user_id_to_config,
 )
 
-add_routes(
-    app,
-    ingest_runnable,
-    config_keys=["configurable"],
-    path="/ingest",
-    per_req_config_modifier=attach_user_id_to_config,
-)
+
+@app.post("/ingest")
+def ingest_endpoint(
+    req: Request,
+    files: list[UploadFile],
+    config: str = Form(...),
+):
+    config = attach_user_id_to_config(orjson.loads(config), req)
+    return ingest_runnable.batch([file.file for file in files], config)
 
 
 @app.get("/assistants/")

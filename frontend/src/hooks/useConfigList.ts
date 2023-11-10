@@ -15,7 +15,11 @@ export interface Config {
 export interface ConfigListProps {
   configs: Config[] | null;
   currentConfig: Config | null;
-  saveConfig: (key: string, config: Config["config"]) => Promise<void>;
+  saveConfig: (
+    key: string,
+    config: Config["config"],
+    files: File[]
+  ) => Promise<void>;
   enterConfig: (id: string | null) => void;
 }
 
@@ -55,16 +59,33 @@ export function useConfigList(): ConfigListProps {
     async (
       name: string,
       config: Config["config"],
+      files: File[],
       assistant_id: string = crypto.randomUUID()
     ) => {
-      const saved = await fetch(`/assistants/${assistant_id}`, {
-        method: "PUT",
-        body: JSON.stringify({ name, config }),
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      }).then((r) => r.json());
+      const formData = files.reduce((formData, file) => {
+        formData.append("files", file);
+        return formData;
+      }, new FormData());
+      formData.append(
+        "config",
+        JSON.stringify({ configurable: { assistant_id } })
+      );
+      const [saved] = await Promise.all([
+        fetch(`/assistants/${assistant_id}`, {
+          method: "PUT",
+          body: JSON.stringify({ name, config }),
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }).then((r) => r.json()),
+        files.length
+          ? fetch(`/ingest`, {
+              method: "POST",
+              body: formData,
+            })
+          : Promise.resolve(),
+      ]);
       setConfigs(saved);
       setCurrent(saved.assistant_id);
     },

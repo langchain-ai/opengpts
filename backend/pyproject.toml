@@ -17,6 +17,8 @@ gizmo-agent = {path = "packages/gizmo-agent", develop = true}
 agent-executor = {path = "packages/agent-executor", develop = true}
 orjson = "^3.9.10"
 redis = "^5.0.1"
+python-multipart = "^0.0.6"
+tiktoken = "^0.5.1"
 
 [tool.poetry.group.dev.dependencies]
 uvicorn = "^0.23.2"
