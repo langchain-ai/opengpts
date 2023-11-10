@@ -1,7 +1,6 @@
 import base64
-from typing import List, NotRequired, Optional, Sequence
+from typing import List, Optional, Sequence
 
-from langchain.schema import Document
 from langchain.document_loaders.base import BaseBlobParser
 from langchain.document_loaders.blob_loaders.schema import Blob
 from langchain.document_loaders.parsers import PyMuPDFParser
@@ -9,10 +8,14 @@ from langchain.document_loaders.parsers.generic import MimeTypeBasedParser
 from langchain.document_loaders.parsers.html import BS4HTMLParser
 from langchain.document_loaders.parsers.msword import MsWordParser
 from langchain.document_loaders.parsers.txt import TextParser
+from langchain.schema import Document
 from langchain.schema.runnable import RunnableConfig, RunnableSerializable
 from langchain.schema.runnable.utils import ConfigurableFieldSpec
 from langchain.schema.vectorstore import VectorStore
 from langchain.text_splitter import TextSplitter
+from typing_extensions import NotRequired
+# PUBLIC API
+from typing_extensions import TypedDict
 
 
 def _guess_mimetype(file_bytes: bytes) -> str:
@@ -24,7 +27,7 @@ def _guess_mimetype(file_bytes: bytes) -> str:
             "magic package not found, please install it with `pip install python-magic`"
         )
 
-    mime = magic.Magic()
+    mime = magic.Magic(mime=True)
     mime_type = mime.from_buffer(file_bytes)
     return mime_type
 
@@ -43,10 +46,6 @@ def _get_default_parser() -> BaseBlobParser:
         },
         fallback_parser=None,
     )
-
-
-# PUBLIC API
-from typing_extensions import TypedDict
 
 
 class IngestionInput(TypedDict):
