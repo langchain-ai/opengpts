@@ -52,7 +52,6 @@ jobs:
       # Label used to access the service container
       redis:
         image: redislabs/redisearch:latest
-        container_name: redis
         # Expose the port that the service is listening on.
         ports:
           - "6379:6379"
