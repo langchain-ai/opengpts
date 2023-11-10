@@ -8,7 +8,6 @@ on:
     paths:
       - '.github/actions/poetry_setup/action.yml'
       - '.github/workflows/_lint.yml'
-      - '.github/workflows/_test.yml'
       - '.github/workflows/langserve_ci.yml'
       - 'backend/**'
   workflow_dispatch:  # Allows to trigger the workflow manually in GitHub UI
@@ -25,14 +24,14 @@ concurrency:
 
 env:
   POETRY_VERSION: "1.5.1"
-  WORKDIR: "backend/"
+  WORKDIR: "./backend"
 
 jobs:
   lint:
     uses:
       ./.github/workflows/_lint.yml
     with:
-      working-directory: ${{ env.WORKDIR }}
+      working-directory: "./backend"
     secrets: inherit
 
   test:
@@ -63,8 +62,8 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          echo "Running extended tests, installing dependencies with poetry..."
-          poetry install --with test,lint --extras all
+          echo "Running tests, installing dependencies with poetry..."
+          poetry install --with test,lint
 
       - name: Run tests
         run: make test
