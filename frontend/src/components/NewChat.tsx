@@ -25,6 +25,7 @@ export function NewChat(props: NewChatProps) {
         <main className="flex-1">
           <div className="px-4">
             <Config
+              key={props.currentConfig?.assistant_id}
               config={props.currentConfig}
               configSchema={props.configSchema}
               configDefaults={props.configDefaults}
