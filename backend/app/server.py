@@ -4,8 +4,8 @@ import orjson
 from fastapi import FastAPI, Form, Request, UploadFile
 from fastapi.staticfiles import StaticFiles
 from gizmo_agent import agent, ingest_runnable
-from langserve import add_routes
 from langchain.schema.runnable import RunnableConfig
+from langserve import add_routes
 
 from app.storage import (
     get_thread_messages,
