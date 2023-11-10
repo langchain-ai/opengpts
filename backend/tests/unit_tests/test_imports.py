@@ -1,4 +1,6 @@
 """Shallow tests that make sure we can at least import the code."""
+import os
+
 import pytest
 from pytest import MonkeyPatch
 
@@ -22,3 +24,7 @@ def test_gizmo_agent() -> None:
 def test_import_app() -> None:
     """Test import app"""
     import app  # noqa: F401
+
+
+def test_redis_url() -> None:
+    assert os.environ["REDIS_URL"] == "redis://localhost:6379/0"
