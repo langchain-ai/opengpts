@@ -1,19 +1,24 @@
+from typing import Optional
+
 import orjson
 from fastapi import FastAPI, Form, Request, UploadFile
 from fastapi.staticfiles import StaticFiles
 from gizmo_agent import agent, ingest_runnable
-from langserve import add_routes
 from langchain.schema.runnable import RunnableConfig
+from langserve import add_routes
 
 from app.storage import (
     get_thread_messages,
     list_assistants,
+    list_public_assistants,
     list_threads,
     put_assistant,
     put_thread,
 )
 
 app = FastAPI()
+
+FEATURED_PUBLIC_ASSISTANTS = []
 
 
 def attach_user_id_to_config(
@@ -32,18 +37,21 @@ add_routes(
 
 
 @app.post("/ingest")
-def ingest_endpoint(
-    req: Request,
-    files: list[UploadFile],
-    config: str = Form(...),
-):
-    config = attach_user_id_to_config(orjson.loads(config), req)
+def ingest_endpoint(files: list[UploadFile], config: str = Form(...)):
+    config = orjson.loads(config)
     return ingest_runnable.batch([file.file for file in files], config)
 
 
 @app.get("/assistants/")
 def list_assistants_endpoint(req: Request):
     return list_assistants(req.cookies["opengpts_user_id"])
+
+
+@app.get("/assistants/public/")
+def list_public_assistants_endpoint(shared_id: Optional[str] = None):
+    return list_public_assistants(
+        FEATURED_PUBLIC_ASSISTANTS + ([shared_id] if shared_id else [])
+    )
 
 
 @app.put("/assistants/{aid}")
@@ -53,6 +61,7 @@ def put_assistant_endpoint(req: Request, aid: str, payload: dict):
         aid,
         name=payload["name"],
         config=payload["config"],
+        public=payload["public"],
     )
 
 

@@ -20,13 +20,7 @@ vstore = Redis(
 ingest_runnable = IngestRunnable(
     text_splitter=RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200),
     vectorstore=vstore,
-    input_key="file_contents",
 ).configurable_fields(
-    user_id=ConfigurableField(
-        id="user_id",
-        annotation=str,
-        name="User ID",
-    ),
     assistant_id=ConfigurableField(
         id="assistant_id",
         annotation=str,

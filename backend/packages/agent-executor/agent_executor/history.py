@@ -7,13 +7,15 @@ from langchain.callbacks.tracers.schemas import Run
 from langchain.pydantic_v1 import BaseModel, create_model
 from langchain.schema.chat_history import BaseChatMessageHistory
 from langchain.schema.messages import BaseMessage
-from langchain.schema.runnable.base import Runnable, RunnableBindingBase, RunnableLambda
+from langchain.schema.runnable.base import Runnable, RunnableLambda
 from langchain.schema.runnable.config import RunnableConfig
 from langchain.schema.runnable.passthrough import RunnablePassthrough
 from langchain.schema.runnable.utils import (
     ConfigurableFieldSpec,
     get_unique_config_specs,
 )
+
+from agent_executor.runnables import RunnableBindingBase
 
 
 class RunnableWithMessageHistory(RunnableBindingBase):

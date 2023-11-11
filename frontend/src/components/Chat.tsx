@@ -21,7 +21,11 @@ export function Chat(props: ChatProps) {
   return (
     <div className="flex-1 flex flex-col items-stretch pb-[76px] pt-2">
       {messages?.map((msg, i) => (
-        <Message {...msg} key={i} />
+        <Message
+          {...msg}
+          key={i}
+          runId={i === messages.length - 1 ? props.stream?.run_id : undefined}
+        />
       ))}
       {(props.stream?.status === "inflight" || messages === null) && (
         <div className="leading-6 mb-2 animate-pulse font-black text-gray-400 text-lg">

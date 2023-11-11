@@ -28,8 +28,9 @@ def thread_messages_key(user_id: str, thread_id: str):
     return f"message_store:{user_id}:{thread_id}"
 
 
-assistant_hash_keys = ["assistant_id", "name", "config", "updated_at"]
+assistant_hash_keys = ["assistant_id", "name", "config", "updated_at", "public"]
 thread_hash_keys = ["assistant_id", "thread_id", "name", "updated_at"]
+public_user_id = "eef39817-c173-4eb6-8be4-f77cf37054fb"
 
 
 def dump(map: dict) -> dict:
@@ -50,18 +51,46 @@ def list_assistants(user_id: str):
     return [load(assistant_hash_keys, values) for values in assistants]
 
 
-def put_assistant(user_id: str, assistant_id: str, *, name: str, config: dict):
+def list_public_assistants(assistant_ids: list[str]):
+    if not assistant_ids:
+        return []
+    client = get_client(os.environ.get("REDIS_URL"))
+    ids = [
+        id
+        for id, is_public in zip(
+            assistant_ids,
+            client.smismember(
+                assistants_list_key(public_user_id),
+                [orjson.dumps(id) for id in assistant_ids],
+            ),
+        )
+        if is_public
+    ]
+    with client.pipeline() as pipe:
+        for id in ids:
+            pipe.hmget(assistant_key(public_user_id, id), *assistant_hash_keys)
+        assistants = pipe.execute()
+    return [load(assistant_hash_keys, values) for values in assistants]
+
+
+def put_assistant(
+    user_id: str, assistant_id: str, *, name: str, config: dict, public: bool = False
+):
     saved = {
         "user_id": user_id,
         "assistant_id": assistant_id,
         "name": name,
         "config": config,
         "updated_at": datetime.utcnow(),
+        "public": public,
     }
     client = get_client(os.environ.get("REDIS_URL"))
     with client.pipeline() as pipe:
         pipe.sadd(assistants_list_key(user_id), orjson.dumps(assistant_id))
         pipe.hset(assistant_key(user_id, assistant_id), mapping=dump(saved))
+        if public:
+            pipe.sadd(assistants_list_key(public_user_id), orjson.dumps(assistant_id))
+            pipe.hset(assistant_key(public_user_id, assistant_id), mapping=dump(saved))
         pipe.execute()
     return saved
 

@@ -36,7 +36,6 @@ class ConfigurableAgent(RunnableBinding):
         tools: Sequence[str],
         agent: GizmoAgentType = GizmoAgentType.GPT_35_TURBO,
         system_message: str = DEFAULT_SYSTEM_MESSAGE,
-        user_id: Optional[str] = None,
         assistant_id: Optional[str] = None,
         kwargs: Optional[Mapping[str, Any]] = None,
         config: Optional[Mapping[str, Any]] = None,
@@ -50,11 +49,7 @@ class ConfigurableAgent(RunnableBinding):
                     raise ValueError(
                         "assistant_id must be provided if Retrieval tool is used"
                     )
-                if user_id is None:
-                    raise ValueError(
-                        "user_id must be provided if Retrieval tool is used"
-                    )
-                _tools.append(get_retrieval_tool(user_id, assistant_id))
+                _tools.append(get_retrieval_tool(assistant_id))
             else:
                 _tools.append(TOOLS[_tool])
         if agent == GizmoAgentType.GPT_35_TURBO:
@@ -103,7 +98,6 @@ agent = ConfigurableAgent(
     agent=ConfigurableField(id="agent_type", name="Agent Type"),
     system_message=ConfigurableField(id="system_message", name="System Message"),
     assistant_id=ConfigurableField(id="assistant_id", name="Assistant ID"),
-    user_id=ConfigurableField(id="user_id", annotation=str, name="User ID"),
     tools=ConfigurableFieldMultiOption(
         id="tools",
         name="Tools",
