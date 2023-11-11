@@ -185,11 +185,11 @@ If you want to use some preconfigured tools, these include:
 
 **DuckDuckGo Search**
 
-Search the web with DuckDuckGo. Does not require any API keys.
+Search the web with [DuckDuckGo](https://pypi.org/project/duckduckgo-search/). Does not require any API keys.
 
 **Tavily Search**
 
-Uses the Tavily search engine. Requires setting an environment variable:
+Uses the [Tavily](https://app.tavily.com/) search engine. Requires setting an environment variable:
 
 ```shell
 export TAVILY_API_KEY=tvly-...
@@ -199,7 +199,7 @@ Sign up for an API key [here](https://app.tavily.com/).
 
 **Tavily Search (Answer Only)**
 
-Uses the Tavily search engine. 
+Uses the [Tavily](https://app.tavily.com/) search engine. 
 This returns only the answer, no supporting evidence.
 Good when you need a short response (small context windows).
 Requires setting an environment variable:
@@ -213,7 +213,7 @@ Sign up for an API key [here](https://app.tavily.com/).
 
 **You.com Search**
 
-Uses You.com search, optimized responses for LLMs.
+Uses [You.com](https://you.com/) search, optimized responses for LLMs.
 Requires setting an environment variable:
 
 ```shell
@@ -224,7 +224,7 @@ Sign up for an API key [here](https://you.com/)
 
 **SEC Filings (Kay.ai)**
 
-Searches through SEC filings using Kay.ai.
+Searches through SEC filings using [Kay.ai](https://www.kay.ai/).
 Requires setting an environment variable:
 
 ```shell
@@ -235,7 +235,7 @@ Sign up for an API key [here](https://www.kay.ai/)
 
 **Press Releases (Kay.ai)**
 
-Searches through press releases using Kay.ai.
+Searches through press releases using [Kay.ai](https://www.kay.ai/).
 Requires setting an environment variable:
 
 ```shell
@@ -246,15 +246,15 @@ Sign up for an API key [here](https://www.kay.ai/)
 
 **Arxiv**
 
-Searches Arxiv. Does not require any API keys.
+Searches [Arxiv](https://arxiv.org/). Does not require any API keys.
 
 **PubMed**
 
-Searches PubMed. Does not require any API keys.
+Searches [PubMed](https://pubmed.ncbi.nlm.nih.gov/). Does not require any API keys.
 
 **Wikipedia**
 
-Searches Wikipedia. Does not require any API keys.
+Searches [Wikipedia](https://pypi.org/project/wikipedia/). Does not require any API keys.
 
 
 ## Deployment
