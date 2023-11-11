@@ -14,9 +14,7 @@ def test_redis_url_set() -> None:
             # Simplify the instructions for running the tests
             "running. Then run the tests with `REDIS_URL=... make test`."
         )
-
-    # verify that we're using db #3
-    assert os.environ["REDIS_URL"].endswith("/3")
+    raise ValueError(os.environ["REDIS_URL"]) # Just for debugging
 
 
 def test_agent_executor() -> None:

@@ -58,6 +58,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          - "6379:6379"
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }} + Poetry ${{ env.POETRY_VERSION }}
@@ -82,7 +84,7 @@ jobs:
           # if they run the tests against a real redis instance.
           # Need to follow up and swap out default port numbers and add `test`
           # password
-          REDIS_URL: "redis://redis:6379"
+          REDIS_URL: "redis://redis:6379/0"
       - name: Ensure the tests did not create any additional files
         shell: bash
         run: |
