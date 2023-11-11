@@ -11,6 +11,7 @@ develop = true
 
 [package.dependencies]
 langchain = ">=0.0.333"
+python-magic = "^0.4.27"
 
 [package.source]
 type = "directory"
