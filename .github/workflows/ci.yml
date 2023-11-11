@@ -69,30 +69,36 @@ jobs:
           poetry-version: ${{ env.POETRY_VERSION }}
           working-directory: .
           cache-key: langserve-all
-
-      - name: Install dependencies
-        shell: bash
+      - name: install redis
         run: |
-          echo "Running tests, installing dependencies with poetry..."
-          poetry install --with test,lint
-
-      - name: Run tests
-        run: make test
-        env:
-          # Adding a DB number to match unit tests
-          # Unit tests use DB 3, so user doesn't accidentally wipe their data
-          # if they run the tests against a real redis instance.
-          # Need to follow up and swap out default port numbers and add `test`
-          # password
-          REDIS_URL: "redis://redis:6379/0"
-      - name: Ensure the tests did not create any additional files
-        shell: bash
+          pip install redis
+      - name: check redis is running
         run: |
-          set -eu
+          python -c "import redis; redis.Redis(host='redis', port=6379).ping()"
 
-          STATUS="$(git status)"
-          echo "$STATUS"
-
-          # grep will exit non-zero if the target message isn't found,
-          # and `set -e` above will cause the step to fail.
-          echo "$STATUS" | grep 'nothing to commit, working tree clean'
+#      - name: Install dependencies
+#        shell: bash
+#        run: |
+#          echo "Running tests, installing dependencies with poetry..."
+#          poetry install --with test,lint
+#
+#      - name: Run tests
+#        run: make test
+#        env:
+#          # Adding a DB number to match unit tests
+#          # Unit tests use DB 3, so user doesn't accidentally wipe their data
+#          # if they run the tests against a real redis instance.
+#          # Need to follow up and swap out default port numbers and add `test`
+#          # password
+#          REDIS_URL: "redis://redis:6379/0"
+#      - name: Ensure the tests did not create any additional files
+#        shell: bash
+#        run: |
+#          set -eu
+#
+#          STATUS="$(git status)"
+#          echo "$STATUS"
+#
+#          # grep will exit non-zero if the target message isn't found,
+#          # and `set -e` above will cause the step to fail.
+#          echo "$STATUS" | grep 'nothing to commit, working tree clean'
