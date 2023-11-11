@@ -195,6 +195,8 @@ Uses the Tavily search engine. Requires setting an environment variable:
 export TAVILY_API_KEY=tvly-...
 ```
 
+Sign up for an API key [here](https://app.tavily.com/).
+
 **Tavily Search (Answer Only)**
 
 Uses the Tavily search engine. 
@@ -207,6 +209,8 @@ Requires setting an environment variable:
 export TAVILY_API_KEY=tvly-...
 ```
 
+Sign up for an API key [here](https://app.tavily.com/).
+
 **You.com Search**
 
 Uses You.com search, optimized responses for LLMs.
@@ -216,6 +220,7 @@ Requires setting an environment variable:
 export YDC_API_KEY=...
 ```
 
+Sign up for an API key [here](https://you.com/)
 
 **SEC Filings (Kay.ai)**
 
@@ -226,6 +231,8 @@ Requires setting an environment variable:
 export KAY_API_KEY=...
 ```
 
+Sign up for an API key [here](https://www.kay.ai/)
+
 **Press Releases (Kay.ai)**
 
 Searches through press releases using Kay.ai.
@@ -234,6 +241,8 @@ Requires setting an environment variable:
 ```shell
 export KAY_API_KEY=...
 ```
+
+Sign up for an API key [here](https://www.kay.ai/)
 
 **Arxiv**
 
