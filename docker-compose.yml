@@ -4,6 +4,11 @@ services:
   redis:
     image: redislabs/redisearch:latest
     container_name: redis
+    # Export the port that the service is listening on.
+    expose:
+      - "6379"
+    ports:
+      - "6379:6379"
   backend:
     build:
       context: .  # Use the current directory as the build context
