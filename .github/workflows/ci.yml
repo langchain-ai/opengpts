@@ -52,9 +52,6 @@ jobs:
       # Label used to access the service container
       redis:
         image: redislabs/redisearch:latest
-        # Expose the port that the service is listening on.
-        ports:
-          - "6379:6379"
         # Set health checks to wait until redis has started
         options: >-
           --health-cmd "redis-cli ping"
@@ -85,7 +82,7 @@ jobs:
           # if they run the tests against a real redis instance.
           # Need to follow up and swap out default port numbers and add `test`
           # password
-          REDIS_URL: "redis://redis:6379/3"
+          REDIS_URL: "redis://redis:6379"
       - name: Ensure the tests did not create any additional files
         shell: bash
         run: |
