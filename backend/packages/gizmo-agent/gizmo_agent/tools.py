@@ -39,10 +39,70 @@ def get_retrieval_tool(assistant_id: str):
         "Retriever",
         RETRIEVER_DESCRIPTION,
     )
-tavily_search = TavilySearchAPIWrapper()
+
+
+def _get_duck_duck_go():
+    return DuckDuckGoSearchRun(args_schema=DDGInput)
+
+
+def _get_arxiv():
+    return ArxivQueryRun(api_wrapper=ArxivAPIWrapper(), args_schema=ArxivInput)
+
+
+def _get_you_search():
+    return create_retriever_tool(
+        YouRetriever(n_hits=3, n_snippets_per_hit=3),
+        "you_search",
+        "Searches for documents using You.com"
+    )
+
+def _get_sec_filings():
+    return create_retriever_tool(
+        KayAiRetriever.create(
+            dataset_id="company", data_types=["10-K", "10-Q"], num_contexts=3
+        ),
+        "sec_filings_search",
+        "Search for a query among SEC Filings"
+    )
+
+
+def _get_press_releases():
+    return create_retriever_tool(
+        KayAiRetriever.create(
+            dataset_id="company", data_types=["PressRelease"], num_contexts=6
+        ),
+        "press_release_search",
+        "Search for a query among press releases from US companies"
+    )
+
+
+def _get_pubmed():
+    return create_retriever_tool(
+        PubMedRetriever(),
+        "pub_med_search",
+        "Search for a query on PubMed"
+    )
+
+
+def _get_tavily():
+    tavily_search = TavilySearchAPIWrapper()
+    return TavilySearchResults(api_wrapper=tavily_search)
+
+
+def _get_wikipedia():
+    return create_retriever_tool(
+        WikipediaRetriever(),
+        "wikipedia",
+        "Search for a query on Wikipedia"
+    )
+
+def _get_tavily_answer():
+    tavily_search = TavilySearchAPIWrapper()
+    return TavilyAnswer(api_wrapper=tavily_search)
 
 
 class AvailableTools(str, Enum):
+    DDG_SEARCH = "DDG Search"
     TAVILY = "Search (Tavily)"
     TAVILY_ANSWER = "Search (short answer, Tavily)"
     RETRIEVAL = "Retrieval"
@@ -51,46 +111,24 @@ class AvailableTools(str, Enum):
     SEC_FILINGS = "SEC Filings (Kay.ai)"
     PRESS_RELEASES = "Press Releases (Kay.ai)"
     PUBMED = "PubMed"
-    DDG_SEARCH = "DDG Search"
     WIKIPEDIA = "Wikipedia"
 
 
 
 TOOLS = {
-    AvailableTools.DDG_SEARCH: DuckDuckGoSearchRun(args_schema=DDGInput),
-    AvailableTools.ARXIV: ArxivQueryRun(api_wrapper=ArxivAPIWrapper(), args_schema=ArxivInput),
-    AvailableTools.YOU_SEARCH: create_retriever_tool(
-        YouRetriever(n_hits=3, n_snippets_per_hit=3),
-        "you_search",
-        "Searches for documents using You.com"
-    ),
-    AvailableTools.SEC_FILINGS: create_retriever_tool(
-        KayAiRetriever.create(
-            dataset_id="company", data_types=["10-K", "10-Q"], num_contexts=3
-        ),
-        "sec_filings_search",
-        "Search for a query among SEC Filings"
-    ),
-    AvailableTools.PRESS_RELEASES: create_retriever_tool(
-        KayAiRetriever.create(
-            dataset_id="company", data_types=["PressRelease"], num_contexts=6
-        ),
-        "press_release_search",
-        "Search for a query among press releases from US companies"
-    ),
-    AvailableTools.PUBMED: create_retriever_tool(
-        PubMedRetriever(),
-        "pub_med_search",
-        "Search for a query on PubMed"
-    ),
-    AvailableTools.TAVILY: TavilySearchResults(api_wrapper=tavily_search),
-    AvailableTools.WIKIPEDIA: create_retriever_tool(
-        WikipediaRetriever(),
-        "wikipedia",
-        "Search for a query on Wikipedia"
-    ),
-    AvailableTools.TAVILY_ANSWER: TavilyAnswer(api_wrapper=tavily_search),
+    AvailableTools.DDG_SEARCH: _get_duck_duck_go,
+    AvailableTools.ARXIV: _get_arxiv,
+    AvailableTools.YOU_SEARCH: _get_you_search,
+    AvailableTools.SEC_FILINGS: _get_sec_filings,
+    AvailableTools.PRESS_RELEASES: _get_press_releases,
+    AvailableTools.PUBMED: _get_pubmed,
+    AvailableTools.TAVILY: _get_tavily,
+    AvailableTools.WIKIPEDIA: _get_wikipedia,
+    AvailableTools.TAVILY_ANSWER: _get_tavily_answer,
 
 }
 
 TOOL_OPTIONS = {e.value: e.value for e in AvailableTools}
+
+for k, v in TOOLS.items():
+    v()

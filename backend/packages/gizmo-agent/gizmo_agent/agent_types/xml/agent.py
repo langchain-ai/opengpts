@@ -1,3 +1,5 @@
+import os
+
 from langchain.agents.format_scratchpad import format_xml
 from langchain.chat_models import ChatAnthropic, BedrockChat
 from langchain.tools.render import render_text_description
@@ -43,7 +45,12 @@ def construct_chat_history(messages):
 
 def get_xml_agent(tools, system_message, bedrock=False):
     if bedrock:
-        client = boto3.client("bedrock-runtime", region_name="us-west-2")
+        client = boto3.client(
+            "bedrock-runtime",
+            region_name="us-west-2",
+            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
+        )
         model = BedrockChat(model_id="anthropic.claude-v2", client=client)
     else:
         model = ChatAnthropic(temperature=0, max_tokens_to_sample=2000)
