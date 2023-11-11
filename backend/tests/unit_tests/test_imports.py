@@ -14,7 +14,10 @@ def test_redis_url_set() -> None:
             # Simplify the instructions for running the tests
             "running. Then run the tests with `REDIS_URL=... make test`."
         )
-    raise ValueError(os.environ["REDIS_URL"]) # Just for debugging
+    # Use database 3 for unit tests
+    # Poorman's convention for accidentally wiping out an actual database
+    # Should change ports in a bit and add a fake test password
+    assert os.environ["REDIS_URL"].endswith("/3")
 
 
 def test_agent_executor() -> None:
