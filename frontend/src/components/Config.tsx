@@ -139,7 +139,10 @@ export function Config(props: {
   const dropzone = useDropzone({
     multiple: true,
     accept: {
-      "text/*": [".txt", ".csv"],
+      "text/*": [".txt", ".csv", ".htm", ".html"],
+      "application/pdf": [".pdf"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+      "application/msword": [".doc"],
     },
   });
   const [isPublic, setPublic] = useState(props.config?.public ?? false);
