@@ -13,13 +13,16 @@ tomli-w = "^1.0.0"
 uvicorn = "^0.23.2"
 fastapi = "^0.103.2"
 langserve = ">=0.0.16"
-langchain = { git = "git@github.com:langchain-ai/langchain.git/", branch = "nc/subclass-runnable-binding" , subdirectory = "libs/langchain"}
+# Uncomment if you need to work from a development branch
+# This will only work for local development though!
+# langchain = { git = "git@github.com:langchain-ai/langchain.git/", branch = "nc/subclass-runnable-binding" , subdirectory = "libs/langchain"}
 gizmo-agent = {path = "packages/gizmo-agent", develop = true}
 agent-executor = {path = "packages/agent-executor", develop = true}
 orjson = "^3.9.10"
 redis = "^5.0.1"
 python-multipart = "^0.0.6"
 tiktoken = "^0.5.1"
+langchain = "^0.0.334"
 
 [tool.poetry.group.dev.dependencies]
 uvicorn = "^0.23.2"
