@@ -9,11 +9,11 @@ services:
       context: .  # Use the current directory as the build context
       dockerfile: Dockerfile  # Specify the custom Dockerfile
     ports:
-      - "8001:8001"
+      - "8100:8100"
     depends_on:
       - redis
     env_file:
       - .env  # Use the .env file to load environment variables
     environment:
-      PORT: 8001
+      PORT: 8100
       REDIS_URL: "redis://redis:6379"
