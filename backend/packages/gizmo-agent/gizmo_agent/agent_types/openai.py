@@ -18,7 +18,10 @@ def get_openai_function_agent(
     else:
         llm = AzureChatOpenAI(
             temperature=0,
-            deployment_name=os.environ["OPENAI_DEPLOYMENT_NAME"],
+            deployment_name=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
+            openai_api_base=os.environ["AZURE_OPENAI_API_BASE"],
+            openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
+            openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],
         )
     prompt = ChatPromptTemplate.from_messages(
         [

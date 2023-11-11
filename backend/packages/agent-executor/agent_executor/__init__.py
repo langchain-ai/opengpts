@@ -82,10 +82,7 @@ def _convert_agent_observation_to_messages(
     Returns:
         AIMessage that corresponds to the original tool invocation.
     """
-    if isinstance(agent_action, AgentActionMessageLog):
-        return [_create_function_message(agent_action, observation)]
-    else:
-        return [HumanMessage(content=observation)]
+    return [_create_function_message(agent_action, observation)]
 
 
 class AgentStep(Serializable):
@@ -417,9 +414,16 @@ class AgentExecutor(RunnableSerializable):
                                 acc_output += next_output
                                 yield next_output
                             else:
+                                msg = AIMessage(
+                                    content=chunk.log,
+                                    additional_kwargs={"function_call": {
+                                        "name": chunk.tool,
+                                        "arguments": json.dumps({"input": chunk.tool_input})
+                                    }}
+                                )
                                 next_output = AddableDict(
                                     actions=[chunk],
-                                    messages=[AIMessage(content=chunk.log)],
+                                    messages=[msg],
                                 )
                                 acc_output += next_output
                                 yield next_output

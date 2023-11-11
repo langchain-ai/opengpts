@@ -59,12 +59,14 @@ class ConfigurableAgent(RunnableBinding):
                 _tools.append(TOOLS[_tool])
         if agent == GizmoAgentType.GPT_35_TURBO:
             _agent = get_openai_function_agent(_tools, system_message)
-        elif agent == GizmoAgentType.GPT_4:
-            _agent = get_openai_function_agent(_tools, system_message, gpt_4=True)
-        # elif agent == GizmoAgentType.AZURE_OPENAI:
-        #     _agent = get_openai_function_agent(tools, system_message, azure=True)
+        # elif agent == GizmoAgentType.GPT_4:
+        #     _agent = get_openai_function_agent(_tools, system_message, gpt_4=True)
+        elif agent == GizmoAgentType.AZURE_OPENAI:
+            _agent = get_openai_function_agent(_tools, system_message, azure=True)
         elif agent == GizmoAgentType.CLAUDE2:
             _agent = get_xml_agent(_tools, system_message)
+        elif agent == GizmoAgentType.BEDROCK_CLAUDE2:
+            _agent = get_xml_agent(_tools, system_message, bedrock=True)
         else:
             raise ValueError("Unexpected agent type")
         agent_executor = AgentExecutor(
