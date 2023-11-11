@@ -74,7 +74,7 @@ jobs:
           pip install redis
       - name: check redis is running
         run: |
-          python -c "import redis; redis.Redis(host='redis', port=6379).ping()"
+          python -c "import redis; redis.Redis(host='localhost', port=6379).ping()"
 
 #      - name: Install dependencies
 #        shell: bash
