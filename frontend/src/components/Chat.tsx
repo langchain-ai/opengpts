@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { Chat as ChatType } from "../hooks/useChatList";
 import { StreamStateProps } from "../hooks/useStreamState";
+import { useChatMessages } from "../hooks/useChatMessages";
 import TypingBox from "./TypingBox";
 import { Message } from "./Message";
-import { useChatMessages } from "../hooks/useChatMessages";
 
 interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
   chat: ChatType;

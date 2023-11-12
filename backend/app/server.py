@@ -33,6 +33,7 @@ add_routes(
     agent,
     config_keys=["configurable"],
     per_req_config_modifier=attach_user_id_to_config,
+    enable_feedback_endpoint=True,
 )
 
 
