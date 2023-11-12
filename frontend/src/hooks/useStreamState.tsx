@@ -81,7 +81,7 @@ export function useStreamState(): StreamStateProps {
 
   return {
     startStream,
-    stopStream: controller ? stopStream : undefined,
+    stopStream,
     stream: current,
   };
 }
