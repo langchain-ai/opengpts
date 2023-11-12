@@ -106,7 +106,7 @@ async def test_list_and_create_assistants(redis_client: RedisType) -> None:
         }
 
         # Check not visible to other users
-        headers = {"Cookie": "opengpts_user_id=2 flushdb"}
+        headers = {"Cookie": "opengpts_user_id=2"}
         response = await client.get("/assistants/", headers=headers)
         assert response.status_code == 200
         assert response.json() == []
