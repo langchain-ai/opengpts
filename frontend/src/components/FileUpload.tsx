@@ -86,7 +86,9 @@ export function FileUploadDropzone(props: {
         <p>
           Drag n' drop some files here, or click to select files.
           <br />
-          Accepted files: .txt, .csv, .html and .docx
+          Accepted files: .txt, .csv, .html, .docx, .pdf. 
+          <br />
+          No file should exceed 10 MB.
         </p>
         {fileRejections.length > 0 && (
           <div className="flex items-center rounded-md bg-yellow-50 mt-4 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20 prose">
