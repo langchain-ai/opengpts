@@ -136,12 +136,14 @@ export function Config(props: {
   const [values, setValues] = useState(
     props.config?.config ?? props.configDefaults
   );
+  const [files, setFiles] = useState<File[]>([]);
   const dropzone = useDropzone({
     multiple: true,
     accept: {
       "text/*": [".txt", ".csv", ".htm", ".html"],
       "application/pdf": [".pdf"],
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        [".docx"],
       "application/msword": [".doc"],
     },
   });
@@ -149,6 +151,25 @@ export function Config(props: {
   useEffect(() => {
     setValues(props.config?.config ?? props.configDefaults);
   }, [props.config, props.configDefaults]);
+  useEffect(() => {
+    if (dropzone.acceptedFiles.length > 0) {
+      setValues((values) => ({
+        configurable: {
+          ...values?.configurable,
+          tools: [
+            ...((values?.configurable?.tools ?? []) as string[]).filter(
+              (tool) => tool !== "Retrieval"
+            ),
+            "Retrieval",
+          ],
+        },
+      }));
+      setFiles((files) => [
+        ...files.filter((f) => !dropzone.acceptedFiles.includes(f)),
+        ...dropzone.acceptedFiles,
+      ]);
+    }
+  }, [dropzone.acceptedFiles]);
   const [inflight, setInflight] = useState(false);
   const readonly = !!props.config && !inflight;
   return (
@@ -241,7 +262,13 @@ export function Config(props: {
               );
             }
           })}
-          {!props.config && <FileUploadDropzone state={dropzone} />}
+          {!props.config && (
+            <FileUploadDropzone
+              state={dropzone}
+              files={files}
+              setFiles={setFiles}
+            />
+          )}
           <SingleOptionField
             id="public"
             field={{

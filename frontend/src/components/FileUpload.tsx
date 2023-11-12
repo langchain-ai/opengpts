@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { DropzoneState } from "react-dropzone";
+import { XCircleIcon } from "@heroicons/react/24/outline";
 
 const baseStyle = {
   flex: 1,
@@ -40,12 +41,24 @@ function Label(props: { id: string; title: string }) {
   );
 }
 
-export function FileUploadDropzone(props: { state: DropzoneState }) {
-  const { acceptedFiles, getRootProps, getInputProps } = props.state;
+export function FileUploadDropzone(props: {
+  state: DropzoneState;
+  files: File[];
+  setFiles: React.Dispatch<React.SetStateAction<File[]>>;
+}) {
+  const { getRootProps, getInputProps, fileRejections } = props.state;
 
-  const files = acceptedFiles.map((file, i) => (
+  const files = props.files.map((file, i) => (
     <li key={i}>
       {file.name} - {file.size} bytes
+      <span
+        className="not-prose ml-2  inline-flex items-center rounded-full px-1 py-1 text-xs font-medium cursor-pointer bg-gray-50 text-gray-600 relative top-[1px]"
+        onClick={() =>
+          props.setFiles((files) => files.filter((f) => f !== file))
+        }
+      >
+        <XCircleIcon className="h-4 w-4" />
+      </span>
     </li>
   ));
 
@@ -64,14 +77,28 @@ export function FileUploadDropzone(props: { state: DropzoneState }) {
     <section className="">
       <aside>
         <Label id="files" title="Files" />
-        <ul className="prose mb-2">{files}</ul>
+        <div className="prose">
+          <ul>{files}</ul>
+        </div>
       </aside>
       <div {...getRootProps({ style })}>
         <input {...getInputProps()} />
         <p>
-          Drag 'n' drop some files here, or click to select files. Only .txt and
-          .csv files are accepted currently.
+          Drag n' drop some files here, or click to select files.
+          <br />
+          Accepted files: .txt, .csv, .html and .docx
         </p>
+        {fileRejections.length > 0 && (
+          <div className="flex items-center rounded-md bg-yellow-50 mt-4 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20 prose">
+            <ul>
+              {fileRejections.map((reject, i) => (
+                <li key={i} className="break-all">
+                  {reject.file.name} - {reject.errors[0].message}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </section>
   );
