@@ -60,6 +60,7 @@ async def test_list_and_create_assistants(redis_client: RedisType) -> None:
             headers=headers,
         )
         assert response.status_code == 200
+
         assert response.json() == []
 
         # Create an assistant
@@ -140,3 +141,21 @@ async def test_threads(redis_client: RedisType) -> None:
                 "thread_id": "1",
             }
         ]
+
+        # Test a bad requests
+        response = await client.put(
+            "/threads/1",
+            json={"name": "bobby", "assistant_id": "bobby"},
+        )
+        assert response.status_code == 422
+
+        response = await client.put(
+            "/threads/1",
+            headers={"Cookie": "opengpts_user_id=2"},
+        )
+        assert response.status_code == 422
+
+        response = await client.get(
+            "/threads/",
+        )
+        assert response.status_code == 422
