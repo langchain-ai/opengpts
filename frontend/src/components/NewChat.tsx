@@ -12,7 +12,7 @@ interface NewChatProps extends ConfigListProps {
 
 export function NewChat(props: NewChatProps) {
   return (
-    <div className="flex flex-col items-stretch mb-8">
+    <div className="flex flex-col items-stretch pb-[76px]">
       <div className="flex-1 flex flex-col md:flex-row lg:items-stretch self-stretch">
         <div className="w-72 border-r border-gray-200 pr-6">
           <ConfigList

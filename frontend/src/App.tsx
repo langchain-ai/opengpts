@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Chat } from "./components/Chat";
 import { ChatList } from "./components/ChatList";
 import { Layout } from "./components/Layout";
@@ -55,13 +56,15 @@ function App() {
 
   const selectChat = useCallback(
     async (id: string | null) => {
-      stopStream?.(true);
+      if (currentChat) {
+        stopStream?.(true);
+      }
       enterChat(id);
       if (sidebarOpen) {
         setSidebarOpen(false);
       }
     },
-    [enterChat, stopStream, sidebarOpen]
+    [enterChat, stopStream, sidebarOpen, currentChat]
   );
 
   const content = currentChat ? (
@@ -83,10 +86,25 @@ function App() {
     />
   );
 
+  const currentChatConfig = configs?.find(
+    (c) => c.assistant_id === currentChat?.assistant_id
+  );
+
   return (
     <Layout
       subtitle={
-        configs?.find((c) => c.assistant_id === currentChat?.assistant_id)?.name
+        currentChatConfig ? (
+          <span className="inline-flex gap-1 items-center">
+            {currentChatConfig.name}
+            <InformationCircleIcon
+              className="h-5 w-5 cursor-pointer text-indigo-600"
+              onClick={() => {
+                enterChat(null);
+                enterConfig(currentChatConfig.assistant_id);
+              }}
+            />
+          </span>
+        ) : null
       }
       sidebarOpen={sidebarOpen}
       setSidebarOpen={setSidebarOpen}

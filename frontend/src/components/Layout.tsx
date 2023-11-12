@@ -7,7 +7,7 @@ export function Layout(props: {
   setSidebarOpen: (open: boolean) => void;
   sidebar: React.ReactNode;
   children: React.ReactNode;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
 }) {
   return (
     <>
@@ -99,7 +99,13 @@ export function Layout(props: {
           <Bars3Icon className="h-6 w-6" aria-hidden="true" />
         </button>
         <div className="flex-1 text-sm font-semibold leading-6 text-gray-900 lg:pl-72">
-          {props.subtitle ? `OpenGPTs: ${props.subtitle}` : "OpenGPTs"}
+          {props.subtitle ? (
+            <>
+              OpenGPTs: <span className="font-normal">{props.subtitle}</span>
+            </>
+          ) : (
+            "OpenGPTs"
+          )}
         </div>
         <div className="inline-flex items-center rounded-md bg-pink-100 px-2 py-1 text-xs font-medium text-pink-700">
           Research Preview: this is unauthenticated and all data can be found.

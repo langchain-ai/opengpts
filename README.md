@@ -1,9 +1,8 @@
 # OpenGPTs
 
-This is an open source effort to create a similar experience as OpenAI's GPTs.
-This builds upon [LangChain](https://github.com/langchain-ai/langchain), [LangServe](https://github.com/langchain-ai/langserve) and [LangSmith](https://smith.langchain.com/)
-This gives you more control over the LLM you use (choose between the 60+ that LangChain offers),
-the prompts you use (use LangSmith to debug those), and the tools you give it (choose from LangChain's 100+ tools, or easily write your own).
+This is an open source effort to create a similar experience to OpenAI's GPTs.
+It builds upon [LangChain](https://github.com/langchain-ai/langchain), [LangServe](https://github.com/langchain-ai/langserve) and [LangSmith](https://smith.langchain.com/).
+OpenGPTs gives you more control over the LLM you use (choose between the 60+ that LangChain offers), the prompts you use (use LangSmith to debug those), and the tools you give it (choose from LangChain's 100+ tools, or easily write your own).
 
 <p align="center">
     <img alt="Configure" src="_static/configure.png" width="49%" />
@@ -15,8 +14,6 @@ Check out a simple hosted version [here](https://opengpts-example-vz4y4ooboq-uc.
 ## Quickstart
 
 ### Start the backend
-
-
 
 **Install requirements**
 
@@ -36,7 +33,7 @@ export REDIS_URL=...
 
 **Set up vector database**
 
-The backend by default also uses Redis as a vector database, 
+The backend by default also uses Redis as a vector database,
 although you can easily switch this out to use any of the 50+ vector databases in LangChain.
 If you are using Redis as a vectorstore, the above environment variable should work
 (assuming you've enabled `redissearch`)
@@ -60,7 +57,6 @@ You do not need to use any of these tools, and the environment variables are not
 (they are only required if that tool is called).
 
 For a full list of environment variables to enable, see the `Tools` section below.
-
 
 **Set up monitoring**
 
@@ -199,11 +195,10 @@ Sign up for an API key [here](https://app.tavily.com/).
 
 **Tavily Search (Answer Only)**
 
-Uses the [Tavily](https://app.tavily.com/) search engine. 
+Uses the [Tavily](https://app.tavily.com/) search engine.
 This returns only the answer, no supporting evidence.
 Good when you need a short response (small context windows).
 Requires setting an environment variable:
-
 
 ```shell
 export TAVILY_API_KEY=tvly-...
@@ -255,7 +250,6 @@ Searches [PubMed](https://pubmed.ncbi.nlm.nih.gov/). Does not require any API ke
 **Wikipedia**
 
 Searches [Wikipedia](https://pypi.org/project/wikipedia/). Does not require any API keys.
-
 
 ## Deployment
 

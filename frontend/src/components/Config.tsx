@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { cn } from "../utils/cn";
 import { useDropzone } from "react-dropzone";
 import { FileUploadDropzone } from "./FileUpload";
+import { marked } from "marked";
 
 function Label(props: { id: string; title: string }) {
   return (
@@ -80,6 +81,25 @@ export default function SingleOptionField(props: {
   );
 }
 
+const TOOL_DESCRIPTIONS = {
+  Retrieval: "Look up information in uploaded files.",
+  "DDG Search":
+    "Search the web with [DuckDuckGo](https://pypi.org/project/duckduckgo-search/).",
+  "Search (Tavily)":
+    "Uses the [Tavily](https://app.tavily.com/) search engine. Includes sources in the response.",
+  "Search (short answer, Tavily)":
+    "Uses the [Tavily](https://app.tavily.com/) search engine. This returns only the answer, no supporting evidence.",
+  "You.com Search":
+    "Uses [You.com](https://you.com/) search, optimized responses for LLMs.",
+  "SEC Filings (Kay.ai)":
+    "Searches through SEC filings using [Kay.ai](https://www.kay.ai/).",
+  "Press Releases (Kay.ai)":
+    "Searches through press releases using [Kay.ai](https://www.kay.ai/).",
+  Arxiv: "Searches [Arxiv](https://arxiv.org/).",
+  PubMed: "Searches [PubMed](https://pubmed.ncbi.nlm.nih.gov/).",
+  Wikipedia: "Searches [Wikipedia](https://pypi.org/project/wikipedia/).",
+};
+
 function MultiOptionField(props: {
   id: string;
   field: SchemaField;
@@ -87,6 +107,7 @@ function MultiOptionField(props: {
   title: string;
   readonly: boolean;
   setValue: (value: string[]) => void;
+  descriptions?: Record<string, string>;
 }) {
   return (
     <fieldset>
@@ -119,6 +140,14 @@ function MultiOptionField(props: {
               >
                 {option}
               </label>
+              {props.descriptions?.[option] && (
+                <div
+                  className="text-gray-500 prose prose-sm prose-a:text-gray-500"
+                  dangerouslySetInnerHTML={{
+                    __html: marked(props.descriptions[option]),
+                  }}
+                ></div>
+              )}
             </div>
           </div>
         ))}
@@ -174,9 +203,30 @@ export function Config(props: {
   const readonly = !!props.config && !inflight;
   return (
     <>
-      <div className="font-semibold text-lg leading-6 text-gray-600 mb-4">
-        Bot: {props.config?.name ?? "New Bot"}{" "}
-        <span className="font-normal">{props.config ? "(read-only)" : ""}</span>
+      <div className="flex gap-2 items-center justify-between font-semibold text-lg leading-6 text-gray-600 mb-4">
+        <span>
+          Bot: {props.config?.name ?? "New Bot"}{" "}
+          <span className="font-normal">
+            {props.config ? "(read-only)" : ""}
+          </span>
+        </span>
+        {props.config?.public && (
+          <div
+            className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigator.clipboard.writeText(
+                window.location.href +
+                  "?shared_id=" +
+                  props.config?.assistant_id
+              );
+              window.alert("Copied to clipboard!");
+            }}
+          >
+            Copy Public Link
+          </div>
+        )}
       </div>
       <form
         className={cn("flex flex-col gap-8")}
@@ -258,6 +308,7 @@ export function Config(props: {
                     })
                   }
                   readonly={readonly}
+                  descriptions={TOOL_DESCRIPTIONS}
                 />
               );
             }
@@ -283,23 +334,6 @@ export function Config(props: {
             readonly={readonly}
           />
         </div>
-        {props.config?.public && (
-          <div
-            className="self-start rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 cursor-pointer"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              navigator.clipboard.writeText(
-                window.location.href +
-                  "?shared_id=" +
-                  props.config?.assistant_id
-              );
-              window.alert("Copied to clipboard!");
-            }}
-          >
-            Copy Public Link
-          </div>
-        )}
         {!props.config && (
           <div className="flex flex-row">
             <div className="relative flex flex-grow items-stretch focus-within:z-10">
