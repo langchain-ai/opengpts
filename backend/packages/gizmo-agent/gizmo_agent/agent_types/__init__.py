@@ -12,4 +12,8 @@ class GizmoAgentType(str, Enum):
     BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
 
 
-__all__ = ["get_openai_function_agent", "get_xml_agent", "GizmoAgentType",]
+__all__ = [
+    "get_openai_function_agent",
+    "get_xml_agent",
+    "GizmoAgentType",
+]

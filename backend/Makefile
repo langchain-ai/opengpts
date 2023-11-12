@@ -11,10 +11,13 @@ all: help
 TEST_FILE ?= tests/unit_tests/
 
 test:
-	poetry run pytest $(TEST_FILE)
+	# We need to update handling of env variables for tests
+	YDC_API_KEY=placeholder OPENAI_API_KEY=placeholder poetry run pytest $(TEST_FILE)
+
 
 test_watch:
-	poetry run ptw . -- $(TEST_FILE)
+	# We need to update handling of env variables for tests
+	YDC_API_KEY=placeholder OPENAI_API_KEY=placeholder poetry run ptw . -- $(TEST_FILE)
 
 ######################
 # LINTING AND FORMATTING
