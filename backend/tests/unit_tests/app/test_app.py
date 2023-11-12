@@ -2,6 +2,7 @@
 
 import os
 from contextlib import asynccontextmanager
+from typing import Optional, Sequence
 
 import pytest
 from httpx import AsyncClient
@@ -42,6 +43,12 @@ def redis_client() -> RedisType:
         client.close()
 
 
+def _project(d: dict, *, exclude_keys: Optional[Sequence[str]]) -> dict:
+    """Return a dict with only the keys specified."""
+    _exclude = set(exclude_keys) if exclude_keys else set()
+    return {k: v for k, v in d.items() if k not in _exclude}
+
+
 @pytest.mark.asyncio
 async def test_list_and_create_assistants(redis_client: RedisType) -> None:
     """Test list and create assistants."""
@@ -55,17 +62,14 @@ async def test_list_and_create_assistants(redis_client: RedisType) -> None:
         assert response.status_code == 200
         assert response.json() == []
 
+        # Create an assistant
         response = await client.put(
             "/assistants/bobby",
             json={"name": "bobby", "config": {}, "public": False},
             headers=headers,
         )
         assert response.status_code == 200
-        json_response = response.json()
-        assert "updated_at" in json_response
-        del json_response["updated_at"]
-
-        assert json_response == {
+        assert _project(response.json(), exclude_keys=["updated_at"]) == {
             "assistant_id": "bobby",
             "config": {},
             "name": "bobby",
@@ -77,23 +81,62 @@ async def test_list_and_create_assistants(redis_client: RedisType) -> None:
             b"opengpts:1:assistants",
         ]
 
-        assistant_info = redis_client.hgetall("opengpts:1:assistant:bobby")
-        del assistant_info[b"updated_at"]
-        assert assistant_info == {
-            b"assistant_id": b'"bobby"',
-            b"config": b"{}",
-            b"name": b'"bobby"',
-            b"public": b"false",
-            b"user_id": b'"1"',
+        response = await client.get("/assistants/", headers=headers)
+        assert [_project(d, exclude_keys=["updated_at"]) for d in response.json()] == [
+            {
+                "assistant_id": "bobby",
+                "config": {},
+                "name": "bobby",
+                "public": False,
+            }
+        ]
+
+        response = await client.put(
+            "/assistants/bobby",
+            json={"name": "bobby", "config": {}, "public": False},
+            headers=headers,
+        )
+
+        assert _project(response.json(), exclude_keys=["updated_at"]) == {
+            "assistant_id": "bobby",
+            "config": {},
+            "name": "bobby",
+            "public": False,
+            "user_id": "1",
         }
+
+        # Check not visible to other users
+        headers = {"Cookie": "opengpts_user_id=2 flushdb"}
+        response = await client.get("/assistants/", headers=headers)
+        assert response.status_code == 200
+        assert response.json() == []
 
 
 @pytest.mark.asyncio
-async def test_list_threads() -> None:
-    """Test listing threads."""
+async def test_threads(redis_client: RedisType) -> None:
+    """Test put thread."""
     async with get_client() as client:
+        response = await client.put(
+            "/threads/1",
+            json={"name": "bobby", "assistant_id": "bobby"},
+            headers={"Cookie": "opengpts_user_id=1"},
+        )
+        assert response.status_code == 200
+
+        response = await client.get(
+            "/threads/1/messages", headers={"Cookie": "opengpts_user_id=1"}
+        )
+        assert response.status_code == 200
+        assert response.json() == {"messages": []}
+
         response = await client.get(
             "/threads/", headers={"Cookie": "opengpts_user_id=1"}
         )
         assert response.status_code == 200
-        assert response.json() == []
+        assert [_project(d, exclude_keys=["updated_at"]) for d in response.json()] == [
+            {
+                "assistant_id": "bobby",
+                "name": "bobby",
+                "thread_id": "1",
+            }
+        ]
