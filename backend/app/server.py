@@ -1,9 +1,10 @@
 from pathlib import Path
-from typing import Optional, Annotated
+from typing import Annotated, Optional
 
 import orjson
-from fastapi import FastAPI, Form, Request, UploadFile, Cookie
+from fastapi import Cookie, FastAPI, Form, Request, UploadFile
 from fastapi.staticfiles import StaticFiles
+from gizmo_agent import agent, ingest_runnable
 from langchain.schema.runnable import RunnableConfig
 from langserve import add_routes
 from typing_extensions import TypedDict
@@ -16,7 +17,6 @@ from app.storage import (
     put_assistant,
     put_thread,
 )
-from gizmo_agent import agent, ingest_runnable
 
 app = FastAPI()
 
