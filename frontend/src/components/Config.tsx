@@ -174,9 +174,30 @@ export function Config(props: {
   const readonly = !!props.config && !inflight;
   return (
     <>
-      <div className="font-semibold text-lg leading-6 text-gray-600 mb-4">
-        Bot: {props.config?.name ?? "New Bot"}{" "}
-        <span className="font-normal">{props.config ? "(read-only)" : ""}</span>
+      <div className="flex gap-2 items-center justify-between font-semibold text-lg leading-6 text-gray-600 mb-4">
+        <span>
+          Bot: {props.config?.name ?? "New Bot"}{" "}
+          <span className="font-normal">
+            {props.config ? "(read-only)" : ""}
+          </span>
+        </span>
+        {props.config?.public && (
+          <div
+            className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigator.clipboard.writeText(
+                window.location.href +
+                  "?shared_id=" +
+                  props.config?.assistant_id
+              );
+              window.alert("Copied to clipboard!");
+            }}
+          >
+            Copy Public Link
+          </div>
+        )}
       </div>
       <form
         className={cn("flex flex-col gap-8")}
@@ -283,23 +304,6 @@ export function Config(props: {
             readonly={readonly}
           />
         </div>
-        {props.config?.public && (
-          <div
-            className="self-start rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 cursor-pointer"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              navigator.clipboard.writeText(
-                window.location.href +
-                  "?shared_id=" +
-                  props.config?.assistant_id
-              );
-              window.alert("Copied to clipboard!");
-            }}
-          >
-            Copy Public Link
-          </div>
-        )}
         {!props.config && (
           <div className="flex flex-row">
             <div className="relative flex flex-grow items-stretch focus-within:z-10">
