@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 
 import orjson
@@ -6,7 +7,6 @@ from fastapi.staticfiles import StaticFiles
 from gizmo_agent import agent, ingest_runnable
 from langchain.schema.runnable import RunnableConfig
 from langserve import add_routes
-from pathlib import Path
 
 from app.storage import (
     get_thread_messages,
