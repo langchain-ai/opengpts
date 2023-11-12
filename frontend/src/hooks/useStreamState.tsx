@@ -44,11 +44,17 @@ export function useStreamState(): StreamStateProps {
               messages: current?.messages ?? [],
               run_id: run_id,
             }));
+          } else if (msg.event === "error") {
+            setCurrent((current) => ({
+              status: "error",
+              messages: current?.messages ?? [],
+              run_id: current?.run_id,
+            }));
           }
         },
         onclose() {
           setCurrent((current) => ({
-            status: "done",
+            status: current?.status === "error" ? current.status : "done",
             messages: current?.messages ?? [],
             run_id: current?.run_id,
           }));
