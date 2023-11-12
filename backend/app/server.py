@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 
 import orjson
@@ -19,6 +20,9 @@ from app.storage import (
 app = FastAPI()
 
 FEATURED_PUBLIC_ASSISTANTS = []
+
+# Get root of app, used to point to directory containing static files
+ROOT = Path(__file__).parent.parent
 
 
 def attach_user_id_to_config(
@@ -45,6 +49,7 @@ def ingest_endpoint(files: list[UploadFile], config: str = Form(...)):
 
 @app.get("/assistants/")
 def list_assistants_endpoint(req: Request):
+    """List all assistants for the current user."""
     return list_assistants(req.cookies["opengpts_user_id"])
 
 
@@ -86,7 +91,7 @@ def put_thread_endpoint(req: Request, tid: str, payload: dict):
     )
 
 
-app.mount("", StaticFiles(directory="ui", html=True), name="ui")
+app.mount("", StaticFiles(directory=str(ROOT / "ui"), html=True), name="ui")
 
 if __name__ == "__main__":
     import uvicorn
