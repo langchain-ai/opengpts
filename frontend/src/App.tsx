@@ -85,6 +85,9 @@ function App() {
 
   return (
     <Layout
+      subtitle={
+        configs?.find((c) => c.assistant_id === currentChat?.assistant_id)?.name
+      }
       sidebarOpen={sidebarOpen}
       setSidebarOpen={setSidebarOpen}
       sidebar={
