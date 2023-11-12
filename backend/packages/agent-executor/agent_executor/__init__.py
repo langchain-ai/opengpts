@@ -34,7 +34,6 @@ from langchain.schema.messages import (
     AIMessage,
     BaseMessage,
     FunctionMessage,
-    HumanMessage,
 )
 from langchain.schema.runnable import Runnable, RunnableSerializable
 from langchain.schema.runnable.config import RunnableConfig
@@ -416,10 +415,14 @@ class AgentExecutor(RunnableSerializable):
                             else:
                                 msg = AIMessage(
                                     content=chunk.log,
-                                    additional_kwargs={"function_call": {
-                                        "name": chunk.tool,
-                                        "arguments": json.dumps({"input": chunk.tool_input})
-                                    }}
+                                    additional_kwargs={
+                                        "function_call": {
+                                            "name": chunk.tool,
+                                            "arguments": json.dumps(
+                                                {"input": chunk.tool_input}
+                                            ),
+                                        }
+                                    },
                                 )
                                 next_output = AddableDict(
                                     actions=[chunk],

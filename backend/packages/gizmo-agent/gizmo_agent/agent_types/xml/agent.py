@@ -1,10 +1,10 @@
 import os
 
-from langchain.agents.format_scratchpad import format_xml
-from langchain.chat_models import ChatAnthropic, BedrockChat
-from langchain.tools.render import render_text_description
 import boto3
-from langchain.schema.messages import FunctionMessage, HumanMessage, AIMessage
+from langchain.agents.format_scratchpad import format_xml
+from langchain.chat_models import BedrockChat, ChatAnthropic
+from langchain.schema.messages import AIMessage, HumanMessage
+from langchain.tools.render import render_text_description
 
 from .prompts import conversational_prompt, parse_output
 
@@ -16,12 +16,11 @@ def _collapse_messages(messages):
         raise ValueError("Unexpected")
     for i in range(0, len(scratchpad), 2):
         action = messages[i]
-        observation = messages[i+1]
-        log += (
-            f"{action.content}<observation>{observation.content}</observation>"
-        )
+        observation = messages[i + 1]
+        log += f"{action.content}<observation>{observation.content}</observation>"
     log += final_message.content
     return AIMessage(content=log)
+
 
 def construct_chat_history(messages):
     collapsed_messages = []
