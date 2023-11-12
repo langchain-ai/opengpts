@@ -7,12 +7,10 @@ from langchain.tools import ArxivQueryRun, DuckDuckGoSearchRun
 from langchain.tools.retriever import create_retriever_tool
 from langchain.utilities import ArxivAPIWrapper
 from langchain.vectorstores.redis import RedisFilter
+from langchain.utilities.tavily_search import TavilySearchAPIWrapper
+from langchain.tools.tavily_search import TavilySearchResults, TavilyAnswer
 
 from gizmo_agent.ingest import vstore
-
-# Uncomment once relevant code is merged into langchain.
-# from langchain.utilities.tavily_search import TavilySearchAPIWrapper
-# from langchain.tools.tavily_search import TavilySearchResults, TavilyAnswer
 
 
 class DDGInput(BaseModel):
@@ -89,22 +87,20 @@ def _get_wikipedia():
     )
 
 
-# Uncomment tavily once tavily code is merged in:W
+def _get_tavily():
+    tavily_search = TavilySearchAPIWrapper()
+    return TavilySearchResults(api_wrapper=tavily_search)
 
-# def _get_tavily():
-#     tavily_search = TavilySearchAPIWrapper()
-#     return TavilySearchResults(api_wrapper=tavily_search)
-#
-#
-# def _get_tavily_answer():
-#     tavily_search = TavilySearchAPIWrapper()
-#     return TavilyAnswer(api_wrapper=tavily_search)
+
+def _get_tavily_answer():
+    tavily_search = TavilySearchAPIWrapper()
+    return TavilyAnswer(api_wrapper=tavily_search)
 
 
 class AvailableTools(str, Enum):
     DDG_SEARCH = "DDG Search"
-    # TAVILY = "Search (Tavily)"
-    # TAVILY_ANSWER = "Search (short answer, Tavily)"
+    TAVILY = "Search (Tavily)"
+    TAVILY_ANSWER = "Search (short answer, Tavily)"
     RETRIEVAL = "Retrieval"
     ARXIV = "Arxiv"
     YOU_SEARCH = "You.com Search"
@@ -121,12 +117,13 @@ TOOLS = {
     AvailableTools.SEC_FILINGS: _get_sec_filings,
     AvailableTools.PRESS_RELEASES: _get_press_releases,
     AvailableTools.PUBMED: _get_pubmed,
-    # AvailableTools.TAVILY: _get_tavily,
+    AvailableTools.TAVILY: _get_tavily,
     AvailableTools.WIKIPEDIA: _get_wikipedia,
-    # AvailableTools.TAVILY_ANSWER: _get_tavily_answer,
+    AvailableTools.TAVILY_ANSWER: _get_tavily_answer,
 }
 
 TOOL_OPTIONS = {e.value: e.value for e in AvailableTools}
 
+# Check if dependencies and env vars for each tool are available
 for k, v in TOOLS.items():
     v()
