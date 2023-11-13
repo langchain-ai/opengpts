@@ -20,7 +20,10 @@ from app.storage import (
 
 app = FastAPI()
 
-FEATURED_PUBLIC_ASSISTANTS = []
+FEATURED_PUBLIC_ASSISTANTS = [
+    "ba721964-b7e4-474c-b817-fb089d94dc5f",
+    "dc3ec482-aafc-4d90-8a1a-afb9b2876cde",
+]
 
 # Get root of app, used to point to directory containing static files
 ROOT = Path(__file__).parent.parent

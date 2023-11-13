@@ -165,10 +165,10 @@ function PublicLink(props: { assistantId: string }) {
       <button
         type="submit"
         className="relative -ml-px inline-flex items-center gap-x-1.5 rounded-l-md px-3 py-2 text-sm font-semibold text-gray-900 border border-gray-300 hover:bg-gray-50 bg-white"
-        onClick={(e) => {
+        onClick={async (e) => {
           e.preventDefault();
           e.stopPropagation();
-          navigator.clipboard.writeText(link);
+          await navigator.clipboard.writeText(link);
           window.alert("Copied to clipboard!");
         }}
       >
