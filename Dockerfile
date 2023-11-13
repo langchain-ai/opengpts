@@ -1,6 +1,6 @@
 FROM python:3.11
 
-RUN apt-get install libmagic1
+RUN apt-get install -y libmagic1
 
 WORKDIR /backend
 
