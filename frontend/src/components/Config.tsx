@@ -1,10 +1,12 @@
+import { useEffect, useState } from "react";
+import { marked } from "marked";
+import { ShareIcon } from "@heroicons/react/24/outline";
+import { useDropzone } from "react-dropzone";
+
 import { ConfigListProps } from "../hooks/useConfigList";
 import { SchemaField, Schemas } from "../hooks/useSchemas";
-import { useEffect, useState } from "react";
 import { cn } from "../utils/cn";
-import { useDropzone } from "react-dropzone";
 import { FileUploadDropzone } from "./FileUpload";
-import { marked } from "marked";
 
 function Label(props: { id: string; title: string }) {
   return (
@@ -156,6 +158,36 @@ function MultiOptionField(props: {
   );
 }
 
+function PublicLink(props: { assistantId: string }) {
+  const link = window.location.href + "?shared_id=" + props.assistantId;
+  return (
+    <div className="flex rounded-md shadow-sm mb-4">
+      <button
+        type="submit"
+        className="relative -ml-px inline-flex items-center gap-x-1.5 rounded-l-md px-3 py-2 text-sm font-semibold text-gray-900 border border-gray-300 hover:bg-gray-50 bg-white"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          navigator.clipboard.writeText(link);
+          window.alert("Copied to clipboard!");
+        }}
+      >
+        <ShareIcon
+          className="-ml-0.5 h-5 w-5 text-gray-400"
+          aria-hidden="true"
+        />
+        Copy Public Link
+      </button>
+      <a
+        className="rounded-none rounded-r-md py-1.5 px-2 text-gray-900 border border-l-0 border-gray-300 text-sm leading-6 line-clamp-1 flex-1 underline"
+        href={link}
+      >
+        {link}
+      </a>
+    </div>
+  );
+}
+
 export function Config(props: {
   configSchema: Schemas["configSchema"];
   configDefaults: Schemas["configDefaults"];
@@ -210,24 +242,10 @@ export function Config(props: {
             {props.config ? "(read-only)" : ""}
           </span>
         </span>
-        {props.config?.public && (
-          <div
-            className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 cursor-pointer"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              navigator.clipboard.writeText(
-                window.location.href +
-                  "?shared_id=" +
-                  props.config?.assistant_id
-              );
-              window.alert("Copied to clipboard!");
-            }}
-          >
-            Copy Public Link
-          </div>
-        )}
       </div>
+      {props.config?.public && (
+        <PublicLink assistantId={props.config?.assistant_id} />
+      )}
       <form
         className={cn("flex flex-col gap-8")}
         onSubmit={async (e) => {
