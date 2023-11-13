@@ -11,10 +11,13 @@ all: help
 TEST_FILE ?= tests/unit_tests/
 
 test:
-	poetry run pytest --disable-socket --allow-unix-socket $(TEST_FILE)
+	# We need to update handling of env variables for tests
+	YDC_API_KEY=placeholder OPENAI_API_KEY=placeholder poetry run pytest $(TEST_FILE)
+
 
 test_watch:
-	poetry run ptw . -- $(TEST_FILE)
+	# We need to update handling of env variables for tests
+	YDC_API_KEY=placeholder OPENAI_API_KEY=placeholder poetry run ptw . -- $(TEST_FILE)
 
 ######################
 # LINTING AND FORMATTING
@@ -26,9 +29,8 @@ lint format: PYTHON_FILES=.
 lint_diff format_diff: PYTHON_FILES=$(shell git diff --relative=. --name-only --diff-filter=d master | grep -E '\.py$$|\.ipynb$$')
 
 lint lint_diff:
-	echo "Not linting yet"
-	# poetry run ruff .
-	# poetry run ruff format $(PYTHON_FILES) --check
+	poetry run ruff .
+	poetry run ruff format $(PYTHON_FILES) --check
 
 format format_diff:
 	poetry run ruff format $(PYTHON_FILES)

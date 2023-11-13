@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Chat } from "./components/Chat";
 import { ChatList } from "./components/ChatList";
 import { Layout } from "./components/Layout";
 import { NewChat } from "./components/NewChat";
-import { useChatList } from "./hooks/useChatList";
+import { Chat as ChatType, useChatList } from "./hooks/useChatList";
 import { useSchemas } from "./hooks/useSchemas";
 import { useStreamState } from "./hooks/useStreamState";
 import { useConfigList } from "./hooks/useConfigList";
@@ -11,62 +12,60 @@ import { useConfigList } from "./hooks/useConfigList";
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { configSchema, configDefaults } = useSchemas();
-  const { chats, currentChat, createChat, updateChat, enterChat } =
-    useChatList();
-  const { configs, currentConfig, saveConfig, enterConfig } =
-    useConfigList(configDefaults);
+  const { chats, currentChat, createChat, enterChat } = useChatList();
+  const { configs, currentConfig, saveConfig, enterConfig } = useConfigList();
   const { startStream, stopStream, stream } = useStreamState();
+
+  const startTurn = useCallback(
+    async (message: string, chat: ChatType | null = currentChat) => {
+      if (!chat) return;
+      const config = configs?.find(
+        (c) => c.assistant_id === chat.assistant_id
+      )?.config;
+      if (!config) return;
+      await startStream(
+        {
+          input: {
+            content: message,
+            additional_kwargs: {},
+            type: "human",
+            example: false,
+          },
+        },
+        {
+          ...config,
+          configurable: {
+            ...config.configurable,
+            thread_id: chat.thread_id,
+            assistant_id: chat.assistant_id,
+          },
+        }
+      );
+    },
+    [currentChat, startStream, configs]
+  );
 
   const startChat = useCallback(
     async (message: string) => {
       if (!currentConfig) return;
-      const chat = await createChat(
-        message,
-        [{ type: "human", content: message }],
-        currentConfig
-      );
-      return startStream({ messages: chat.messages }, chat.config.config);
+      const chat = await createChat(message, currentConfig.assistant_id);
+      return startTurn(message, chat);
     },
-    [createChat, startStream, currentConfig]
-  );
-
-  const startTurn = useCallback(
-    async (message: string) => {
-      if (!currentChat) return;
-      const messages = [
-        ...currentChat.messages,
-        { type: "human", content: message },
-      ];
-      await Promise.all([
-        updateChat(currentChat.id, { messages }),
-        startStream({ messages }, currentChat.config.config),
-      ]);
-    },
-    [currentChat, startStream, updateChat]
+    [createChat, startTurn, currentConfig]
   );
 
   const selectChat = useCallback(
     async (id: string | null) => {
-      stopStream?.();
+      if (currentChat) {
+        stopStream?.(true);
+      }
       enterChat(id);
       if (sidebarOpen) {
         setSidebarOpen(false);
       }
     },
-    [enterChat, stopStream, sidebarOpen]
+    [enterChat, stopStream, sidebarOpen, currentChat]
   );
-
-  useEffect(() => {
-    if (stream?.status === "done" && currentChat) {
-      updateChat(currentChat.id, {
-        messages: [
-          ...currentChat.messages,
-          ...stream.messages.filter((m) => !currentChat.messages.includes(m)),
-        ],
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stream?.status, updateChat]);
 
   const content = currentChat ? (
     <Chat
@@ -87,13 +86,36 @@ function App() {
     />
   );
 
+  const currentChatConfig = configs?.find(
+    (c) => c.assistant_id === currentChat?.assistant_id
+  );
+
   return (
     <Layout
+      subtitle={
+        currentChatConfig ? (
+          <span className="inline-flex gap-1 items-center">
+            {currentChatConfig.name}
+            <InformationCircleIcon
+              className="h-5 w-5 cursor-pointer text-indigo-600"
+              onClick={() => {
+                enterChat(null);
+                enterConfig(currentChatConfig.assistant_id);
+              }}
+            />
+          </span>
+        ) : null
+      }
       sidebarOpen={sidebarOpen}
       setSidebarOpen={setSidebarOpen}
       sidebar={
         <ChatList
-          chats={chats}
+          chats={useMemo(() => {
+            if (configs === null || chats === null) return null;
+            return chats.filter((c) =>
+              configs.some((config) => config.assistant_id === c.assistant_id)
+            );
+          }, [chats, configs])}
           currentChat={currentChat}
           enterChat={selectChat}
         />

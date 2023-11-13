@@ -5,6 +5,7 @@ import { cn } from "../utils/cn";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { LangSmithActions } from "./LangSmithActions";
 
 function Function(props: {
   call: boolean;
@@ -78,49 +79,56 @@ function Function(props: {
   );
 }
 
-export function Message(props: MessageType) {
+export function Message(props: MessageType & { runId?: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="leading-6 flex flex-row mb-8">
-      <div
-        className={cn(
-          "font-medium text-sm text-gray-400 uppercase mr-2 mt-1 w-24",
-          props.type === "function" && "mt-2"
-        )}
-      >
-        {props.type}
-      </div>
-      <div className="flex-1">
-        {props.type === "function" && (
-          <Function
-            call={false}
-            name={props.name}
-            open={open}
-            setOpen={setOpen}
-          />
-        )}
-        {props.additional_kwargs?.function_call && (
-          <Function
-            call={true}
-            name={props.additional_kwargs.function_call.name}
-            args={props.additional_kwargs.function_call.arguments}
-          />
-        )}
-        {(props.type === "function" ? open : true) ? (
-          typeof props.content === "string" ? (
-            <div
-              className="text-gray-900 prose"
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(marked(props.content)).trim(),
-              }}
+    <div className="flex flex-col mb-8">
+      <div className="leading-6 flex flex-row">
+        <div
+          className={cn(
+            "font-medium text-sm text-gray-400 uppercase mr-2 mt-1 w-24 flex flex-col",
+            props.type === "function" && "mt-2"
+          )}
+        >
+          {props.type}
+        </div>
+        <div className="flex-1">
+          {props.type === "function" && (
+            <Function
+              call={false}
+              name={props.name}
+              open={open}
+              setOpen={setOpen}
             />
+          )}
+          {props.additional_kwargs?.function_call && (
+            <Function
+              call={true}
+              name={props.additional_kwargs.function_call.name}
+              args={props.additional_kwargs.function_call.arguments}
+            />
+          )}
+          {(props.type === "function" ? open : true) ? (
+            typeof props.content === "string" ? (
+              <div
+                className="text-gray-900 prose"
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(marked(props.content)).trim(),
+                }}
+              />
+            ) : (
+              <div className="text-gray-900 prose">{str(props.content)}</div>
+            )
           ) : (
-            <div className="text-gray-900 prose">{str(props.content)}</div>
-          )
-        ) : (
-          false
-        )}
+            false
+          )}
+        </div>
       </div>
+      {props.runId && (
+        <div className="mt-2 pl-[100px]">
+          <LangSmithActions runId={props.runId} />
+        </div>
+      )}
     </div>
   );
 }

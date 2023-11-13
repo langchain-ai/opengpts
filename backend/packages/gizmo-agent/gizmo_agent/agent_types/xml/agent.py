@@ -1,12 +1,58 @@
-from langchain.tools.render import render_text_description
+import os
+
+import boto3
 from langchain.agents.format_scratchpad import format_xml
-from langchain.chat_models import ChatAnthropic
+from langchain.chat_models import BedrockChat, ChatAnthropic
+from langchain.schema.messages import AIMessage, HumanMessage
+from langchain.tools.render import render_text_description
 
 from .prompts import conversational_prompt, parse_output
 
 
-def get_xml_agent(tools, system_message):
-    model = ChatAnthropic(temperature=0, max_tokens_to_sample=2000)
+def _collapse_messages(messages):
+    log = ""
+    scratchpad, final_message = messages[:-1], messages[-1]
+    if len(scratchpad) % 2 != 0:
+        raise ValueError("Unexpected")
+    for i in range(0, len(scratchpad), 2):
+        action = messages[i]
+        observation = messages[i + 1]
+        log += f"{action.content}<observation>{observation.content}</observation>"
+    log += final_message.content
+    return AIMessage(content=log)
+
+
+def construct_chat_history(messages):
+    collapsed_messages = []
+    temp_messages = []
+
+    for message in messages:
+        if isinstance(message, HumanMessage):
+            if temp_messages:
+                collapsed_messages.append(_collapse_messages(temp_messages))
+                temp_messages = []
+            collapsed_messages.append(message)
+        else:
+            temp_messages.append(message)
+
+    # Don't forget to add the last non-human message if it exists
+    if temp_messages:
+        collapsed_messages.append(_collapse_messages(temp_messages))
+
+    return collapsed_messages
+
+
+def get_xml_agent(tools, system_message, bedrock=False):
+    if bedrock:
+        client = boto3.client(
+            "bedrock-runtime",
+            region_name="us-west-2",
+            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
+        )
+        model = BedrockChat(model_id="anthropic.claude-v2", client=client)
+    else:
+        model = ChatAnthropic(temperature=0, max_tokens_to_sample=2000)
     prompt = conversational_prompt.partial(
         tools=render_text_description(tools),
         tool_names=", ".join([t.name for t in tools]),
@@ -16,7 +62,7 @@ def get_xml_agent(tools, system_message):
 
     agent = (
         {
-            "messages": lambda x: x["messages"],
+            "messages": lambda x: construct_chat_history(x["messages"]),
             "agent_scratchpad": lambda x: format_xml(x["intermediate_steps"]),
         }
         | prompt

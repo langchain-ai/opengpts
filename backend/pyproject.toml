@@ -13,6 +13,17 @@ tomli-w = "^1.0.0"
 uvicorn = "^0.23.2"
 fastapi = "^0.103.2"
 langserve = ">=0.0.16"
+# Uncomment if you need to work from a development branch
+# This will only work for local development though!
+# langchain = { git = "git@github.com:langchain-ai/langchain.git/", branch = "nc/subclass-runnable-binding" , subdirectory = "libs/langchain"}
+gizmo-agent = {path = "packages/gizmo-agent", develop = true}
+agent-executor = {path = "packages/agent-executor", develop = true}
+orjson = "^3.9.10"
+redis = "^5.0.1"
+python-multipart = "^0.0.6"
+tiktoken = "^0.5.1"
+langchain = "^0.0.335"
+python-magic = "^0.4.27"
 
 [tool.poetry.group.dev.dependencies]
 uvicorn = "^0.23.2"
@@ -44,12 +55,12 @@ omit = [
 # --strict-config       any warnings encountered while parsing the `pytest`
 #                       section of the configuration file raise errors.
 addopts = "--strict-markers --strict-config --durations=5 -vv"
-# Global timeout for all tests. There shuold be a good reason for a test to
-# take more than 5 second
-timeout = 5
+# Use global timeout of 30 seconds for now.
+# Most tests should be closer to ~100 ms, but some of the tests involve
+# parsing files. We can adjust on a per test basis later on.
+timeout = 30
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
