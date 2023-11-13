@@ -207,6 +207,7 @@ export function Config(props: {
         [".docx"],
       "application/msword": [".doc"],
     },
+    maxSize: 10_000_000, // Up to 10 MB file size.
   });
   const [isPublic, setPublic] = useState(props.config?.public ?? false);
   useEffect(() => {
