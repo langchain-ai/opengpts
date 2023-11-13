@@ -2,7 +2,14 @@
 
 This is an open source effort to create a similar experience to OpenAI's GPTs.
 It builds upon [LangChain](https://github.com/langchain-ai/langchain), [LangServe](https://github.com/langchain-ai/langserve) and [LangSmith](https://smith.langchain.com/).
-OpenGPTs gives you more control over the LLM you use (choose between the 60+ that LangChain offers), the prompts you use (use LangSmith to debug those), and the tools you give it (choose from LangChain's 100+ tools, or easily write your own).
+OpenGPTs gives you more control, allowing you to configure:
+
+- The LLM you use (choose between the 60+ that LangChain offers)
+- The prompts you use (use LangSmith to debug those)
+- The tools you give it (choose from LangChain's 100+ tools, or easily write your own)
+- The vector database you use (choose from LangChain's 60+ vector database integrations)
+- The retrieval algorithm you use
+- The chat history database you use
 
 <p align="center">
     <img alt="Configure" src="_static/configure.png" width="49%" />
