@@ -137,7 +137,7 @@ You can choose between different LLMs to use.
 This takes advantage of LangChain's many integrations.
 It is important to note that depending on which LLM you use, you may need to change how you are prompting it.
 
-We have expose four agent types by default:
+We have exposed four agent types by default:
 
 - "GPT 3.5 Turbo"
 - "GPT 4"
