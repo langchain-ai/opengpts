@@ -49,7 +49,7 @@ def _create_function_message(
     )
 
 
-def run_tool(
+def _run_tool(
     messages: list[AnyMessage], config: RunnableConfig, *, tools: dict[str, BaseTool]
 ) -> FunctionMessage:
     action: AgentAction = messages[-1].additional_kwargs["agent"]
@@ -58,7 +58,7 @@ def run_tool(
     return _create_function_message(action, result)
 
 
-async def arun_tool(
+async def _arun_tool(
     messages: list[AnyMessage], config: RunnableConfig, *, tools: dict[str, BaseTool]
 ) -> FunctionMessage:
     action: AgentAction = messages[-1].additional_kwargs["agent"]
@@ -72,7 +72,7 @@ def get_agent_executor(
     agent: Runnable[dict[str, list[AnyMessage]], AgentAction | AgentFinish],
 ) -> Pregel:
     tool_map = {tool.name: tool for tool in tools}
-    tool_lambda = RunnableLambda(run_tool, arun_tool).bind(tools=tool_map)
+    tool_lambda = RunnableLambda(_run_tool, _arun_tool).bind(tools=tool_map)
 
     tool_chain = tool_lambda | Channel.write_to("messages")
     agent_chain = (
