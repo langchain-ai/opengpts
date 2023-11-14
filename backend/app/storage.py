@@ -2,8 +2,8 @@ import os
 from datetime import datetime
 
 import orjson
-from langchain.schema.messages import messages_from_dict
 from langchain.utilities.redis import get_client
+from agent_executor.checkpoint import RedisCheckpoint
 from redis.client import Redis as RedisType
 
 
@@ -115,13 +115,13 @@ def list_threads(user_id: str):
 
 
 def get_thread_messages(user_id: str, thread_id: str):
-    client = _get_redis_client()
-    messages = client.lrange(thread_messages_key(user_id, thread_id), 0, -1)
+    client = RedisCheckpoint()
+    checkpoint = client.get(
+        {"configurable": {"user_id": user_id, "thread_id": thread_id}}
+    )
+    _, messages = checkpoint.get("messages", [[], []])
     return {
-        "messages": [
-            m.dict()
-            for m in messages_from_dict([orjson.loads(m) for m in messages[::-1]])
-        ],
+        "messages": [m.dict() for m in messages],
     }
 
 

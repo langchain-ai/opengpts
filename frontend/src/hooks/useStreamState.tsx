@@ -10,7 +10,7 @@ export interface StreamState {
 
 export interface StreamStateProps {
   stream: StreamState | null;
-  startStream: (input: { input: Message }, config: unknown) => Promise<void>;
+  startStream: (input: { messages: Message }, config: unknown) => Promise<void>;
   stopStream?: (clear?: boolean) => void;
 }
 
@@ -19,10 +19,10 @@ export function useStreamState(): StreamStateProps {
   const [controller, setController] = useState<AbortController | null>(null);
 
   const startStream = useCallback(
-    async (input: { input: Message }, config: unknown) => {
+    async (input: { messages: Message }, config: unknown) => {
       const controller = new AbortController();
       setController(controller);
-      setCurrent({ status: "inflight", messages: [input.input] });
+      setCurrent({ status: "inflight", messages: [input.messages] });
 
       await fetchEventSource("/stream", {
         signal: controller.signal,

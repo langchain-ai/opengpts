@@ -25,7 +25,7 @@ function App() {
       if (!config) return;
       await startStream(
         {
-          input: {
+          messages: {
             content: message,
             additional_kwargs: {},
             type: "human",

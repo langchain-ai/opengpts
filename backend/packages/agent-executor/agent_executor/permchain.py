@@ -2,6 +2,7 @@ import json
 
 from permchain import Channel, Pregel
 from permchain.channels import Topic
+from permchain.checkpoint.base import BaseCheckpointAdapter
 from langchain.schema.runnable import (
     Runnable,
     RunnableConfig,
@@ -69,6 +70,7 @@ async def _arun_tool(
 def get_agent_executor(
     tools: list[BaseTool],
     agent: Runnable[dict[str, list[AnyMessage]], AgentAction | AgentFinish],
+    checkpoint: BaseCheckpointAdapter,
 ) -> Pregel:
     tool_map = {tool.name: tool for tool in tools}
     tool_lambda = RunnableLambda(_run_tool, _arun_tool).bind(tools=tool_map)
@@ -99,4 +101,5 @@ def get_agent_executor(
         channels={"messages": Topic(AnyMessage, accumulate=True)},
         input=["messages"],
         output=["messages"],
+        checkpoint=checkpoint,
     )
