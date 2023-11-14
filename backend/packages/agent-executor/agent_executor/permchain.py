@@ -25,7 +25,6 @@ def _create_agent_message(
                 content=output.log,
                 additional_kwargs={"agent": output},
             )
-
     else:
         return AIMessage(
             content=output.return_values["output"],
