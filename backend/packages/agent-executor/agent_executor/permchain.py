@@ -85,6 +85,7 @@ def get_agent_executor(
         message = messages[-1]
         if isinstance(message, AIMessage):
             if isinstance(message.additional_kwargs.get("agent"), AgentAction):
+                # TODO if this is last step, return stop message instead
                 return tool_chain
             elif isinstance(message.additional_kwargs.get("agent"), AgentFinish):
                 return RunnablePassthrough()
@@ -92,8 +93,6 @@ def get_agent_executor(
             return agent_chain
 
     executor = Channel.subscribe_to("messages") | route_last_message
-
-    # TODO add agent stop message
 
     return Pregel(
         chains={"executor": executor},
