@@ -2,8 +2,8 @@ import os
 from functools import partial
 from typing import Any, Mapping, Optional, Sequence
 
-from agent_executor import AgentExecutor
 from agent_executor.history import RunnableWithMessageHistory
+from agent_executor.permchain import get_agent_executor
 from langchain.memory import RedisChatMessageHistory
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.schema.messages import AnyMessage
@@ -64,12 +64,10 @@ class ConfigurableAgent(RunnableBinding):
             _agent = get_xml_agent(_tools, system_message, bedrock=True)
         else:
             raise ValueError("Unexpected agent type")
-        agent_executor = AgentExecutor(
-            agent=_agent,
+        agent_executor = get_agent_executor(
             tools=_tools,
-            handle_parsing_errors=True,
-            max_iterations=10,
-        )
+            agent=_agent,
+        ).with_config({"recursion_limit": 10})
         super().__init__(
             tools=tools,
             agent=agent,

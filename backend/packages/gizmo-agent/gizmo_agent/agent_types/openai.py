@@ -1,6 +1,5 @@
 import os
 
-from langchain.agents.format_scratchpad import format_to_openai_functions
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
 from langchain.chat_models import AzureChatOpenAI, ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -27,7 +26,6 @@ def get_openai_function_agent(
         [
             ("system", system_message),
             MessagesPlaceholder(variable_name="messages"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
     )
     if tools:
@@ -36,15 +34,5 @@ def get_openai_function_agent(
         )
     else:
         llm_with_tools = llm
-    agent = (
-        {
-            "messages": lambda x: x["messages"],
-            "agent_scratchpad": lambda x: format_to_openai_functions(
-                x["intermediate_steps"]
-            ),
-        }
-        | prompt
-        | llm_with_tools
-        | OpenAIFunctionsAgentOutputParser()
-    )
+    agent = prompt | llm_with_tools | OpenAIFunctionsAgentOutputParser()
     return agent

@@ -33,7 +33,6 @@ conversational_prompt = ChatPromptTemplate.from_messages(
     [
         ("system", template),
         MessagesPlaceholder(variable_name="messages"),
-        ("ai", "{agent_scratchpad}"),
     ]
 )
 
