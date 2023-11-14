@@ -19,6 +19,7 @@ export function NewChat(props: NewChatProps) {
             configs={props.configs}
             currentConfig={props.currentConfig}
             enterConfig={props.enterConfig}
+            removeConfig={props.removeConfig}
           />
         </div>
 
