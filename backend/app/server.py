@@ -9,16 +9,11 @@ from langchain.schema.runnable import RunnableConfig
 from langserve import add_routes
 from typing_extensions import TypedDict
 
-from app.storage import (
-    get_thread_messages,
-    list_assistants,
-    list_public_assistants,
-    list_threads,
-    put_assistant,
-    put_thread,
-)
+from app.storage.redis import RedisStorage
 
 app = FastAPI()
+
+storage = RedisStorage()
 
 FEATURED_PUBLIC_ASSISTANTS = [
     "ba721964-b7e4-474c-b817-fb089d94dc5f",
@@ -55,12 +50,12 @@ def ingest_endpoint(files: list[UploadFile], config: str = Form(...)):
 @app.get("/assistants/")
 def list_assistants_endpoint(opengpts_user_id: Annotated[str, Cookie()]):
     """List all assistants for the current user."""
-    return list_assistants(opengpts_user_id)
+    return storage.list_assistants(opengpts_user_id)
 
 
 @app.get("/assistants/public/")
 def list_public_assistants_endpoint(shared_id: Optional[str] = None):
-    return list_public_assistants(
+    return storage.list_public_assistants(
         FEATURED_PUBLIC_ASSISTANTS + ([shared_id] if shared_id else [])
     )
 
@@ -77,7 +72,7 @@ def put_assistant_endpoint(
     payload: AssistantPayload,
     opengpts_user_id: Annotated[str, Cookie()],
 ):
-    return put_assistant(
+    return storage.put_assistant(
         opengpts_user_id,
         aid,
         name=payload["name"],
@@ -88,12 +83,12 @@ def put_assistant_endpoint(
 
 @app.get("/threads/")
 def list_threads_endpoint(opengpts_user_id: Annotated[str, Cookie()]):
-    return list_threads(opengpts_user_id)
+    return storage.list_threads(opengpts_user_id)
 
 
 @app.get("/threads/{tid}/messages")
 def get_thread_messages_endpoint(opengpts_user_id: Annotated[str, Cookie()], tid: str):
-    return get_thread_messages(opengpts_user_id, tid)
+    return storage.get_thread_messages(opengpts_user_id, tid)
 
 
 class ThreadPayload(TypedDict):
@@ -105,7 +100,7 @@ class ThreadPayload(TypedDict):
 def put_thread_endpoint(
     opengpts_user_id: Annotated[str, Cookie()], tid: str, payload: ThreadPayload
 ):
-    return put_thread(
+    return storage.put_thread(
         opengpts_user_id,
         tid,
         assistant_id=payload["assistant_id"],
