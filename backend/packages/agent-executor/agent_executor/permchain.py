@@ -1,6 +1,8 @@
 import json
+from operator import itemgetter
+from typing import Sequence
 
-from permchain import Channel, Pregel
+from permchain import Channel, Pregel, ReservedChannels
 from permchain.channels import Topic
 from permchain.checkpoint.base import BaseCheckpointAdapter
 from langchain.schema.runnable import (
@@ -20,7 +22,9 @@ def _create_agent_message(
     if isinstance(output, AgentAction):
         if isinstance(output, AgentActionMessageLog):
             output.message_log[-1].additional_kwargs["agent"] = output
-            return output.message_log
+            messages = output.message_log
+            output.message_log = []
+            return messages
         else:
             return AIMessage(
                 content=output.log,
@@ -75,26 +79,39 @@ def get_agent_executor(
     tool_map = {tool.name: tool for tool in tools}
     tool_lambda = RunnableLambda(_run_tool, _arun_tool).bind(tools=tool_map)
 
-    tool_chain = tool_lambda | Channel.write_to("messages")
-    agent_chain = (
-        {"messages": RunnablePassthrough()}
-        | agent
-        | _create_agent_message
-        | Channel.write_to("messages")
+    tool_chain = itemgetter("messages") | tool_lambda | Channel.write_to("messages")
+    agent_chain = agent | _create_agent_message | Channel.write_to("messages")
+
+    def route_last_message(input: dict[str, bool | Sequence[AnyMessage]]) -> Runnable:
+        message: AnyMessage = input["messages"][-1]
+        if isinstance(message.additional_kwargs.get("agent"), AgentFinish):
+            # finished, do nothing
+            return RunnablePassthrough()
+
+        if input[ReservedChannels.is_last_step]:
+            # exhausted iterations without finishing, return stop message
+            return Channel.write_to(
+                messages=_create_agent_message(
+                    AgentFinish(
+                        {
+                            "output": "Agent stopped due to iteration limit or time limit."
+                        },
+                        "",
+                    )
+                )
+            )
+
+        if isinstance(message.additional_kwargs.get("agent"), AgentAction):
+            # agent action, run it
+            return tool_chain
+
+        # otherwise, run the agent
+        return agent_chain
+
+    executor = (
+        Channel.subscribe_to(["messages", ReservedChannels.is_last_step])
+        | route_last_message
     )
-
-    def route_last_message(messages: list[AnyMessage]) -> Runnable:
-        message = messages[-1]
-        if isinstance(message, AIMessage):
-            if isinstance(message.additional_kwargs.get("agent"), AgentAction):
-                # TODO if this is last step, return stop message instead
-                return tool_chain
-            elif isinstance(message.additional_kwargs.get("agent"), AgentFinish):
-                return RunnablePassthrough()
-        else:
-            return agent_chain
-
-    executor = Channel.subscribe_to("messages") | route_last_message
 
     return Pregel(
         chains={"executor": executor},
