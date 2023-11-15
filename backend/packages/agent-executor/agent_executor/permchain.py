@@ -23,7 +23,7 @@ def _create_agent_message(
         if isinstance(output, AgentActionMessageLog):
             output.message_log[-1].additional_kwargs["agent"] = output
             messages = output.message_log
-            output.message_log = []
+            output.message_log = []  # avoid circular reference for json dumps
             return messages
         else:
             return AIMessage(
