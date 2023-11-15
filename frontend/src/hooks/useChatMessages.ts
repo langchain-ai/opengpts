@@ -47,13 +47,7 @@ export function useChatMessages(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stream?.status]);
 
-  return useMemo(() => {
-    // TODO replace this with less hacky logic
-    const ignoreStream =
-      !stream ||
-      JSON.stringify(stream.messages) ===
-        JSON.stringify(messages?.slice(-stream.messages?.length));
-
-    return ignoreStream ? messages : [...(messages ?? []), ...stream.messages];
-  }, [messages, stream]);
+  return stream?.merge
+    ? [...(messages ?? []), ...stream.messages]
+    : stream?.messages ?? messages;
 }

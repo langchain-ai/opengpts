@@ -75,7 +75,7 @@ class ConfigurableAgent(RunnableBinding):
 
 
 class AgentInput(BaseModel):
-    messages: AnyMessage
+    messages: Sequence[AnyMessage]
 
 
 class AgentOutput(BaseModel):

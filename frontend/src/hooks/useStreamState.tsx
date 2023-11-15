@@ -6,11 +6,15 @@ export interface StreamState {
   status: "inflight" | "error" | "done";
   messages: Message[];
   run_id?: string;
+  merge?: boolean;
 }
 
 export interface StreamStateProps {
   stream: StreamState | null;
-  startStream: (input: { messages: Message }, config: unknown) => Promise<void>;
+  startStream: (
+    input: { messages: Message[] },
+    config: unknown
+  ) => Promise<void>;
   stopStream?: (clear?: boolean) => void;
 }
 
@@ -19,10 +23,10 @@ export function useStreamState(): StreamStateProps {
   const [controller, setController] = useState<AbortController | null>(null);
 
   const startStream = useCallback(
-    async (input: { messages: Message }, config: unknown) => {
+    async (input: { messages: Message[] }, config: unknown) => {
       const controller = new AbortController();
       setController(controller);
-      setCurrent({ status: "inflight", messages: [input.messages] });
+      setCurrent({ status: "inflight", messages: input.messages, merge: true });
 
       await fetchEventSource("/stream", {
         signal: controller.signal,
@@ -34,7 +38,7 @@ export function useStreamState(): StreamStateProps {
             const { messages } = JSON.parse(msg.data);
             setCurrent((current) => ({
               status: "inflight",
-              messages: [...(current?.messages ?? []), ...messages],
+              messages,
               run_id: current?.run_id,
             }));
           } else if (msg.event === "metadata") {
@@ -84,8 +88,6 @@ export function useStreamState(): StreamStateProps {
     },
     [controller]
   );
-
-  console.log("stream", current);
 
   return {
     startStream,

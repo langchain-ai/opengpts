@@ -2,8 +2,11 @@ import os
 from datetime import datetime
 
 import orjson
+from langchain.schema.messages import AnyMessage
 from langchain.utilities.redis import get_client
 from agent_executor.checkpoint import RedisCheckpoint
+from permchain.channels.base import ChannelsManager
+from permchain.channels import Topic
 from redis.client import Redis as RedisType
 
 
@@ -21,12 +24,6 @@ def threads_list_key(user_id: str):
 
 def thread_key(user_id: str, thread_id: str):
     return f"opengpts:{user_id}:thread:{thread_id}"
-
-
-def thread_messages_key(user_id: str, thread_id: str):
-    # Needs to match key used by RedisChatMessageHistory
-    # TODO we probably want to align this with the others
-    return f"message_store:{user_id}:{thread_id}"
 
 
 assistant_hash_keys = ["assistant_id", "name", "config", "updated_at", "public"]
@@ -119,10 +116,12 @@ def get_thread_messages(user_id: str, thread_id: str):
     checkpoint = client.get(
         {"configurable": {"user_id": user_id, "thread_id": thread_id}}
     )
-    _, messages = checkpoint.get("messages", [[], []])
-    return {
-        "messages": [m.dict() for m in messages],
-    }
+    # TODO replace hardcoded messages channel with
+    # channel extracted from agent
+    with ChannelsManager(
+        {"messages": Topic(AnyMessage, accumulate=True)}, checkpoint
+    ) as channels:
+        return {k: v.get() for k, v in channels.items()}
 
 
 def put_thread(user_id: str, thread_id: str, *, assistant_id: str, name: str):

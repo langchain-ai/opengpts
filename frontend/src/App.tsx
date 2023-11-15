@@ -25,12 +25,14 @@ function App() {
       if (!config) return;
       await startStream(
         {
-          messages: {
-            content: message,
-            additional_kwargs: {},
-            type: "human",
-            example: false,
-          },
+          messages: [
+            {
+              content: message,
+              additional_kwargs: {},
+              type: "human",
+              example: false,
+            },
+          ],
         },
         {
           ...config,
