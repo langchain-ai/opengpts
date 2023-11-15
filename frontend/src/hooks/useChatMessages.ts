@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { Message } from "./useChatList";
 import { StreamState } from "./useStreamState";
 
-// const MESSAGES_SEEN = new WeakSet<Message>();
-
 async function getMessages(threadId: string) {
   const { messages } = await fetch(`/threads/${threadId}/messages`, {
     headers: {
