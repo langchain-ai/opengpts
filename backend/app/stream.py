@@ -69,6 +69,8 @@ class StreamMessagesHandler(BaseCallbackHandler):
 
 
 def map_chunk_to_msg(chunk: BaseMessageChunk) -> BaseMessage:
+    if not isinstance(chunk, BaseMessageChunk):
+        return chunk
     args = {k: v for k, v in chunk.__dict__.items() if k != "type"}
     if isinstance(chunk, HumanMessageChunk):
         return HumanMessage(**args)
