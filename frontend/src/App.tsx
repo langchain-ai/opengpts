@@ -34,14 +34,8 @@ function App() {
             },
           ],
         },
-        {
-          ...config,
-          configurable: {
-            ...config.configurable,
-            thread_id: chat.thread_id,
-            assistant_id: chat.assistant_id,
-          },
-        }
+        chat.assistant_id,
+        chat.thread_id
       );
     },
     [currentChat, startStream, configs]

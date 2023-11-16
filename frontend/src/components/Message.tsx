@@ -7,6 +7,14 @@ import DOMPurify from "dompurify";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { LangSmithActions } from "./LangSmithActions";
 
+function tryJsonParse(value: string) {
+  try {
+    return JSON.parse(value);
+  } catch (e) {
+    return {};
+  }
+}
+
 function Function(props: {
   call: boolean;
   name?: string;
@@ -48,7 +56,7 @@ function Function(props: {
           <div className="ring-1 ring-gray-300 rounded">
             <table className="divide-y divide-gray-300">
               <tbody>
-                {Object.entries(JSON.parse(props.args)).map(
+                {Object.entries(tryJsonParse(props.args)).map(
                   ([key, value], i) => (
                     <tr key={i}>
                       <td

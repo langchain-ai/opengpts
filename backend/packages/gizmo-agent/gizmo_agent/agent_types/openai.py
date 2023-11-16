@@ -11,9 +11,9 @@ def get_openai_function_agent(
 ):
     if not azure:
         if gpt_4:
-            llm = ChatOpenAI(model="gpt-4-1106-preview", temperature=0)
+            llm = ChatOpenAI(model="gpt-4-1106-preview", temperature=0, streaming=True)
         else:
-            llm = ChatOpenAI(model="gpt-3.5-turbo-1106", temperature=0)
+            llm = ChatOpenAI(model="gpt-3.5-turbo-1106", temperature=0, streaming=True)
     else:
         llm = AzureChatOpenAI(
             temperature=0,
@@ -21,6 +21,7 @@ def get_openai_function_agent(
             openai_api_base=os.environ["AZURE_OPENAI_API_BASE"],
             openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
             openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],
+            streaming=True,
         )
     prompt = ChatPromptTemplate.from_messages(
         [

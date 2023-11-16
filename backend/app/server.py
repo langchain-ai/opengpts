@@ -1,15 +1,26 @@
+import asyncio
+import json
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated, AsyncIterator, Optional, Sequence
+from fastapi.exceptions import RequestValidationError
 
 import orjson
-from fastapi import Cookie, FastAPI, Form, Request, UploadFile
+from fastapi import BackgroundTasks, Cookie, FastAPI, Form, Request, UploadFile
 from fastapi.staticfiles import StaticFiles
 from gizmo_agent import agent, ingest_runnable
+from langserve.callbacks import AsyncEventAggregatorCallback
+from langchain.pydantic_v1 import ValidationError
+from langchain.schema.messages import AnyMessage
 from langchain.schema.runnable import RunnableConfig
 from langserve import add_routes
+from langserve.server import _get_base_run_id_as_str, _unpack_input
+from langserve.serialization import WellKnownLCSerializer
+from pydantic import BaseModel
+from sse_starlette import EventSourceResponse
 from typing_extensions import TypedDict
 
 from app.storage import (
+    get_assistant,
     get_thread_messages,
     list_assistants,
     list_public_assistants,
@@ -17,6 +28,7 @@ from app.storage import (
     put_assistant,
     put_thread,
 )
+from app.stream import StreamMessagesHandler
 
 app = FastAPI()
 
@@ -44,6 +56,117 @@ add_routes(
     per_req_config_modifier=attach_user_id_to_config,
     enable_feedback_endpoint=True,
 )
+
+serializer = WellKnownLCSerializer()
+
+
+class AgentInput(BaseModel):
+    messages: Sequence[AnyMessage]
+
+
+class CreateRunPayload(BaseModel):
+    assistant_id: str
+    thread_id: str
+    stream: bool
+    # TODO make optional
+    input: AgentInput
+
+
+@app.post("/runs")
+async def create_run_endpoint(
+    request: Request,
+    opengpts_user_id: Annotated[str, Cookie()],
+    background_tasks: BackgroundTasks,
+):
+    try:
+        body = await request.json()
+    except json.JSONDecodeError:
+        raise RequestValidationError(errors=["Invalid JSON body"])
+    assistant, state = await asyncio.gather(
+        asyncio.get_running_loop().run_in_executor(
+            None, get_assistant, opengpts_user_id, body["assistant_id"]
+        ),
+        asyncio.get_running_loop().run_in_executor(
+            None, get_thread_messages, opengpts_user_id, body["thread_id"]
+        ),
+    )
+    config: RunnableConfig = attach_user_id_to_config(
+        {
+            **assistant["config"],
+            "configurable": {
+                **assistant["config"]["configurable"],
+                "thread_id": body["thread_id"],
+                "assistant_id": body["assistant_id"],
+            },
+        },
+        request,
+    )
+    try:
+        input_ = _unpack_input(agent.get_input_schema(config).validate(body["input"]))
+    except ValidationError as e:
+        raise RequestValidationError(e.errors(), body=body)
+    if body["stream"]:
+        streamer = StreamMessagesHandler(state["messages"] + input_["messages"])
+        event_aggregator = AsyncEventAggregatorCallback()
+        config["callbacks"] = [streamer, event_aggregator]
+
+        # Call the runnable in streaming mode,
+        # add each chunk to the output stream
+        async def consume_astream() -> None:
+            try:
+                async for chunk in agent.astream(input_, config):
+                    await streamer.send_stream.send(chunk)
+            except Exception as e:
+                await streamer.send_stream.send(e)
+            finally:
+                await streamer.send_stream.aclose()
+
+        # Start the runnable in the background
+        task = asyncio.create_task(consume_astream())
+
+        # Consume the stream into an EventSourceResponse
+        async def _stream() -> AsyncIterator[dict]:
+            has_sent_metadata = False
+
+            async for chunk in streamer.receive_stream:
+                if isinstance(chunk, BaseException):
+                    yield {
+                        "event": "error",
+                        # Do not expose the error message to the client since
+                        # the message may contain sensitive information.
+                        # We'll add client side errors for validation as well.
+                        "data": orjson.dumps(
+                            {"status_code": 500, "message": "Internal Server Error"}
+                        ).decode(),
+                    }
+                    raise chunk
+                else:
+                    if not has_sent_metadata and event_aggregator.callback_events:
+                        yield {
+                            "event": "metadata",
+                            "data": orjson.dumps(
+                                {"run_id": _get_base_run_id_as_str(event_aggregator)}
+                            ).decode(),
+                        }
+                        has_sent_metadata = True
+
+                    yield {
+                        # EventSourceResponse expects a string for data
+                        # so after serializing into bytes, we decode into utf-8
+                        # to get a string.
+                        "data": serializer.dumps(chunk).decode("utf-8"),
+                        "event": "data",
+                    }
+
+            # Send an end event to signal the end of the stream
+            yield {"event": "end"}
+            # Wait for the runnable to finish
+            await task
+
+        return EventSourceResponse(_stream())
+    else:
+        background_tasks.add_task(agent.ainvoke, input_, config)
+        return {"status": "ok"}  # TODO add a run id
 
 
 @app.post("/ingest")

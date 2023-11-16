@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "^/(config_schema|input_schema|stream|assistants|threads|ingest|feedback)":
+      "^/(config_schema|input_schema|stream|assistants|threads|ingest|feedback|runs)":
         {
           target: "http://127.0.0.1:8100",
           changeOrigin: true,

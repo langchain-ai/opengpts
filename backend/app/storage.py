@@ -57,6 +57,12 @@ def list_assistants(user_id: str):
     return [load(assistant_hash_keys, values) for values in assistants]
 
 
+def get_assistant(user_id: str, assistant_id: str):
+    client = _get_redis_client()
+    values = client.hmget(assistant_key(user_id, assistant_id), *assistant_hash_keys)
+    return load(assistant_hash_keys, values)
+
+
 def list_public_assistants(assistant_ids: list[str]):
     if not assistant_ids:
         return []
