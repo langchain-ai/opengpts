@@ -228,7 +228,7 @@ def get_thread_messages_endpoint(opengpts_user_id: Annotated[str, Cookie()], tid
 
 class ThreadPayload(TypedDict):
     name: str
-    assistant_id: str
+    assistant_id: Optional[str]
 
 
 @app.put("/threads/{tid}")
@@ -238,7 +238,7 @@ def put_thread_endpoint(
     return put_thread(
         opengpts_user_id,
         tid,
-        assistant_id=payload["assistant_id"],
+        assistant_id=payload.get("assistant_id"),
         name=payload["name"],
     )
 
