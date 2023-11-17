@@ -23,8 +23,7 @@ redis = "^5.0.1"
 python-multipart = "^0.0.6"
 tiktoken = "^0.5.1"
 langchain = "^0.0.335"
-python-magic = "^0.4.27"
-permchain = {path = "../../permchain", develop = true}
+permchain = { git = "git@github.com:langchain-ai/permchain.git/", branch = "main"}
 
 [tool.poetry.group.dev.dependencies]
 uvicorn = "^0.23.2"
