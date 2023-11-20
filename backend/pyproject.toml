@@ -60,6 +60,7 @@ addopts = "--strict-markers --strict-config --durations=5 -vv"
 # Most tests should be closer to ~100 ms, but some of the tests involve
 # parsing files. We can adjust on a per test basis later on.
 timeout = 30
+asyncio_mode = "auto"
 
 
 [build-system]

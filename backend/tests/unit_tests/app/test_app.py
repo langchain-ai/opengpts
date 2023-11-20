@@ -49,7 +49,6 @@ def _project(d: dict, *, exclude_keys: Optional[Sequence[str]]) -> dict:
     return {k: v for k, v in d.items() if k not in _exclude}
 
 
-@pytest.mark.asyncio
 async def test_list_and_create_assistants(redis_client: RedisType) -> None:
     """Test list and create assistants."""
     headers = {"Cookie": "opengpts_user_id=1"}
@@ -113,7 +112,6 @@ async def test_list_and_create_assistants(redis_client: RedisType) -> None:
         assert response.json() == []
 
 
-@pytest.mark.asyncio
 async def test_threads(redis_client: RedisType) -> None:
     """Test put thread."""
     async with get_client() as client:
