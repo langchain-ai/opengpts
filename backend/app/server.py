@@ -1,26 +1,26 @@
 import asyncio
 import json
 from pathlib import Path
-from typing import Annotated, AsyncIterator, Optional, Sequence
+from typing import Annotated, AsyncIterator, List, Optional, Sequence
 from uuid import uuid4
-from fastapi.exceptions import RequestValidationError
 
 import orjson
-from fastapi import BackgroundTasks, Cookie, FastAPI, Form, Request, UploadFile
+from fastapi import BackgroundTasks, Cookie, FastAPI, Form, Query, Request, UploadFile
+from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from gizmo_agent import agent, ingest_runnable
-from langserve.callbacks import AsyncEventAggregatorCallback
 from langchain.pydantic_v1 import ValidationError
 from langchain.schema.messages import AnyMessage, FunctionMessage
 from langchain.schema.output import ChatGeneration
 from langchain.schema.runnable import RunnableConfig
 from langserve import add_routes
-from langserve.server import _get_base_run_id_as_str, _unpack_input
+from langserve.callbacks import AsyncEventAggregatorCallback
 from langserve.serialization import WellKnownLCSerializer
-from pydantic import BaseModel
+from langserve.server import _get_base_run_id_as_str, _unpack_input
+from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
-from typing_extensions import TypedDict
 
+from app.schema import Assistant, AssistantWithoutUserId, Thread, ThreadWithoutUserId
 from app.storage import (
     get_assistant,
     get_thread_messages,
@@ -42,11 +42,32 @@ FEATURED_PUBLIC_ASSISTANTS = [
 # Get root of app, used to point to directory containing static files
 ROOT = Path(__file__).parent.parent
 
+OpengptsUserId = Annotated[
+    str,
+    Cookie(
+        description=(
+            "A cookie that identifies the user. This is not an authentication "
+            "mechanism that should be used in an actual production environment that "
+            "contains sensitive information."
+        )
+    ),
+]
+
 
 def attach_user_id_to_config(
     config: RunnableConfig,
     request: Request,
 ) -> RunnableConfig:
+    """Attach the user id to the runnable config.
+
+    Args:
+        config: The runnable config.
+        request: The request.
+
+    Returns:
+        A modified runnable config that contains information about the user
+        who made the request in the `configurable.user_id` field.
+    """
     config["configurable"]["user_id"] = request.cookies["opengpts_user_id"]
     return config
 
@@ -63,10 +84,14 @@ serializer = WellKnownLCSerializer()
 
 
 class AgentInput(BaseModel):
+    """An input into an agent."""
+
     messages: Sequence[AnyMessage]
 
 
 class CreateRunPayload(BaseModel):
+    """Payload for creating a run."""
+
     assistant_id: str
     thread_id: str
     stream: bool
@@ -80,6 +105,7 @@ async def create_run_endpoint(
     opengpts_user_id: Annotated[str, Cookie()],
     background_tasks: BackgroundTasks,
 ):
+    """Create a run."""
     try:
         body = await request.json()
     except json.JSONDecodeError:
@@ -176,70 +202,97 @@ async def create_run_endpoint(
         return {"status": "ok"}  # TODO add a run id
 
 
-@app.post("/ingest")
-def ingest_endpoint(files: list[UploadFile], config: str = Form(...)):
+@app.post("/ingest", description="Upload files to the given user.")
+def ingest_endpoint(files: list[UploadFile], config: str = Form(...)) -> None:
+    """Ingest a list of files."""
     config = orjson.loads(config)
     return ingest_runnable.batch([file.file for file in files], config)
 
 
 @app.get("/assistants/")
-def list_assistants_endpoint(opengpts_user_id: Annotated[str, Cookie()]):
+def list_assistants_endpoint(
+    opengpts_user_id: OpengptsUserId
+) -> List[AssistantWithoutUserId]:
     """List all assistants for the current user."""
     return list_assistants(opengpts_user_id)
 
 
 @app.get("/assistants/public/")
-def list_public_assistants_endpoint(shared_id: Optional[str] = None):
+def list_public_assistants_endpoint(
+    shared_id: Annotated[
+        Optional[str], Query(description="ID of a publicly shared assistant.")
+    ] = None,
+) -> List[AssistantWithoutUserId]:
+    """List all public assistants."""
     return list_public_assistants(
         FEATURED_PUBLIC_ASSISTANTS + ([shared_id] if shared_id else [])
     )
 
 
-class AssistantPayload(TypedDict):
-    name: str
-    config: dict
-    public: bool
+class AssistantPayload(BaseModel):
+    """Payload for creating an assistant."""
+
+    name: str = Field(..., description="The name of the assistant.")
+    config: dict = Field(..., description="The assistant config.")
+    public: bool = Field(default=False, description="Whether the assistant is public.")
+
+
+AssistantID = Annotated[str, Path(description="The ID of the assistant.")]
+ThreadID = Annotated[str, Path(description="The ID of the thread.")]
 
 
 @app.put("/assistants/{aid}")
 def put_assistant_endpoint(
-    aid: str,
-    payload: AssistantPayload,
     opengpts_user_id: Annotated[str, Cookie()],
-):
+    aid: AssistantID,
+    payload: AssistantPayload,
+) -> Assistant:
+    """Create or update an assistant."""
     return put_assistant(
         opengpts_user_id,
         aid,
-        name=payload["name"],
-        config=payload["config"],
-        public=payload["public"],
+        name=payload.name,
+        config=payload.config,
+        public=payload.public,
     )
 
 
 @app.get("/threads/")
-def list_threads_endpoint(opengpts_user_id: Annotated[str, Cookie()]):
+def list_threads_endpoint(
+    opengpts_user_id: OpengptsUserId
+) -> List[ThreadWithoutUserId]:
+    """List all threads for the current user."""
     return list_threads(opengpts_user_id)
 
 
 @app.get("/threads/{tid}/messages")
-def get_thread_messages_endpoint(opengpts_user_id: Annotated[str, Cookie()], tid: str):
+def get_thread_messages_endpoint(
+    opengpts_user_id: OpengptsUserId,
+    tid: ThreadID,
+):
+    """Get all messages for a thread."""
     return get_thread_messages(opengpts_user_id, tid)
 
 
-class ThreadPayload(TypedDict):
-    name: str
-    assistant_id: Optional[str]
+class ThreadPutRequest(BaseModel):
+    """Payload for creating a thread."""
+
+    name: str = Field(..., description="The name of the thread.")
+    assistant_id: str = Field(..., description="The ID of the assistant to use.")
 
 
 @app.put("/threads/{tid}")
 def put_thread_endpoint(
-    opengpts_user_id: Annotated[str, Cookie()], tid: str, payload: ThreadPayload
-):
+    opengpts_user_id: OpengptsUserId,
+    tid: ThreadID,
+    thread_put_request: ThreadPutRequest,
+) -> Thread:
+    """Update a thread."""
     return put_thread(
         opengpts_user_id,
         tid,
-        assistant_id=payload.get("assistant_id"),
-        name=payload["name"],
+        assistant_id=thread_put_request.assistant_id,
+        name=thread_put_request.name,
     )
 
 
