@@ -109,7 +109,7 @@ async def test_list_and_create_assistants(redis_client: RedisType) -> None:
         # Check not visible to other users
         headers = {"Cookie": "opengpts_user_id=2"}
         response = await client.get("/assistants/", headers=headers)
-        assert response.status_code == 200
+        assert response.status_code == 200, response.text
         assert response.json() == []
 
 
@@ -122,7 +122,7 @@ async def test_threads(redis_client: RedisType) -> None:
             json={"name": "bobby", "assistant_id": "bobby"},
             headers={"Cookie": "opengpts_user_id=1"},
         )
-        assert response.status_code == 200
+        assert response.status_code == 200, response.text
 
         response = await client.get(
             "/threads/1/messages", headers={"Cookie": "opengpts_user_id=1"}
