@@ -5,6 +5,8 @@ This allows you to easily integrate it with a different frontend of your choice.
 
 For full API documentation, see [localhost:8100/docs](localhost:8100/docs) after deployment.![Screenshot 2023-11-20 at 11.22.05 AM.png](..%2F..%2F..%2F..%2Fvar%2Ffolders%2Fbm%2Fylzhm36n075cslb9fvvbgq640000gn%2FT%2FTemporaryItems%2FNSIRD_screencaptureui_c5wFHT%2FScreenshot%202023-11-20%20at%2011.22.05%20AM.png)
 
+If you want to see the API docs before deployment, check out the [hosted docs here](https://opengpts-example-vz4y4ooboq-uc.a.run.app/docs).
+
 ## Create an Assistant
 
 First, let's use the API to create an assistant. 
