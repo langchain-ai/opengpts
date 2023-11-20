@@ -4,7 +4,7 @@
 all: help
 
 build_ui:
-	cd ../frontend && yarn build && cp -r dist ../backend/ui
+	cd ../frontend && yarn build && cp -r dist/* ../backend/ui
 
 ######################
 # TESTING AND COVERAGE
