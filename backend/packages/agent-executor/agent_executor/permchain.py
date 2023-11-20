@@ -111,6 +111,10 @@ def get_agent_executor(
     agent_chain = agent | _create_agent_message | Channel.write_to("messages")
 
     def route_last_message(input: dict[str, bool | Sequence[AnyMessage]]) -> Runnable:
+        if not input["messages"]:
+            # no messages, do nothing
+            return RunnablePassthrough()
+
         message: AnyMessage = input["messages"][-1]
         if isinstance(message.additional_kwargs.get("agent"), AgentFinish):
             # finished, do nothing
@@ -137,7 +141,7 @@ def get_agent_executor(
         return agent_chain
 
     executor = (
-        Channel.subscribe_to(["messages", ReservedChannels.is_last_step])
+        Channel.subscribe_to(["messages"]).join([ReservedChannels.is_last_step])
         | route_last_message
     )
 

@@ -4,7 +4,7 @@ import { Message } from "./useChatList";
 
 export interface StreamState {
   status: "inflight" | "error" | "done";
-  messages: Message[];
+  messages?: Message[];
   run_id?: string;
   merge?: boolean;
 }
@@ -50,13 +50,13 @@ export function useStreamState(): StreamStateProps {
             const { run_id } = JSON.parse(msg.data);
             setCurrent((current) => ({
               status: "inflight",
-              messages: current?.messages ?? [],
+              messages: current?.messages,
               run_id: run_id,
             }));
           } else if (msg.event === "error") {
             setCurrent((current) => ({
               status: "error",
-              messages: current?.messages ?? [],
+              messages: current?.messages,
               run_id: current?.run_id,
             }));
           }
@@ -64,16 +64,18 @@ export function useStreamState(): StreamStateProps {
         onclose() {
           setCurrent((current) => ({
             status: current?.status === "error" ? current.status : "done",
-            messages: current?.messages ?? [],
+            messages: current?.messages,
             run_id: current?.run_id,
+            merge: current?.merge,
           }));
           setController(null);
         },
         onerror(error) {
           setCurrent((current) => ({
             status: "error",
-            messages: current?.messages ?? [],
+            messages: current?.messages,
             run_id: current?.run_id,
+            merge: current?.merge,
           }));
           setController(null);
           throw error;
