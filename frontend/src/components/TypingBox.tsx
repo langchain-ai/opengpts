@@ -22,6 +22,7 @@ export default function TypingBox(props: {
         if (disabled) return;
         const form = e.target as HTMLFormElement;
         const message = form.message.value;
+        if (!message) return;
         setInflight(true);
         await props.onSubmit(message);
         setInflight(false);

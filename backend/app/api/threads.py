@@ -1,7 +1,8 @@
-from typing import Annotated, List
+from typing import Annotated, List, Sequence
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path
+from langchain.schema.messages import AnyMessage
 from pydantic import BaseModel, Field
 
 import app.storage as storage
@@ -20,6 +21,12 @@ class ThreadPutRequest(BaseModel):
     assistant_id: str = Field(..., description="The ID of the assistant to use.")
 
 
+class ThreadMessagesPostRequest(BaseModel):
+    """Payload for adding messages to a thread."""
+
+    messages: Sequence[AnyMessage]
+
+
 @router.get("/")
 def list_threads(opengpts_user_id: OpengptsUserId) -> List[ThreadWithoutUserId]:
     """List all threads for the current user."""
@@ -33,6 +40,16 @@ def get_thread_messages(
 ):
     """Get all messages for a thread."""
     return storage.get_thread_messages(opengpts_user_id, tid)
+
+
+@router.post("/{tid}/messages")
+def add_thread_messages(
+    opengpts_user_id: OpengptsUserId,
+    tid: ThreadID,
+    payload: ThreadMessagesPostRequest,
+):
+    """Add messages to a thread."""
+    return storage.post_thread_messages(opengpts_user_id, tid, payload.messages)
 
 
 @router.get("/{tid}")
