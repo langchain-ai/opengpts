@@ -98,7 +98,6 @@ async def stream_run(
     request: Request,
     payload: CreateRunPayload,  # for openapi docs
     opengpts_user_id: OpengptsUserId,
-    background_tasks: BackgroundTasks,
 ):
     """Create a run."""
     input_, config, messages = await _run_input_and_config(request, opengpts_user_id)
