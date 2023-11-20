@@ -33,11 +33,11 @@ export function useStreamState(): StreamStateProps {
       setController(controller);
       setCurrent({ status: "inflight", messages: input.messages, merge: true });
 
-      await fetchEventSource("/runs", {
+      await fetchEventSource("/runs/stream", {
         signal: controller.signal,
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input, assistant_id, thread_id, stream: true }),
+        body: JSON.stringify({ input, assistant_id, thread_id }),
         onmessage(msg) {
           if (msg.event === "data") {
             const { messages } = JSON.parse(msg.data);
