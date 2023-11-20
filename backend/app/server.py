@@ -7,7 +7,7 @@ from gizmo_agent import ingest_runnable
 
 from app.api import router as api_router
 
-app = FastAPI()
+app = FastAPI(title="OpenGPTs API")
 
 
 # Get root of app, used to point to directory containing static files
