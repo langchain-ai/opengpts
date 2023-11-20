@@ -1,6 +1,6 @@
 # OpenGPTs
 
-This is an open source effort to create a similar experience to OpenAI's GPTs.
+This is an open source effort to create a similar experience to OpenAI's GPTs and Assistants API.
 It builds upon [LangChain](https://github.com/langchain-ai/langchain), [LangServe](https://github.com/langchain-ai/langserve) and [LangSmith](https://smith.langchain.com/).
 OpenGPTs gives you more control, allowing you to configure:
 
@@ -16,7 +16,9 @@ OpenGPTs gives you more control, allowing you to configure:
     <img alt="Chat" src="_static/chat.png" width="49%" />
 </p>
 
-Check out a simple hosted version [here](https://opengpts-example-vz4y4ooboq-uc.a.run.app/)
+**Key Links**
+- [GPTs: a simple hosted version](https://opengpts-example-vz4y4ooboq-uc.a.run.app/)
+- [Assistants API: a getting started guide](API.md)
 
 ## Quickstart
 
