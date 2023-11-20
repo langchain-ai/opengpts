@@ -2,18 +2,18 @@ import json
 from operator import itemgetter
 from typing import Sequence
 
-from permchain import Channel, Pregel, ReservedChannels
-from permchain.channels import Topic
-from permchain.checkpoint.base import BaseCheckpointAdapter
+from langchain.schema.agent import AgentAction, AgentActionMessageLog, AgentFinish
+from langchain.schema.messages import AIMessage, AnyMessage, FunctionMessage
 from langchain.schema.runnable import (
     Runnable,
     RunnableConfig,
     RunnableLambda,
     RunnablePassthrough,
 )
-from langchain.schema.agent import AgentAction, AgentFinish, AgentActionMessageLog
-from langchain.schema.messages import AIMessage, FunctionMessage, AnyMessage
 from langchain.tools import BaseTool
+from permchain import Channel, Pregel, ReservedChannels
+from permchain.channels import Topic
+from permchain.checkpoint.base import BaseCheckpointAdapter
 
 
 def _create_agent_message(

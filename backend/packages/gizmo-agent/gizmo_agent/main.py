@@ -1,6 +1,6 @@
 from typing import Any, Mapping, Optional, Sequence
-from agent_executor.checkpoint import RedisCheckpoint
 
+from agent_executor.checkpoint import RedisCheckpoint
 from agent_executor.permchain import get_agent_executor
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.schema.messages import AnyMessage

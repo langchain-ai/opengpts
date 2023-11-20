@@ -4,19 +4,19 @@ from uuid import UUID
 
 from anyio import create_memory_object_stream
 from langchain.callbacks.base import BaseCallbackHandler
-from langchain.schema.output import ChatGenerationChunk, GenerationChunk
 from langchain.schema.messages import (
+    AIMessage,
+    AIMessageChunk,
     BaseMessage,
     BaseMessageChunk,
-    AIMessageChunk,
-    HumanMessageChunk,
-    HumanMessage,
-    AIMessage,
-    FunctionMessage,
-    FunctionMessageChunk,
     ChatMessage,
     ChatMessageChunk,
+    FunctionMessage,
+    FunctionMessageChunk,
+    HumanMessage,
+    HumanMessageChunk,
 )
+from langchain.schema.output import ChatGenerationChunk, GenerationChunk
 
 
 class StreamMessagesHandler(BaseCallbackHandler):

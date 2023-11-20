@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "lang-gizmo"
+name = "opengpts"
 version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
@@ -22,8 +22,8 @@ orjson = "^3.9.10"
 redis = "^5.0.1"
 python-multipart = "^0.0.6"
 tiktoken = "^0.5.1"
-langchain = "^0.0.335"
-permchain = "^0.0.5"
+langchain = ">=0.0.338"
+permchain = "0.0.6"
 
 [tool.poetry.group.dev.dependencies]
 uvicorn = "^0.23.2"
