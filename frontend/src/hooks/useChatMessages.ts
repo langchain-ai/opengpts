@@ -46,6 +46,6 @@ export function useChatMessages(
   }, [stream?.status]);
 
   return stream?.merge
-    ? [...(messages ?? []), ...stream.messages]
+    ? [...(messages ?? []), ...(stream.messages ?? [])]
     : stream?.messages ?? messages;
 }
