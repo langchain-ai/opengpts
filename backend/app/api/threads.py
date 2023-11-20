@@ -1,6 +1,7 @@
 from typing import Annotated, List
+from uuid import uuid4
 
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, HTTPException, Path
 from pydantic import BaseModel, Field
 
 import app.storage as storage
@@ -20,15 +21,13 @@ class ThreadPutRequest(BaseModel):
 
 
 @router.get("/")
-def list_threads_endpoint(
-    opengpts_user_id: OpengptsUserId
-) -> List[ThreadWithoutUserId]:
+def list_threads(opengpts_user_id: OpengptsUserId) -> List[ThreadWithoutUserId]:
     """List all threads for the current user."""
     return storage.list_threads(opengpts_user_id)
 
 
 @router.get("/{tid}/messages")
-def get_thread_messages_endpoint(
+def get_thread_messages(
     opengpts_user_id: OpengptsUserId,
     tid: ThreadID,
 ):
@@ -36,8 +35,34 @@ def get_thread_messages_endpoint(
     return storage.get_thread_messages(opengpts_user_id, tid)
 
 
+@router.get("/{tid}")
+def get_thread(
+    opengpts_user_id: OpengptsUserId,
+    tid: ThreadID,
+) -> Thread:
+    """Get a thread by ID."""
+    thread = storage.get_thread(opengpts_user_id, tid)
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found")
+    return thread
+
+
+@router.post("")
+def create_thread(
+    opengpts_user_id: OpengptsUserId,
+    thread_put_request: ThreadPutRequest,
+) -> Thread:
+    """Create a thread."""
+    return storage.put_thread(
+        opengpts_user_id,
+        str(uuid4()),
+        assistant_id=thread_put_request.assistant_id,
+        name=thread_put_request.name,
+    )
+
+
 @router.put("/{tid}")
-def put_thread_endpoint(
+def upsert_thread(
     opengpts_user_id: OpengptsUserId,
     tid: ThreadID,
     thread_put_request: ThreadPutRequest,

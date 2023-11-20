@@ -1,6 +1,7 @@
 from typing import Annotated, List, Optional
+from uuid import uuid4
 
-from fastapi import APIRouter, Cookie, Path, Query
+from fastapi import APIRouter, HTTPException, Path, Query
 from pydantic import BaseModel, Field
 
 import app.storage as storage
@@ -12,6 +13,17 @@ FEATURED_PUBLIC_ASSISTANTS = [
     "ba721964-b7e4-474c-b817-fb089d94dc5f",
     "dc3ec482-aafc-4d90-8a1a-afb9b2876cde",
 ]
+
+
+class AssistantPayload(BaseModel):
+    """Payload for creating an assistant."""
+
+    name: str = Field(..., description="The name of the assistant.")
+    config: dict = Field(..., description="The assistant config.")
+    public: bool = Field(default=False, description="Whether the assistant is public.")
+
+
+AssistantID = Annotated[str, Path(description="The ID of the assistant.")]
 
 
 @router.get("/")
@@ -32,20 +44,36 @@ def list_public_assistants(
     )
 
 
-class AssistantPayload(BaseModel):
-    """Payload for creating an assistant."""
+@router.get("/{aid}")
+def get_asistant(
+    opengpts_user_id: OpengptsUserId,
+    aid: AssistantID,
+) -> Assistant:
+    """Get an assistant by ID."""
+    assistant = storage.get_assistant(opengpts_user_id, aid)
+    if not assistant:
+        raise HTTPException(status_code=404, detail="Assistant not found")
+    return assistant
 
-    name: str = Field(..., description="The name of the assistant.")
-    config: dict = Field(..., description="The assistant config.")
-    public: bool = Field(default=False, description="Whether the assistant is public.")
 
-
-AssistantID = Annotated[str, Path(description="The ID of the assistant.")]
+@router.post("")
+def create_assistant(
+    opengpts_user_id: OpengptsUserId,
+    payload: AssistantPayload,
+) -> Assistant:
+    """Create an assistant."""
+    return storage.put_assistant(
+        opengpts_user_id,
+        str(uuid4()),
+        name=payload.name,
+        config=payload.config,
+        public=payload.public,
+    )
 
 
 @router.put("/{aid}")
-def put_assistant(
-    opengpts_user_id: Annotated[str, Cookie()],
+def upsert_assistant(
+    opengpts_user_id: OpengptsUserId,
     aid: AssistantID,
     payload: AssistantPayload,
 ) -> Assistant:

@@ -138,6 +138,13 @@ def list_threads(user_id: str) -> List[ThreadWithoutUserId]:
     return [load(thread_hash_keys, values) for values in threads]
 
 
+def get_thread(user_id: str, thread_id: str) -> Thread | None:
+    """Get a thread by ID."""
+    client = _get_redis_client()
+    values = client.hmget(thread_key(user_id, thread_id), *thread_hash_keys)
+    return load(thread_hash_keys, values) if any(values) else None
+
+
 def get_thread_messages(user_id: str, thread_id: str):
     """Get all messages for a thread."""
     client = RedisCheckpoint()
