@@ -17,7 +17,7 @@ from langserve.schema import FeedbackCreateRequest
 from langserve.serialization import WellKnownLCSerializer
 from langserve.server import _get_base_run_id_as_str, _unpack_input
 from langsmith.utils import tracing_is_enabled
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
 
 from app.schema import OpengptsUserId
@@ -33,7 +33,7 @@ _serializer = WellKnownLCSerializer()
 class AgentInput(BaseModel):
     """An input into an agent."""
 
-    messages: Sequence[AnyMessage]
+    messages: Sequence[AnyMessage] = Field(default_factory=list)
 
 
 class CreateRunPayload(BaseModel):
@@ -42,8 +42,7 @@ class CreateRunPayload(BaseModel):
     assistant_id: str
     thread_id: str
     stream: bool
-    # TODO make optional
-    input: AgentInput
+    input: AgentInput = Field(default_factory=AgentInput)
 
 
 @router.post("")

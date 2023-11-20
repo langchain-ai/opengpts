@@ -113,7 +113,7 @@ def get_agent_executor(
     def route_last_message(input: dict[str, bool | Sequence[AnyMessage]]) -> Runnable:
         if not input["messages"]:
             # no messages, do nothing
-            return RunnablePassthrough()
+            return agent_chain
 
         message: AnyMessage = input["messages"][-1]
         if isinstance(message.additional_kwargs.get("agent"), AgentFinish):
