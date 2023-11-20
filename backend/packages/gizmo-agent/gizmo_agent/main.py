@@ -1,10 +1,7 @@
-import os
-from functools import partial
 from typing import Any, Mapping, Optional, Sequence
 
-from agent_executor import AgentExecutor
-from agent_executor.history import RunnableWithMessageHistory
-from langchain.memory import RedisChatMessageHistory
+from agent_executor.checkpoint import RedisCheckpoint
+from agent_executor.permchain import get_agent_executor
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.schema.messages import AnyMessage
 from langchain.schema.runnable import (
@@ -64,12 +61,9 @@ class ConfigurableAgent(RunnableBinding):
             _agent = get_xml_agent(_tools, system_message, bedrock=True)
         else:
             raise ValueError("Unexpected agent type")
-        agent_executor = AgentExecutor(
-            agent=_agent,
-            tools=_tools,
-            handle_parsing_errors=True,
-            max_iterations=10,
-        )
+        agent_executor = get_agent_executor(
+            tools=_tools, agent=_agent, checkpoint=RedisCheckpoint()
+        ).with_config({"recursion_limit": 10})
         super().__init__(
             tools=tools,
             agent=agent,
@@ -81,40 +75,33 @@ class ConfigurableAgent(RunnableBinding):
 
 
 class AgentInput(BaseModel):
-    input: AnyMessage
+    messages: Sequence[AnyMessage] = Field(default_factory=list)
 
 
 class AgentOutput(BaseModel):
     messages: Sequence[AnyMessage] = Field(..., extra={"widget": {"type": "chat"}})
-    output: str
 
 
-agent = ConfigurableAgent(
-    agent=GizmoAgentType.GPT_35_TURBO,
-    tools=[],
-    system_message=DEFAULT_SYSTEM_MESSAGE,
-    assistant_id=None,
-).configurable_fields(
-    agent=ConfigurableField(id="agent_type", name="Agent Type"),
-    system_message=ConfigurableField(id="system_message", name="System Message"),
-    assistant_id=ConfigurableField(id="assistant_id", name="Assistant ID"),
-    tools=ConfigurableFieldMultiOption(
-        id="tools",
-        name="Tools",
-        options=TOOL_OPTIONS,
-        default=[],
-    ),
+agent = (
+    ConfigurableAgent(
+        agent=GizmoAgentType.GPT_35_TURBO,
+        tools=[],
+        system_message=DEFAULT_SYSTEM_MESSAGE,
+        assistant_id=None,
+    )
+    .configurable_fields(
+        agent=ConfigurableField(id="agent_type", name="Agent Type"),
+        system_message=ConfigurableField(id="system_message", name="System Message"),
+        assistant_id=ConfigurableField(id="assistant_id", name="Assistant ID"),
+        tools=ConfigurableFieldMultiOption(
+            id="tools",
+            name="Tools",
+            options=TOOL_OPTIONS,
+            default=[],
+        ),
+    )
+    .with_types(input_type=AgentInput, output_type=AgentOutput)
 )
-agent = RunnableWithMessageHistory(
-    agent,
-    # first arg should be a function that
-    # - accepts a single arg "session_id"
-    # - returns a BaseChatMessageHistory instance
-    partial(RedisChatMessageHistory, url=os.environ["REDIS_URL"]),
-    input_key="input",
-    output_key="messages",
-    history_key="messages",
-).with_types(input_type=AgentInput, output_type=AgentOutput)
 
 if __name__ == "__main__":
     import asyncio
@@ -123,8 +110,8 @@ if __name__ == "__main__":
 
     async def run():
         async for m in agent.astream_log(
-            {"input": HumanMessage(content="whats your name")},
-            config={"configurable": {"thread_id": "test1"}},
+            {"messages": HumanMessage(content="whats your name")},
+            config={"configurable": {"user_id": "1", "thread_id": "test1"}},
         ):
             print(m)
 

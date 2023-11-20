@@ -4,13 +4,18 @@ import { Message } from "./useChatList";
 
 export interface StreamState {
   status: "inflight" | "error" | "done";
-  messages: Message[];
+  messages?: Message[];
   run_id?: string;
+  merge?: boolean;
 }
 
 export interface StreamStateProps {
   stream: StreamState | null;
-  startStream: (input: { input: Message }, config: unknown) => Promise<void>;
+  startStream: (
+    input: { messages: Message[] },
+    assistant_id: string,
+    thread_id: string
+  ) => Promise<void>;
   stopStream?: (clear?: boolean) => void;
 }
 
@@ -19,35 +24,39 @@ export function useStreamState(): StreamStateProps {
   const [controller, setController] = useState<AbortController | null>(null);
 
   const startStream = useCallback(
-    async (input: { input: Message }, config: unknown) => {
+    async (
+      input: { messages: Message[] },
+      assistant_id: string,
+      thread_id: string
+    ) => {
       const controller = new AbortController();
       setController(controller);
-      setCurrent({ status: "inflight", messages: [input.input] });
+      setCurrent({ status: "inflight", messages: input.messages, merge: true });
 
-      await fetchEventSource("/stream", {
+      await fetchEventSource("/runs/stream", {
         signal: controller.signal,
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input, config }),
+        body: JSON.stringify({ input, assistant_id, thread_id }),
         onmessage(msg) {
           if (msg.event === "data") {
             const { messages } = JSON.parse(msg.data);
             setCurrent((current) => ({
               status: "inflight",
-              messages: [...(current?.messages ?? []), ...messages],
+              messages,
               run_id: current?.run_id,
             }));
           } else if (msg.event === "metadata") {
             const { run_id } = JSON.parse(msg.data);
             setCurrent((current) => ({
               status: "inflight",
-              messages: current?.messages ?? [],
+              messages: current?.messages,
               run_id: run_id,
             }));
           } else if (msg.event === "error") {
             setCurrent((current) => ({
               status: "error",
-              messages: current?.messages ?? [],
+              messages: current?.messages,
               run_id: current?.run_id,
             }));
           }
@@ -55,16 +64,18 @@ export function useStreamState(): StreamStateProps {
         onclose() {
           setCurrent((current) => ({
             status: current?.status === "error" ? current.status : "done",
-            messages: current?.messages ?? [],
+            messages: current?.messages,
             run_id: current?.run_id,
+            merge: current?.merge,
           }));
           setController(null);
         },
         onerror(error) {
           setCurrent((current) => ({
             status: "error",
-            messages: current?.messages ?? [],
+            messages: current?.messages,
             run_id: current?.run_id,
+            merge: current?.merge,
           }));
           setController(null);
           throw error;

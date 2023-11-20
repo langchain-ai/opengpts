@@ -24,7 +24,11 @@ export function Chat(props: ChatProps) {
         <Message
           {...msg}
           key={i}
-          runId={i === messages.length - 1 ? props.stream?.run_id : undefined}
+          runId={
+            i === messages.length - 1 && props.stream?.status === "done"
+              ? props.stream?.run_id
+              : undefined
+          }
         />
       ))}
       {(props.stream?.status === "inflight" || messages === null) && (

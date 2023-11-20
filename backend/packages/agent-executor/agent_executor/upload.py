@@ -46,9 +46,17 @@ def _convert_ingestion_input_to_blob(data: BinaryIO) -> Blob:
 
 
 class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
+    """Runnable for ingesting files into a vectorstore."""
+
     text_splitter: TextSplitter
+    """Text splitter to use for splitting the text into chunks."""
     vectorstore: VectorStore
+    """Vectorstore to ingest into."""
     assistant_id: Optional[str]
+    """Ingested documents will be associated with this assistant id.
+    
+    The assistant ID is used as the namespace, and is filtered on at query time.
+    """
 
     class Config:
         arbitrary_types_allowed = True

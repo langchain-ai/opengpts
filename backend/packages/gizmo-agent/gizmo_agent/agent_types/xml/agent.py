@@ -1,7 +1,6 @@
 import os
 
 import boto3
-from langchain.agents.format_scratchpad import format_xml
 from langchain.chat_models import BedrockChat, ChatAnthropic
 from langchain.schema.messages import AIMessage, HumanMessage
 from langchain.tools.render import render_text_description
@@ -61,10 +60,7 @@ def get_xml_agent(tools, system_message, bedrock=False):
     llm_with_stop = model.bind(stop=["</tool_input>"])
 
     agent = (
-        {
-            "messages": lambda x: construct_chat_history(x["messages"]),
-            "agent_scratchpad": lambda x: format_xml(x["intermediate_steps"]),
-        }
+        {"messages": lambda x: construct_chat_history(x["messages"])}
         | prompt
         | llm_with_stop
         | parse_output
