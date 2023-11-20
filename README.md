@@ -102,8 +102,8 @@ As much as possible, we are striving for feature parity with OpenAI.
   - The chatbots used are all in code, so are easily editable
 - [x] Custom Actions - Define additional functionality for your chatbot using OpenAPI specifications
   - Supported by adding tools
-- [ ] Knowledge Files - attach additional files that your chatbot can reference
-  - Coming soon
+- [x] Knowledge Files - attach additional files that your chatbot can reference
+  - Upload files from the UI or API, used by Retrieval tool
 - [x] Tools - Provides basic tools for web browsing, image creation, etc.
   - Basic DuckDuckGo and PythonREPL tools enabled by default
   - Image creation coming soon
