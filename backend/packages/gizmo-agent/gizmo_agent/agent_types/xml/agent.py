@@ -10,21 +10,26 @@ from .prompts import conversational_prompt, parse_output
 
 def _collapse_messages(messages):
     log = ""
-    scratchpad, final_message = messages[:-1], messages[-1]
+    if isinstance(messages[-1], AIMessage):
+        scratchpad = messages[:-1]
+        final = messages[-1]
+    else:
+        scratchpad = messages
+        final = None
     if len(scratchpad) % 2 != 0:
         raise ValueError("Unexpected")
     for i in range(0, len(scratchpad), 2):
         action = messages[i]
         observation = messages[i + 1]
         log += f"{action.content}<observation>{observation.content}</observation>"
-    log += final_message.content
+    if final is not None:
+        log += final.content
     return AIMessage(content=log)
 
 
 def construct_chat_history(messages):
     collapsed_messages = []
     temp_messages = []
-
     for message in messages:
         if isinstance(message, HumanMessage):
             if temp_messages:
