@@ -4,7 +4,6 @@ services:
   redis:
     image: redislabs/redisearch:latest
     container_name: redis
-    # Export the port that the service is listening on.
     expose:
       - "6379"
     ports:
@@ -12,7 +11,7 @@ services:
   backend:
     build:
       context: .  # Use the current directory as the build context
-      dockerfile: Dockerfile  # Specify the custom Dockerfile
+      dockerfile: backend/Dockerfile  # Specify the custom Dockerfile
     ports:
       - "8100:8100"
     depends_on:
@@ -22,3 +21,9 @@ services:
     environment:
       PORT: 8100
       REDIS_URL: "redis://redis:6379"
+  frontend:
+    build:
+      context: .  # Use the current directory as the build context
+      dockerfile: frontend/Dockerfile  # Specify the custom Dockerfile
+    ports:
+      - "5173:5173"
