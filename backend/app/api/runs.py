@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
 
 from app.schema import OpengptsUserId
-from app.storage import get_assistant, get_thread_messages, public_user_id
+from app.storage import get_assistant, get_thread_state, public_user_id
 from app.stream import StreamMessagesHandler
 
 router = APIRouter()
@@ -57,7 +57,7 @@ async def _run_input_and_config(request: Request, opengpts_user_id: OpengptsUser
             None, get_assistant, public_user_id, body["assistant_id"]
         ),
         asyncio.get_running_loop().run_in_executor(
-            None, get_thread_messages, opengpts_user_id, body["thread_id"]
+            None, get_thread_state, opengpts_user_id, body["thread_id"]
         ),
     )
     assistant = assistant or public_assistant

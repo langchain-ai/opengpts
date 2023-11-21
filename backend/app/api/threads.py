@@ -33,23 +33,23 @@ def list_threads(opengpts_user_id: OpengptsUserId) -> List[ThreadWithoutUserId]:
     return storage.list_threads(opengpts_user_id)
 
 
-@router.get("/{tid}/messages")
-def get_thread_messages(
+@router.get("/{tid}/state")
+def get_thread_state(
     opengpts_user_id: OpengptsUserId,
     tid: ThreadID,
 ):
-    """Get all messages for a thread."""
-    return storage.get_thread_messages(opengpts_user_id, tid)
+    """Get state for a thread."""
+    return storage.get_thread_state(opengpts_user_id, tid)
 
 
-@router.post("/{tid}/messages")
+@router.post("/{tid}/state")
 def add_thread_messages(
     opengpts_user_id: OpengptsUserId,
     tid: ThreadID,
     payload: ThreadMessagesPostRequest,
 ):
-    """Add messages to a thread."""
-    return storage.post_thread_messages(opengpts_user_id, tid, payload.messages)
+    """Update state for a thread."""
+    return storage.update_thread_state(opengpts_user_id, tid, payload.messages)
 
 
 @router.get("/{tid}")
