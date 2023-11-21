@@ -2,11 +2,12 @@ version: '3'
 
 services:
   redis:
-    image: redislabs/redisearch:latest
     container_name: redis
+    image: redislabs/redisearch:latest
     ports:
-      - "6379:6379"  # Redis is accessible on localhost:6379
-
+      - "6379:6379"
+    volumes:
+      - ./redis-volume:/data
   backend:
     build:
       context: .
