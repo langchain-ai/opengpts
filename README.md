@@ -22,6 +22,14 @@ OpenGPTs gives you more control, allowing you to configure:
 
 ## Quickstart
 
+> Use docker compose, else there will be a ton of errors due to version mismatch to be dealt with.
+
+- add a file `.open-ai-env` and update it with openai token i.e. `OPENAI_API_KEY="my_token_value"`
+
+- `docker-compose up`
+
+## Ignore the below guide for startup
+
 ### Start the backend
 
 **Install requirements**

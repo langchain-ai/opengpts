@@ -3,3 +3,5 @@ langchain-cli
 -e packages/agent-executor
 langchain>=0.0.331
 langserve>=0.0.23
+permchain
+python-multipart

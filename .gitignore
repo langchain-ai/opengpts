@@ -1,1 +1,4 @@
 .env.gcp.yaml
+.DS_Store
+.open-ai-env
+redis-volume/dump.rdb
