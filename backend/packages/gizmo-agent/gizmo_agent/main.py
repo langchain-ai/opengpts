@@ -1,7 +1,10 @@
 from typing import Any, Mapping, Optional, Sequence
 
+from enum import StrEnum
+
 from agent_executor.checkpoint import RedisCheckpoint
 from agent_executor.permchain import get_agent_executor
+from agent_executor.dnd import create_dnd_bot
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.schema.messages import AnyMessage
 from langchain.schema.runnable import (
@@ -9,6 +12,7 @@ from langchain.schema.runnable import (
     ConfigurableFieldMultiOption,
     RunnableBinding,
 )
+from langchain.chat_models import ChatOpenAI
 
 from gizmo_agent.agent_types import (
     GizmoAgentType,
@@ -82,6 +86,9 @@ class AgentOutput(BaseModel):
     messages: Sequence[AnyMessage] = Field(..., extra={"widget": {"type": "chat"}})
 
 
+dnd_bot = create_dnd_bot(ChatOpenAI()).with_types(input_type=AgentInput, output_type=AgentOutput)
+
+
 agent = (
     ConfigurableAgent(
         agent=GizmoAgentType.GPT_35_TURBO,
@@ -100,7 +107,13 @@ agent = (
             default=[],
         ),
     )
+    .configurable_alternatives(
+        ConfigurableField(id="type"),
+        default_key="agent",
+        dungeons_and_dragons=dnd_bot
+    )
     .with_types(input_type=AgentInput, output_type=AgentOutput)
+
 )
 
 if __name__ == "__main__":
