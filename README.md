@@ -260,6 +260,31 @@ Searches [PubMed](https://pubmed.ncbi.nlm.nih.gov/). Does not require any API ke
 
 Searches [Wikipedia](https://pypi.org/project/wikipedia/). Does not require any API keys.
 
+## Docker Setup
+
+Make sure you have installed [Docker Desktop](https://www.docker.com/products/docker-desktop/). Once installed, open the docker desktop.
+
+Make sure to paste the `OPENAI_API_KEY` in the `.env` file. If you don't want to use the actual api key for tavily and ydc and get error related to ydc and tavily, just paste the following in the .env file.
+
+```
+TAVILY_API_KEY=your_secret_here
+YDC_API_KEY=your_secret_here
+```
+
+Once you open the docker desktop and environment varialbes pasted, run the following commands from the root directory where `docker-compose.yml` is.
+
+```
+docker-compose --env-file .env up
+```
+
+Navigate to http://localhost:8100/ and enjoy!
+
+Once done, run the following command to stop the app.
+
+```
+docker-compose down
+```
+
 ## Deployment
 
 **1. Build the frontend**
