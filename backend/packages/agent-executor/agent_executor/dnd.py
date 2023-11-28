@@ -10,7 +10,7 @@ from langchain_core.messages import AnyMessage, AIMessage, HumanMessage
 from langchain_core.language_models import BaseChatModel
 
 
-template1 = """You are a dungeon master for a game of dungeons and dragons.
+character_system_msg = """You are a dungeon master for a game of dungeons and dragons.
 
 You are interacting with the first (and only) player in the game. \
 Your job is to collect all needed information about their character. This will be used in the quest. \
@@ -33,10 +33,10 @@ class CharacterNotebook(BaseModel):
 
 
 character_prompt = ChatPromptTemplate.from_messages(
-    [("system", template1), MessagesPlaceholder(variable_name="messages")]
+    [("system", character_system_msg), MessagesPlaceholder(variable_name="messages")]
 )
 
-template2 = """You are a dungeon master for a game of dungeons and dragons.
+gameplay_system_msg = """You are a dungeon master for a game of dungeons and dragons.
 
 You are leading a quest of one person. Their character description is here:
 
@@ -47,7 +47,7 @@ A summary of the game state is here:
 {state}"""
 
 game_prompt = ChatPromptTemplate.from_messages(
-    [("system", template2), MessagesPlaceholder(variable_name="messages")]
+    [("system", gameplay_system_msg), MessagesPlaceholder(variable_name="messages")]
 )
 
 
@@ -59,7 +59,7 @@ class StateNotebook(BaseModel):
 
 state_prompt = ChatPromptTemplate.from_messages(
     [
-        ("system", template2),
+        ("system", gameplay_system_msg),
         MessagesPlaceholder(variable_name="messages"),
         (
             "human",
@@ -138,6 +138,5 @@ def create_dnd_bot(llm: BaseChatModel, checkpoint: BaseCheckpointAdapter):
         input=["messages"],
         output=["messages"],
         checkpoint=checkpoint,
-        debug=True,
     )
     return dnd
