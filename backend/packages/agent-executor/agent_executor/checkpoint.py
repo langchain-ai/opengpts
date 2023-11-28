@@ -43,6 +43,7 @@ class RedisCheckpoint(BaseCheckpointAdapter):
                 name="User ID",
                 description=None,
                 default=None,
+                is_shared=True,
             ),
             ConfigurableFieldSpec(
                 id="thread_id",
@@ -50,6 +51,7 @@ class RedisCheckpoint(BaseCheckpointAdapter):
                 name="Thread ID",
                 description=None,
                 default="",
+                is_shared=True,
             ),
         ]
 

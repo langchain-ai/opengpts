@@ -1,6 +1,5 @@
+import os
 from typing import Any, Mapping, Optional, Sequence
-
-from enum import StrEnum
 
 from agent_executor.checkpoint import RedisCheckpoint
 from agent_executor.permchain import get_agent_executor
@@ -12,7 +11,7 @@ from langchain.schema.runnable import (
     ConfigurableFieldMultiOption,
     RunnableBinding,
 )
-from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import ChatOpenAI, AzureChatOpenAI
 
 from gizmo_agent.agent_types import (
     GizmoAgentType,
@@ -86,7 +85,25 @@ class AgentOutput(BaseModel):
     messages: Sequence[AnyMessage] = Field(..., extra={"widget": {"type": "chat"}})
 
 
-dnd_bot = create_dnd_bot(ChatOpenAI()).with_types(input_type=AgentInput, output_type=AgentOutput)
+dnd_llm = ChatOpenAI(
+    model="gpt-3.5-turbo-1106", temperature=0, streaming=True
+).configurable_alternatives(
+    ConfigurableField(id="llm", name="LLM"),
+    default_key="gpt-35-turbo",
+    azure_openai=AzureChatOpenAI(
+        temperature=0,
+        deployment_name=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
+        openai_api_base=os.environ["AZURE_OPENAI_API_BASE"],
+        openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
+        openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],
+        streaming=True,
+    ),
+)
+
+
+dnd_bot = create_dnd_bot(dnd_llm, checkpoint=RedisCheckpoint()).with_types(
+    input_type=AgentInput, output_type=AgentOutput
+)
 
 
 agent = (
@@ -99,7 +116,9 @@ agent = (
     .configurable_fields(
         agent=ConfigurableField(id="agent_type", name="Agent Type"),
         system_message=ConfigurableField(id="system_message", name="System Message"),
-        assistant_id=ConfigurableField(id="assistant_id", name="Assistant ID"),
+        assistant_id=ConfigurableField(
+            id="assistant_id", name="Assistant ID", is_shared=True
+        ),
         tools=ConfigurableFieldMultiOption(
             id="tools",
             name="Tools",
@@ -108,12 +127,12 @@ agent = (
         ),
     )
     .configurable_alternatives(
-        ConfigurableField(id="type"),
+        ConfigurableField(id="type", name="Bot Type"),
         default_key="agent",
-        dungeons_and_dragons=dnd_bot
+        prefix_keys=True,
+        dungeons_and_dragons=dnd_bot,
     )
     .with_types(input_type=AgentInput, output_type=AgentOutput)
-
 )
 
 if __name__ == "__main__":
