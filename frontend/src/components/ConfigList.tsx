@@ -1,4 +1,4 @@
-import { PlusIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 import { Config, ConfigListProps } from "../hooks/useConfigList";
 import { cn } from "../utils/cn";
@@ -7,6 +7,7 @@ function ConfigItem(props: {
   config: Config;
   currentConfig: ConfigListProps["currentConfig"];
   enterConfig: ConfigListProps["enterConfig"];
+  removeConfig: ConfigListProps["removeConfig"];
 }) {
   return (
     <li key={props.config.assistant_id}>
@@ -29,7 +30,10 @@ function ConfigItem(props: {
         >
           {props.config.name?.[0] ?? " "}
         </span>
-        <span className="truncate">{props.config.name}</span>
+        <span className="truncate w-full">
+          {props.config.name}
+          <TrashIcon className="text-red-600 hidden float-right group-hover:block h-4 w-4" onClick={() => props.removeConfig(props.config)} />
+        </span>
       </div>
     </li>
   );
@@ -70,12 +74,13 @@ export function ConfigList(props: {
       <ul role="list" className="-mx-2 mt-2 space-y-1">
         {props.configs
           ?.filter((a) => a.mine)
-          .map((assistant) => (
+          .map((assistant, index) => (
             <ConfigItem
-              key={assistant.assistant_id}
+              key={index}
               config={assistant}
               currentConfig={props.currentConfig}
               enterConfig={props.enterConfig}
+              removeConfig={props.removeConfig}
             />
           )) ?? (
           <li className="leading-6 p-2 animate-pulse font-black text-gray-400 text-lg">
@@ -90,12 +95,13 @@ export function ConfigList(props: {
       <ul role="list" className="-mx-2 mt-2 space-y-1">
         {props.configs
           ?.filter((a) => !a.mine)
-          .map((assistant) => (
+          .map((assistant, index) => (
             <ConfigItem
-              key={assistant.assistant_id}
+              key={index}
               config={assistant}
               currentConfig={props.currentConfig}
               enterConfig={props.enterConfig}
+              removeConfig={props.removeConfig}
             />
           )) ?? (
           <li className="leading-6 p-2 animate-pulse font-black text-gray-400 text-lg">

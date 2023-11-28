@@ -24,6 +24,7 @@ export interface ConfigListProps {
     isPublic: boolean
   ) => Promise<void>;
   enterConfig: (id: string | null) => void;
+  removeConfig: (config: Config | null) => void;
 }
 
 function configsReducer(
@@ -117,10 +118,27 @@ export function useConfigList(): ConfigListProps {
     setCurrent(key);
   }, []);
 
+  const removeConfig = useCallback(
+    async (config: Config | null) => {
+      const removed = await fetch(`/assistants/${config.assistant_id}`, {
+        method: "DELETE",
+        body: JSON.stringify({ public: config.public }),
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }).then((r) => r.json());
+      const newConfigs = configs.filter((c) => c.assistant_id !== config.assistant_id)
+      setConfigs(newConfigs)
+    },
+    [configs]
+  );
+
   return {
     configs,
     currentConfig: configs?.find((c) => c.assistant_id === current) || null,
     saveConfig,
     enterConfig,
+    removeConfig,
   };
 }

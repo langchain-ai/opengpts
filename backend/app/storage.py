@@ -127,6 +127,18 @@ def put_assistant(
     return saved
 
 
+def delete_assistant(user_id: str, assistant_id: str, public: bool = False) -> bool:
+    client = _get_redis_client()
+    with client.pipeline() as pipe:
+        pipe.srem(assistants_list_key(user_id), orjson.dumps(assistant_id))
+        pipe.delete(assistant_key(user_id, assistant_id))
+        if public:
+            pipe.srem(assistants_list_key(public_user_id), orjson.dumps(assistant_id))
+            pipe.delete(assistant_key(public_user_id, assistant_id))
+        pipe.execute()
+    return True
+
+
 def list_threads(user_id: str) -> List[ThreadWithoutUserId]:
     """List all threads for the current user."""
     client = _get_redis_client()

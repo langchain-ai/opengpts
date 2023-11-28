@@ -13,7 +13,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { configSchema, configDefaults } = useSchemas();
   const { chats, currentChat, createChat, enterChat } = useChatList();
-  const { configs, currentConfig, saveConfig, enterConfig } = useConfigList();
+  const { configs, currentConfig, saveConfig, enterConfig, removeConfig } = useConfigList();
   const { startStream, stopStream, stream } = useStreamState();
 
   const startTurn = useCallback(
@@ -79,6 +79,7 @@ function App() {
       currentConfig={currentConfig}
       saveConfig={saveConfig}
       enterConfig={enterConfig}
+      removeConfig={removeConfig}
     />
   );
 

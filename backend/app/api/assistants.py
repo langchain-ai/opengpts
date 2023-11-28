@@ -1,8 +1,9 @@
 from typing import Annotated, List, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, HTTPException, Path, Query, Cookie
 from pydantic import BaseModel, Field
+from typing_extensions import TypedDict
 
 import app.storage as storage
 from app.schema import Assistant, AssistantWithoutUserId, OpengptsUserId
@@ -21,6 +22,10 @@ class AssistantPayload(BaseModel):
     name: str = Field(..., description="The name of the assistant.")
     config: dict = Field(..., description="The assistant config.")
     public: bool = Field(default=False, description="Whether the assistant is public.")
+
+
+class PublicPayload(TypedDict):
+    public: bool
 
 
 AssistantID = Annotated[str, Path(description="The ID of the assistant.")]
@@ -85,3 +90,16 @@ def upsert_assistant(
         config=payload.config,
         public=payload.public,
     )
+
+@router.delete("/{aid}")
+def delete_assistant_endpoint(
+    aid: str,
+    payload: PublicPayload,
+    opengpts_user_id: Annotated[str, Cookie()],
+):
+    return storage.delete_assistant(
+        opengpts_user_id,
+        aid,
+        payload["public"],
+    )
+
