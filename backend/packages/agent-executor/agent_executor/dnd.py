@@ -1,5 +1,4 @@
 import json
-from agent_executor.utils import map_chunk_to_msg
 
 from permchain import Channel, Pregel, BaseCheckpointAdapter
 from permchain.channels import Topic, LastValue
@@ -72,7 +71,7 @@ state_prompt = ChatPromptTemplate.from_messages(
 def _maybe_update_state(message: AnyMessage):
     if "function_call" in message.additional_kwargs:
         return Channel.write_to(
-            messages=map_chunk_to_msg(message),
+            "messages",
             state=json.loads(message.additional_kwargs["function_call"]["arguments"])[
                 "state"
             ],
@@ -92,11 +91,7 @@ def create_dnd_bot(llm: BaseChatModel, checkpoint: BaseCheckpointAdapter):
     character_model = llm.bind(
         functions=[convert_pydantic_to_openai_function(CharacterNotebook)],
     )
-    game_chain = (
-        game_prompt
-        | llm
-        | Channel.write_to(messages=map_chunk_to_msg, check_update=True)
-    )
+    game_chain = game_prompt | llm | Channel.write_to("messages", check_update=True)
     state_model = llm.bind(
         functions=[convert_pydantic_to_openai_function(StateNotebook)],
         stream=False,
@@ -110,7 +105,7 @@ def create_dnd_bot(llm: BaseChatModel, checkpoint: BaseCheckpointAdapter):
     character_chain = (
         character_prompt
         | character_model
-        | Channel.write_to(messages=map_chunk_to_msg)
+        | Channel.write_to("messages")
         | _maybe_update_character
     )
 
