@@ -4,21 +4,45 @@ services:
   redis:
     image: redislabs/redisearch:latest
     container_name: redis
-    # Export the port that the service is listening on.
-    expose:
-      - "6379"
-    ports:
-      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - opengpts
+
   backend:
     build:
-      context: .  # Use the current directory as the build context
-      dockerfile: Dockerfile  # Specify the custom Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
-      - "8100:8100"
+      - "${BACKEND_PORT:-8100}:${BACKEND_PORT:-8100}"
     depends_on:
-      - redis
+      redis:
+        condition: service_started
     env_file:
-      - .env  # Use the .env file to load environment variables
+      - .env
     environment:
-      PORT: 8100
       REDIS_URL: "redis://redis:6379"
+    networks:
+      - opengpts
+    command: ["poetry", "run", "uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "${BACKEND_PORT:-8100}"]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - opengpts
+    command: ["yarn", "dev"]
+
+
+volumes:
+  redis-data:
+
+networks:
+  opengpts:
+    driver: bridge
