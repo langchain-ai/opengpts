@@ -23,7 +23,7 @@ redis = "^5.0.1"
 python-multipart = "^0.0.6"
 tiktoken = "^0.5.1"
 langchain = ">=0.0.338"
-permchain = ">=0.0.7"
+permchain = ">=0.0.8"
 pydantic = "<2.0"
 
 [tool.poetry.group.dev.dependencies]

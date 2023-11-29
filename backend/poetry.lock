@@ -1877,13 +1877,13 @@ image = ["Pillow"]
 
 [[package]]
 name = "permchain"
-version = "0.0.7"
+version = "0.0.8"
 description = "permchain"
 optional = false
 python-versions = ">=3.8.1,<4.0"
 files = [
-    {file = "permchain-0.0.7-py3-none-any.whl", hash = "sha256:0cc8d21e140fe994b0ae0d0696ecda81d4a3d805e724c00ee162b370852c9a6a"},
-    {file = "permchain-0.0.7.tar.gz", hash = "sha256:ec83a2759d5ec73705015fe0413e7f4c830f504f1d6a7fcb69c75276cb112b15"},
+    {file = "permchain-0.0.8-py3-none-any.whl", hash = "sha256:5e77b06264e20a70fb3431e9debf951d21181c4507db7b8db7425cb1a187a046"},
+    {file = "permchain-0.0.8.tar.gz", hash = "sha256:be9f6d4dad6fd6850fdc4d7118cfca0f6069928360376c5191bdcb7a2d1e84c2"},
 ]
 
 [package.dependencies]
@@ -3372,4 +3372,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.1"
-content-hash = "9408d002edd7d6f17823c25bda79204127a5b6aa837d94c318bc309b568cf893"
+content-hash = "0fb23784c0634e2721c01fdd3ca1c07bf6805531b8678bd51406f591b9c58f1f"
