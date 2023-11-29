@@ -2,7 +2,6 @@ import os
 
 from agent_executor.upload import IngestRunnable
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.embeddings.azure_openai import AzureOpenAIEmbeddings
 from langchain.schema.runnable import ConfigurableField
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores.redis import Redis
@@ -11,7 +10,7 @@ index_schema = {
     "tag": [{"name": "namespace"}],
 }
 
-if os.environ("OPENAI_API_TYPE") == "azure":
+if os.environ["OPENAI_API_TYPE"] == "azure":
     embeddings = OpenAIEmbeddings(
         deployment=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME_EB"],
         model=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME_EB"],
