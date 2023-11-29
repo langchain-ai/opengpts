@@ -9,10 +9,7 @@ from app.schema import Assistant, AssistantWithoutUserId, OpengptsUserId
 
 router = APIRouter()
 
-FEATURED_PUBLIC_ASSISTANTS = [
-    "ba721964-b7e4-474c-b817-fb089d94dc5f",
-    "dc3ec482-aafc-4d90-8a1a-afb9b2876cde",
-]
+FEATURED_PUBLIC_ASSISTANTS = []
 
 
 class AssistantPayload(BaseModel):

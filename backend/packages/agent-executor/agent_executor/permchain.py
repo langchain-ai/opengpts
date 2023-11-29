@@ -3,19 +3,7 @@ from operator import itemgetter
 from typing import Sequence
 
 from langchain.schema.agent import AgentAction, AgentActionMessageLog, AgentFinish
-from langchain.schema.messages import (
-    AnyMessage,
-    AIMessage,
-    AIMessageChunk,
-    BaseMessage,
-    BaseMessageChunk,
-    ChatMessage,
-    ChatMessageChunk,
-    FunctionMessage,
-    FunctionMessageChunk,
-    HumanMessage,
-    HumanMessageChunk,
-)
+from langchain.schema.messages import AIMessage, AnyMessage, FunctionMessage
 from langchain.schema.runnable import (
     Runnable,
     RunnableConfig,
@@ -28,29 +16,13 @@ from permchain.channels import Topic
 from permchain.checkpoint.base import BaseCheckpointAdapter
 
 
-def map_chunk_to_msg(chunk: BaseMessageChunk) -> BaseMessage:
-    if not isinstance(chunk, BaseMessageChunk):
-        return chunk
-    args = {k: v for k, v in chunk.__dict__.items() if k != "type"}
-    if isinstance(chunk, HumanMessageChunk):
-        return HumanMessage(**args)
-    elif isinstance(chunk, AIMessageChunk):
-        return AIMessage(**args)
-    elif isinstance(chunk, FunctionMessageChunk):
-        return FunctionMessage(**args)
-    elif isinstance(chunk, ChatMessageChunk):
-        return ChatMessage(**args)
-    else:
-        raise ValueError(f"Unknown chunk type: {chunk}")
-
-
 def _create_agent_message(
     output: AgentAction | AgentFinish
 ) -> list[AnyMessage] | AnyMessage:
     if isinstance(output, AgentAction):
         if isinstance(output, AgentActionMessageLog):
             output.message_log[-1].additional_kwargs["agent"] = output
-            messages = [map_chunk_to_msg(m) for m in output.message_log]
+            messages = output.message_log
             output.message_log = []  # avoid circular reference for json dumps
             return messages
         else:
