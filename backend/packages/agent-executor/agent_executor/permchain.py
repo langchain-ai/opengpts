@@ -3,7 +3,7 @@ from operator import itemgetter
 from typing import Sequence
 
 from langchain.schema.agent import AgentAction, AgentActionMessageLog, AgentFinish
-from langchain.schema.messages import AnyMessage, AIMessage, FunctionMessage
+from langchain.schema.messages import AIMessage, AnyMessage, FunctionMessage
 from langchain.schema.runnable import (
     Runnable,
     RunnableConfig,

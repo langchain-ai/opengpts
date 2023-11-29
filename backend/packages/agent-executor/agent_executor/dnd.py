@@ -1,13 +1,12 @@
 import json
 
-from permchain import Channel, Pregel, BaseCheckpointAdapter
-from permchain.channels import Topic, LastValue
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.utils.openai_functions import convert_pydantic_to_openai_function
-from langchain_core.messages import AnyMessage, AIMessage, HumanMessage
 from langchain_core.language_models import BaseChatModel
-
+from langchain_core.messages import AIMessage, AnyMessage, HumanMessage
+from permchain import BaseCheckpointAdapter, Channel, Pregel
+from permchain.channels import LastValue, Topic
 
 character_system_msg = """You are a dungeon master for a game of dungeons and dragons.
 

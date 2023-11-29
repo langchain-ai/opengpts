@@ -1,7 +1,7 @@
 import os
 import pickle
 from functools import partial
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping
 
 from langchain.pydantic_v1 import Field
 from langchain.schema.runnable import RunnableConfig
@@ -35,7 +35,7 @@ class RedisCheckpoint(BaseCheckpointAdapter):
         arbitrary_types_allowed = True
 
     @property
-    def config_specs(self) -> Sequence[ConfigurableFieldSpec]:
+    def config_specs(self) -> list[ConfigurableFieldSpec]:
         return [
             ConfigurableFieldSpec(
                 id="user_id",
