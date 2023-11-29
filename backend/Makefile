@@ -13,6 +13,9 @@ build_ui:
 # Define a variable for the test file path.
 TEST_FILE ?= tests/unit_tests/
 
+start:
+	poetry run uvicorn app.server:app --reload --port 8100
+
 test:
 	# We need to update handling of env variables for tests
 	YDC_API_KEY=placeholder OPENAI_API_KEY=placeholder poetry run pytest $(TEST_FILE)
