@@ -19,6 +19,7 @@ OpenGPTs gives you more control, allowing you to configure:
 **Key Links**
 - [GPTs: a simple hosted version](https://opengpts-example-vz4y4ooboq-uc.a.run.app/)
 - [Assistants API: a getting started guide](API.md)
+- [Memory: how to use long-term memory](MEMORY.md)
 
 ## Quickstart
 
