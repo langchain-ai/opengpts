@@ -36,9 +36,10 @@ The config parameters allows you to set the LLM used, the instructions of the as
   "name": "bar",
   "config": {
     "configurable": {
-      "agent_type": "GPT 3.5 Turbo",
-      "system_message": "You are a helpful assistant",
-      "tools": ["Wikipedia"]
+      "type": "agent",
+      "type==agent/agent_type": "GPT 3.5 Turbo",
+      "type==agent/system_message": "You are a helpful assistant",
+      "type==agent/tools": ["Wikipedia"]
   },
   "public": True
 }
