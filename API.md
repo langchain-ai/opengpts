@@ -14,7 +14,7 @@ This should look something like:
 
 ```python
 import requests
-requests.put('http://127.0.0.1:8100/assistants', json={
+requests.post('http://127.0.0.1:8100/assistants', json={
   "name": "bar",
   "config": {"configurable": {}},
   "public": True
@@ -27,6 +27,27 @@ This should return something like:
 ```shell
 b'{"assistant_id":"9c7d7e6e-654b-4eaa-b160-f19f922fc63b","name":"string","config":{"configurable":{}},"updated_at":"2023-11-20T16:24:30.520340","public":true,"user_id":"foo"}'
 ```
+
+The config parameters allows you to set the LLM used, the instructions of the assistant and also the tools used.
+
+
+```
+{
+  "name": "bar",
+  "config": {
+    "configurable": {
+      "type": "agent",
+      "type==agent/agent_type": "GPT 3.5 Turbo",
+      "type==agent/system_message": "You are a helpful assistant",
+      "type==agent/tools": ["Wikipedia"]
+  },
+  "public": True
+}
+```
+This creates an assistant with the name `"bar"`, with GPT 3.5 Turbo, with a prompt `"You are a helpful assistant"` using the Wikipedia tool , that is public.
+
+Available tools names can be found in the AvailableTools class in backend/packages/gizmo-agent/gizmo_agent/tools.py
+Available llms can be found in GizmoAgentType in backend/packages/gizmo-agent/gizmo_agent/agent_types/__init__.py
 
 ## Create a thread
 
