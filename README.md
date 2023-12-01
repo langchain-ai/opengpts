@@ -32,6 +32,15 @@ cd backend
 pip install -r requirements.txt
 ```
 
+**Set up environment variables**
+
+Copy the `.env.example` file to `.env.local` at the root of the project and fill in the values.
+Load the environment variables :
+```shell
+export $(cat .env.local | xargs)
+```
+They will live in the environment of the current shell session.
+
 **Set up persistence layer**
 
 The backed by default uses Redis for saving agent configurations and chat message history.

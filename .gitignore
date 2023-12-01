@@ -1,1 +1,10 @@
 .env.gcp.yaml
+
+# Allow use of local .env file
+.env.local
+
+# vscode extension for local history
+.history
+
+dump.rdb
+```
