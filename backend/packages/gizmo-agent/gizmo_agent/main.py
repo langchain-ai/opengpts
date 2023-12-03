@@ -1,7 +1,10 @@
+import os
 from typing import Any, Mapping, Optional, Sequence
 
 from agent_executor.checkpoint import RedisCheckpoint
+from agent_executor.dnd import create_dnd_bot
 from agent_executor.permchain import get_agent_executor
+from langchain.chat_models import AzureChatOpenAI, ChatOpenAI
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.schema.messages import AnyMessage
 from langchain.schema.runnable import (
@@ -82,6 +85,27 @@ class AgentOutput(BaseModel):
     messages: Sequence[AnyMessage] = Field(..., extra={"widget": {"type": "chat"}})
 
 
+dnd_llm = ChatOpenAI(
+    model="gpt-3.5-turbo-1106", temperature=0, streaming=True
+).configurable_alternatives(
+    ConfigurableField(id="llm", name="LLM"),
+    default_key="gpt-35-turbo",
+    azure_openai=AzureChatOpenAI(
+        temperature=0,
+        deployment_name=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
+        openai_api_base=os.environ["AZURE_OPENAI_API_BASE"],
+        openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
+        openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],
+        streaming=True,
+    ),
+)
+
+
+dnd_bot = create_dnd_bot(dnd_llm, checkpoint=RedisCheckpoint()).with_types(
+    input_type=AgentInput, output_type=AgentOutput
+)
+
+
 agent = (
     ConfigurableAgent(
         agent=GizmoAgentType.GPT_35_TURBO,
@@ -92,13 +116,21 @@ agent = (
     .configurable_fields(
         agent=ConfigurableField(id="agent_type", name="Agent Type"),
         system_message=ConfigurableField(id="system_message", name="System Message"),
-        assistant_id=ConfigurableField(id="assistant_id", name="Assistant ID"),
+        assistant_id=ConfigurableField(
+            id="assistant_id", name="Assistant ID", is_shared=True
+        ),
         tools=ConfigurableFieldMultiOption(
             id="tools",
             name="Tools",
             options=TOOL_OPTIONS,
             default=[],
         ),
+    )
+    .configurable_alternatives(
+        ConfigurableField(id="type", name="Bot Type"),
+        default_key="agent",
+        prefix_keys=True,
+        dungeons_and_dragons=dnd_bot,
     )
     .with_types(input_type=AgentInput, output_type=AgentOutput)
 )

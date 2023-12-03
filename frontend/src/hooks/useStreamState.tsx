@@ -38,6 +38,7 @@ export function useStreamState(): StreamStateProps {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ input, assistant_id, thread_id }),
+        openWhenHidden: true,
         onmessage(msg) {
           if (msg.event === "data") {
             const { messages } = JSON.parse(msg.data);
