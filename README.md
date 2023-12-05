@@ -116,7 +116,7 @@ This project supports a Docker-based setup, streamlining installation and execut
    This command builds the Docker images for the frontend and backend from their respective Dockerfiles and starts all necessary services, including Redis.
 
 3. **Access the Application:**  
-   With the services running, access the frontend at `http://localhost:5173`, substituting `5173` with the designated port number.
+   With the services running, access the frontend at [http://localhost:5173](http://localhost:5173), substituting `5173` with the designated port number.
 
 4. **Rebuilding After Changes:**  
    If you make changes to either the frontend or backend, rebuild the Docker images to reflect these changes. Run:
