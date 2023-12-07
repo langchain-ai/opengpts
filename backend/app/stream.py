@@ -23,9 +23,7 @@ class StreamMessagesHandler(BaseCallbackHandler):
     def __init__(self, messages: Sequence[BaseMessage]) -> None:
         self.messages = messages
         self.output: Dict[UUID, ChatGenerationChunk] = {}
-        send_stream, receive_stream = create_memory_object_stream(
-            math.inf, item_type=dict | Exception
-        )
+        send_stream, receive_stream = create_memory_object_stream(math.inf)
         self.send_stream = send_stream
         self.receive_stream = receive_stream
 

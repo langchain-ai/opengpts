@@ -2,23 +2,31 @@ version: '3'
 
 services:
   redis:
-    image: redislabs/redisearch:latest
     container_name: redis
-    # Export the port that the service is listening on.
-    expose:
-      - "6379"
+    image: redislabs/redisearch:latest
     ports:
       - "6379:6379"
+    volumes:
+      - ./redis-volume:/data
   backend:
     build:
-      context: .  # Use the current directory as the build context
-      dockerfile: Dockerfile  # Specify the custom Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
-      - "8100:8100"
+      - "8100:8100"  # Backend is accessible on localhost:8100
     depends_on:
       - redis
     env_file:
-      - .env  # Use the .env file to load environment variables
+      - .env
     environment:
       PORT: 8100
       REDIS_URL: "redis://redis:6379"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "5173:5173"  # Frontend is accessible on localhost:5173
+    environment:
+      VITE_BACKEND_URL: "http://backend:8100"

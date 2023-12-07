@@ -95,6 +95,42 @@ yarn dev
 
 Navigate to [http://localhost:5173/](http://localhost:5173/) and enjoy!
 
+## Installation and Running with Docker
+
+This project supports a Docker-based setup, streamlining installation and execution. It automatically builds images for the frontend and backend and sets up Redis using docker-compose.
+
+### Quick Start
+
+1. **Clone the Repository:**  
+   Obtain the project files by cloning the repository.
+   ```
+   git clone https://github.com/langchain-ai/opengpts.git
+   cd opengpts
+   ```
+
+2. **Run with Docker Compose:**  
+   In the root directory of the project, execute:
+   ```
+   docker compose up
+   ```
+   This command builds the Docker images for the frontend and backend from their respective Dockerfiles and starts all necessary services, including Redis.
+
+3. **Access the Application:**  
+   With the services running, access the frontend at [http://localhost:5173](http://localhost:5173), substituting `5173` with the designated port number.
+
+4. **Rebuilding After Changes:**  
+   If you make changes to either the frontend or backend, rebuild the Docker images to reflect these changes. Run:
+   ```
+   docker-compose up --build
+   ```
+   This command rebuilds the images with your latest changes and restarts the services.
+
+### Note
+- Ensure Docker and docker-compose are installed on your system.
+- Adjust the `.env` file as required for specific environment configurations.
+
+---
+
 ## Features
 
 As much as possible, we are striving for feature parity with OpenAI.
