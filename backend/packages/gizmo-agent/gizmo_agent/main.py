@@ -56,8 +56,8 @@ class ConfigurableAgent(RunnableBinding):
             _agent = get_openai_function_agent(_tools, system_message)
         # elif agent == GizmoAgentType.GPT_4:
         #     _agent = get_openai_function_agent(_tools, system_message, gpt_4=True)
-        elif agent == GizmoAgentType.AZURE_OPENAI:
-            _agent = get_openai_function_agent(_tools, system_message, azure=True)
+        # elif agent == GizmoAgentType.AZURE_OPENAI:
+        #     _agent = get_openai_function_agent(_tools, system_message, azure=True)
         elif agent == GizmoAgentType.CLAUDE2:
             _agent = get_xml_agent(_tools, system_message)
         elif agent == GizmoAgentType.BEDROCK_CLAUDE2:
@@ -90,14 +90,14 @@ dnd_llm = ChatOpenAI(
 ).configurable_alternatives(
     ConfigurableField(id="llm", name="LLM"),
     default_key="gpt-35-turbo",
-    azure_openai=AzureChatOpenAI(
-        temperature=0,
-        deployment_name=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
-        openai_api_base=os.environ["AZURE_OPENAI_API_BASE"],
-        openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
-        openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],
-        streaming=True,
-    ),
+    # azure_openai=AzureChatOpenAI(
+    #     temperature=0,
+    #     deployment_name=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
+    #     openai_api_base=os.environ["AZURE_OPENAI_API_BASE"],
+    #     openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
+    #     openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],
+    #     streaming=True,
+    # ),
 )
 
 
