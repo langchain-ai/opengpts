@@ -15,7 +15,7 @@ from langchain.schema.runnable import (
 from gizmo_agent.agent_types import (
     GizmoAgentType,
     get_openai_function_agent,
-    get_xml_agent,
+    # get_xml_agent,
 )
 from gizmo_agent.tools import TOOL_OPTIONS, TOOLS, AvailableTools, get_retrieval_tool
 
