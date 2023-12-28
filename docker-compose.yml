@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   redis:
@@ -10,10 +10,9 @@ services:
       - ./redis-volume:/data
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: backend
     ports:
-      - "8100:8100"  # Backend is accessible on localhost:8100
+      - "8100:8100" # Backend is accessible on localhost:8100
     depends_on:
       - redis
     env_file:
@@ -24,9 +23,8 @@ services:
 
   frontend:
     build:
-      context: .
-      dockerfile: frontend/Dockerfile
+      context: frontend
     ports:
-      - "5173:5173"  # Frontend is accessible on localhost:5173
+      - "5173:5173" # Frontend is accessible on localhost:5173
     environment:
       VITE_BACKEND_URL: "http://backend:8100"
