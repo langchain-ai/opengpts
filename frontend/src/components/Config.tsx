@@ -189,6 +189,10 @@ function PublicLink(props: { assistantId: string }) {
   );
 }
 
+function fileId(file: File) {
+  return `${file.name}-${file.size}-${file.lastModified}`;
+}
+
 export function Config(props: {
   configSchema: Schemas["configSchema"];
   configDefaults: Schemas["configDefaults"];
@@ -227,8 +231,9 @@ export function Config(props: {
           ],
         },
       }));
+      const acceptedFileIds = dropzone.acceptedFiles.map(fileId);
       setFiles((files) => [
-        ...files.filter((f) => !dropzone.acceptedFiles.includes(f)),
+        ...files.filter((f) => !acceptedFileIds.includes(fileId(f))),
         ...dropzone.acceptedFiles,
       ]);
     }
@@ -257,12 +262,7 @@ export function Config(props: {
           const key = form.key.value;
           if (!key) return;
           setInflight(true);
-          await props.saveConfig(
-            key,
-            values!,
-            dropzone.acceptedFiles,
-            isPublic
-          );
+          await props.saveConfig(key, values!, files, isPublic);
           setInflight(false);
         }}
       >
