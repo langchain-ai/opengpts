@@ -10,7 +10,7 @@ index_schema = {
     "tag": [{"name": "namespace"}],
 }
 vstore = Redis(
-    redis_url="redis://redis-10437.c28195.us-central1-1.gcp.cloud.rlrcp.com:10437/0?password=EKT7BrnAWBoPmRbENx3R76h9yII6DSHZ",
+    redis_url=os.environ["REDIS_URL"],
     index_name="opengpts",
     embedding=OpenAIEmbeddings(),
     index_schema=index_schema,
