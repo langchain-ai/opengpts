@@ -145,8 +145,8 @@ def get_thread(user_id: str, thread_id: str) -> Thread | None:
     return load(thread_hash_keys, values) if any(values) else None
 
 
-def get_thread_messages(user_id: str, thread_id: str):
-    """Get all messages for a thread."""
+def get_thread_state(user_id: str, thread_id: str):
+    """Get state for a thread."""
     client = RedisCheckpoint()
     checkpoint = client.get(
         {"configurable": {"user_id": user_id, "thread_id": thread_id}}
@@ -159,8 +159,8 @@ def get_thread_messages(user_id: str, thread_id: str):
         return {k: v.get() for k, v in channels.items()}
 
 
-def post_thread_messages(user_id: str, thread_id: str, messages: Sequence[AnyMessage]):
-    """Add messages to a thread."""
+def update_thread_state(user_id: str, thread_id: str, messages: Sequence[AnyMessage]):
+    """Update state for a thread."""
     client = RedisCheckpoint()
     config = {"configurable": {"user_id": user_id, "thread_id": thread_id}}
     checkpoint = client.get(config)
