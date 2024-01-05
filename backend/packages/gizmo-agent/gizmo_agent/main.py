@@ -16,6 +16,7 @@ from gizmo_agent.agent_types import (
     GizmoAgentType,
     get_openai_function_agent,
     # get_xml_agent,
+    get_cohere_function_agent,
 )
 from gizmo_agent.tools import TOOL_OPTIONS, TOOLS, AvailableTools, get_retrieval_tool
 
@@ -61,6 +62,8 @@ class ConfigurableAgent(RunnableBinding):
         #     _agent = get_xml_agent(_tools, system_message)
         # elif agent == GizmoAgentType.BEDROCK_CLAUDE2:
         #     _agent = get_xml_agent(_tools, system_message, bedrock=True)
+        elif agent == GizmoAgentType.COHERE_COMMAND:
+            _agent = get_cohere_function_agent(_tools, system_message)
         else:
             raise ValueError("Unexpected agent type")
         agent_executor = get_agent_executor(
