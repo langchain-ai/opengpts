@@ -5,14 +5,14 @@ FROM node:16
 WORKDIR /frontend
 
 # Copy the package.json and yarn.lock
-COPY ./frontend/package.json ./
-COPY ./frontend/yarn.lock ./
+COPY ./package.json ./
+COPY ./yarn.lock ./
 
 # Install Yarn and dependencies
 RUN yarn install
 
 # Copy the rest of the frontend code
-COPY ./frontend .
+COPY . .
 
 # Expose the port the frontend runs on
 EXPOSE 5173
