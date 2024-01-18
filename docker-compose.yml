@@ -2,13 +2,14 @@ version: "3"
 
 services:
   redis:
-    container_name: redis
+    container_name: opengpts-redis
     image: redis/redis-stack-server:latest
     ports:
       - "6379:6379"
     volumes:
       - ./redis-volume:/data
   backend:
+    container_name: opengpts-backend
     build:
       context: backend
     ports:
@@ -20,11 +21,11 @@ services:
     volumes:
       - ./backend:/backend
     environment:
-      REDIS_URL: "redis://redis:6379"
+      REDIS_URL: "redis://opengpts-redis:6379"
     command:
       - --reload
-
   frontend:
+    container_name: opengpts-frontend
     build:
       context: frontend
     volumes:
@@ -32,4 +33,4 @@ services:
     ports:
       - "5173:5173" # Frontend is accessible on localhost:5173
     environment:
-      VITE_BACKEND_URL: "http://backend:8000"
+      VITE_BACKEND_URL: "http://opengpts-backend:8000"
