@@ -25,17 +25,17 @@ class PythonREPLInput(BaseModel):
     query: str = Field(description="python command to run")
 
 
-RETRIEVER_DESCRIPTION = """Can be used to look up information that was uploaded to this assistant.
+RETRIEVAL_DESCRIPTION = """Can be used to look up information that was uploaded to this assistant.
 If the user is referencing particular files, that is often a good hint that information may be here."""
 
 
-def get_retrieval_tool(assistant_id: str):
+def get_retrieval_tool(assistant_id: str, description: str):
     return create_retriever_tool(
         vstore.as_retriever(
             search_kwargs={"filter": RedisFilter.tag("namespace") == assistant_id}
         ),
         "Retriever",
-        RETRIEVER_DESCRIPTION,
+        description,
     )
 
 
