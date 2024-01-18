@@ -160,7 +160,8 @@ function MultiOptionField(props: {
 }
 
 function PublicLink(props: { assistantId: string }) {
-  const link = window.location.href + "?shared_id=" + props.assistantId;
+  const currentLink = window.location.href;
+  const link = currentLink.includes('shared_id=') ? currentLink : currentLink + "?shared_id=" + props.assistantId;
   return (
     <div className="flex rounded-md shadow-sm mb-4">
       <button
