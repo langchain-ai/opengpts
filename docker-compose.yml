@@ -3,7 +3,7 @@ version: "3"
 services:
   redis:
     container_name: redis
-    image: redislabs/redisearch:latest
+    image: redis/redis-stack-server:latest
     ports:
       - "6379:6379"
     volumes:
@@ -12,7 +12,7 @@ services:
     build:
       context: backend
     ports:
-      - "8100:8100" # Backend is accessible on localhost:8100
+      - "8100:8000" # Backend is accessible on localhost:8100
     depends_on:
       - redis
     env_file:
@@ -20,8 +20,9 @@ services:
     volumes:
       - ./backend:/backend
     environment:
-      PORT: 8100
       REDIS_URL: "redis://redis:6379"
+    command:
+      - --reload
 
   frontend:
     build:
@@ -31,4 +32,4 @@ services:
     ports:
       - "5173:5173" # Frontend is accessible on localhost:5173
     environment:
-      VITE_BACKEND_URL: "http://backend:8100"
+      VITE_BACKEND_URL: "http://backend:8000"

@@ -13,4 +13,4 @@ RUN rm poetry.lock
 
 RUN pip install .
 
-CMD exec uvicorn app.server:app --host 0.0.0.0 --port $PORT --reload
+ENTRYPOINT [ "uvicorn", "app.server:app", "--host", "0.0.0.0" ]
