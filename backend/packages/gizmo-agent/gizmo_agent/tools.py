@@ -5,10 +5,10 @@ from langchain.retrievers import KayAiRetriever, PubMedRetriever, WikipediaRetri
 from langchain.retrievers.you import YouRetriever
 from langchain.tools import ArxivQueryRun, DuckDuckGoSearchRun
 from langchain.tools.retriever import create_retriever_tool
+from langchain.tools.tavily_search import TavilyAnswer, TavilySearchResults
 from langchain.utilities import ArxivAPIWrapper
-from langchain.vectorstores.redis import RedisFilter
 from langchain.utilities.tavily_search import TavilySearchAPIWrapper
-from langchain.tools.tavily_search import TavilySearchResults, TavilyAnswer
+from langchain.vectorstores.redis import RedisFilter
 
 from gizmo_agent.ingest import vstore
 

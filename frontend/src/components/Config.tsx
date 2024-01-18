@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { marked } from "marked";
 import { ShareIcon } from "@heroicons/react/24/outline";
 import { useDropzone } from "react-dropzone";
+import { orderBy } from "lodash";
 
 import { ConfigListProps } from "../hooks/useConfigList";
 import { SchemaField, Schemas } from "../hooks/useSchemas";
@@ -58,7 +59,7 @@ export default function SingleOptionField(props: {
       <fieldset>
         <legend className="sr-only">{props.field.title}</legend>
         <div className="space-y-2">
-          {props.field.enum?.map((option) => (
+          {orderBy(props.field.enum)?.map((option) => (
             <div key={option} className="flex items-center">
               <input
                 id={`${props.id}-${option}`}
@@ -115,7 +116,7 @@ function MultiOptionField(props: {
     <fieldset>
       <Label id={props.id} title={props.title ?? props.field.items?.title} />
       <div className="space-y-2">
-        {props.field.items?.enum?.map((option) => (
+        {orderBy(props.field.items?.enum)?.map((option) => (
           <div className="relative flex items-start" key={option}>
             <div className="flex h-6 items-center">
               <input
@@ -159,7 +160,8 @@ function MultiOptionField(props: {
 }
 
 function PublicLink(props: { assistantId: string }) {
-  const link = window.location.href + "?shared_id=" + props.assistantId;
+  const currentLink = window.location.href;
+  const link = currentLink.includes('shared_id=') ? currentLink : currentLink + "?shared_id=" + props.assistantId;
   return (
     <div className="flex rounded-md shadow-sm mb-4">
       <button
@@ -186,6 +188,10 @@ function PublicLink(props: { assistantId: string }) {
       </a>
     </div>
   );
+}
+
+function fileId(file: File) {
+  return `${file.name}-${file.size}-${file.lastModified}`;
 }
 
 export function Config(props: {
@@ -226,8 +232,9 @@ export function Config(props: {
           ],
         },
       }));
+      const acceptedFileIds = dropzone.acceptedFiles.map(fileId);
       setFiles((files) => [
-        ...files.filter((f) => !dropzone.acceptedFiles.includes(f)),
+        ...files.filter((f) => !acceptedFileIds.includes(fileId(f))),
         ...dropzone.acceptedFiles,
       ]);
     }
@@ -256,12 +263,7 @@ export function Config(props: {
           const key = form.key.value;
           if (!key) return;
           setInflight(true);
-          await props.saveConfig(
-            key,
-            values!,
-            dropzone.acceptedFiles,
-            isPublic
-          );
+          await props.saveConfig(key, values!, files, isPublic);
           setInflight(false);
         }}
       >
@@ -278,7 +280,13 @@ export function Config(props: {
             if (value.allOf?.length === 1) {
               value = value.allOf[0];
             }
-            if (key === "agent_type") {
+            if (key.split("/")[0].includes("==")) {
+              const [parentKey, parentValue] = key.split("/")[0].split("==");
+              if (values?.configurable?.[parentKey] !== parentValue) {
+                return null;
+              }
+            }
+            if (value.type === "string" && value.enum) {
               return (
                 <SingleOptionField
                   key={key}
@@ -295,7 +303,7 @@ export function Config(props: {
                   readonly={readonly}
                 />
               );
-            } else if (key === "system_message") {
+            } else if (key === "type==agent/system_message") {
               return (
                 <StringField
                   key={key}
@@ -312,7 +320,7 @@ export function Config(props: {
                   readonly={readonly}
                 />
               );
-            } else if (key === "tools") {
+            } else if (key === "type==agent/tools") {
               return (
                 <MultiOptionField
                   key={key}
@@ -332,7 +340,7 @@ export function Config(props: {
               );
             }
           })}
-          {!props.config && (
+          {!props.config && values?.configurable?.type === "agent" && (
             <FileUploadDropzone
               state={dropzone}
               files={files}

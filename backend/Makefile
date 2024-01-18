@@ -3,12 +3,18 @@
 # Default target executed when no arguments are given to make.
 all: help
 
+build_ui:
+	cd ../frontend && yarn build && cp -r dist/* ../backend/ui
+
 ######################
 # TESTING AND COVERAGE
 ######################
 
 # Define a variable for the test file path.
 TEST_FILE ?= tests/unit_tests/
+
+start:
+	poetry run uvicorn app.server:app --reload --port 8100
 
 test:
 	# We need to update handling of env variables for tests

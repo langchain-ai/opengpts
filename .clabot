@@ -1,4 +1,0 @@
-{
-  "contributors": ["eyurtsev", "hwchase17", "nfcampos", "efriis", "jacoblee93", "dqbd", "harris", "baskaryan", "hinthornw", "bracesproul", "jakerachleff"],
-  "message": "Thank you for your pull request and welcome to our community. We require contributors to sign our Contributor License Agreement, and we don't seem to have the username {{usersWithoutCLA}} on file. In order for us to review and merge your code, please complete the Individual Contributor License Agreement here https://forms.gle/bJtcHNhhWwarQf83A .\n\nThis process is done manually on our side, so after signing the form one of the maintainers will add you to the contributors list.\n\nFor more details about why we have a CLA and other contribution guidelines please see: https://github.com/langchain-ai/opengpts/blob/main/CONTRIBUTING.md."
-}

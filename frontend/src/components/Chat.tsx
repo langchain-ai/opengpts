@@ -15,8 +15,9 @@ export function Chat(props: ChatProps) {
   useEffect(() => {
     scrollTo({
       top: document.body.scrollHeight,
-      behavior: "smooth",
+      behavior: props.stream?.messages ? "smooth" : undefined,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
   return (
     <div className="flex-1 flex flex-col items-stretch pb-[76px] pt-2">
@@ -24,7 +25,11 @@ export function Chat(props: ChatProps) {
         <Message
           {...msg}
           key={i}
-          runId={i === messages.length - 1 ? props.stream?.run_id : undefined}
+          runId={
+            i === messages.length - 1 && props.stream?.status === "done"
+              ? props.stream?.run_id
+              : undefined
+          }
         />
       ))}
       {(props.stream?.status === "inflight" || messages === null) && (

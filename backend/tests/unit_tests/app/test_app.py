@@ -49,7 +49,6 @@ def _project(d: dict, *, exclude_keys: Optional[Sequence[str]]) -> dict:
     return {k: v for k, v in d.items() if k not in _exclude}
 
 
-@pytest.mark.asyncio
 async def test_list_and_create_assistants(redis_client: RedisType) -> None:
     """Test list and create assistants."""
     headers = {"Cookie": "opengpts_user_id=1"}
@@ -109,11 +108,10 @@ async def test_list_and_create_assistants(redis_client: RedisType) -> None:
         # Check not visible to other users
         headers = {"Cookie": "opengpts_user_id=2"}
         response = await client.get("/assistants/", headers=headers)
-        assert response.status_code == 200
+        assert response.status_code == 200, response.text
         assert response.json() == []
 
 
-@pytest.mark.asyncio
 async def test_threads(redis_client: RedisType) -> None:
     """Test put thread."""
     async with get_client() as client:
@@ -122,7 +120,7 @@ async def test_threads(redis_client: RedisType) -> None:
             json={"name": "bobby", "assistant_id": "bobby"},
             headers={"Cookie": "opengpts_user_id=1"},
         )
-        assert response.status_code == 200
+        assert response.status_code == 200, response.text
 
         response = await client.get(
             "/threads/1/messages", headers={"Cookie": "opengpts_user_id=1"}

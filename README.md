@@ -1,6 +1,6 @@
 # OpenGPTs
 
-This is an open source effort to create a similar experience to OpenAI's GPTs.
+This is an open source effort to create a similar experience to OpenAI's GPTs and Assistants API.
 It builds upon [LangChain](https://github.com/langchain-ai/langchain), [LangServe](https://github.com/langchain-ai/langserve) and [LangSmith](https://smith.langchain.com/).
 OpenGPTs gives you more control, allowing you to configure:
 
@@ -16,7 +16,11 @@ OpenGPTs gives you more control, allowing you to configure:
     <img alt="Chat" src="_static/chat.png" width="49%" />
 </p>
 
-Check out a simple hosted version [here](https://opengpts-example-vz4y4ooboq-uc.a.run.app/)
+**Key Links**
+
+- [GPTs: a simple hosted version](https://opengpts-example-vz4y4ooboq-uc.a.run.app/)
+- [Assistants API: a getting started guide](API.md)
+- [Memory: how to use long-term memory](MEMORY.md)
 
 ## Quickstart
 
@@ -92,6 +96,46 @@ yarn dev
 
 Navigate to [http://localhost:5173/](http://localhost:5173/) and enjoy!
 
+## Installation and Running with Docker
+
+This project supports a Docker-based setup, streamlining installation and execution. It automatically builds images for the frontend and backend and sets up Redis using docker-compose.
+
+### Quick Start
+
+1. **Clone the Repository:**  
+   Obtain the project files by cloning the repository.
+
+   ```
+   git clone https://github.com/langchain-ai/opengpts.git
+   cd opengpts
+   ```
+
+2. **Run with Docker Compose:**  
+   In the root directory of the project, execute:
+
+   ```
+   docker compose up
+   ```
+
+   This command builds the Docker images for the frontend and backend from their respective Dockerfiles and starts all necessary services, including Redis.
+
+3. **Access the Application:**  
+   With the services running, access the frontend at [http://localhost:5173](http://localhost:5173), substituting `5173` with the designated port number.
+
+4. **Rebuilding After Changes:**  
+   If you make changes to either the frontend or backend, rebuild the Docker images to reflect these changes. Run:
+   ```
+   docker-compose up --build
+   ```
+   This command rebuilds the images with your latest changes and restarts the services.
+
+### Note
+
+- Ensure Docker and docker-compose are installed on your system.
+- Adjust the `.env` file as required for specific environment configurations.
+
+---
+
 ## Features
 
 As much as possible, we are striving for feature parity with OpenAI.
@@ -100,8 +144,8 @@ As much as possible, we are striving for feature parity with OpenAI.
   - The chatbots used are all in code, so are easily editable
 - [x] Custom Actions - Define additional functionality for your chatbot using OpenAPI specifications
   - Supported by adding tools
-- [ ] Knowledge Files - attach additional files that your chatbot can reference
-  - Coming soon
+- [x] Knowledge Files - attach additional files that your chatbot can reference
+  - Upload files from the UI or API, used by Retrieval tool
 - [x] Tools - Provides basic tools for web browsing, image creation, etc.
   - Basic DuckDuckGo and PythonREPL tools enabled by default
   - Image creation coming soon
@@ -275,5 +319,5 @@ You can deploy to GCP Cloud Run using the following command:
 First create a `.env.gcp.yaml` file with the contents from `.env.gcp.yaml.example` and fill in the values. Then run:
 
 ```shell
-gcloud run deploy opengpts --source . --port 8001 --env-vars-file .env.gcp.yaml --allow-unauthenticated --region us-central1 --min-instances 1
+gcloud run deploy opengpts --source . --port 8000 --env-vars-file .env.gcp.yaml --allow-unauthenticated --region us-central1 --min-instances 1
 ```

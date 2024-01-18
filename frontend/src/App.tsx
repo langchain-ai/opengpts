@@ -25,21 +25,17 @@ function App() {
       if (!config) return;
       await startStream(
         {
-          input: {
-            content: message,
-            additional_kwargs: {},
-            type: "human",
-            example: false,
-          },
+          messages: [
+            {
+              content: message,
+              additional_kwargs: {},
+              type: "human",
+              example: false,
+            },
+          ],
         },
-        {
-          ...config,
-          configurable: {
-            ...config.configurable,
-            thread_id: chat.thread_id,
-            assistant_id: chat.assistant_id,
-          },
-        }
+        chat.assistant_id,
+        chat.thread_id
       );
     },
     [currentChat, startStream, configs]

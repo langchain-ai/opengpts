@@ -1,32 +1,32 @@
 import os
 from datetime import datetime
+from typing import List, Sequence
 
 import orjson
-from langchain.schema.messages import messages_from_dict
+from agent_executor.checkpoint import RedisCheckpoint
+from langchain.schema.messages import AnyMessage
 from langchain.utilities.redis import get_client
+from permchain.channels import Topic
+from permchain.channels.base import ChannelsManager, create_checkpoint
 from redis.client import Redis as RedisType
 
+from app.schema import Assistant, AssistantWithoutUserId, Thread, ThreadWithoutUserId
 
-def assistants_list_key(user_id: str):
+
+def assistants_list_key(user_id: str) -> str:
     return f"opengpts:{user_id}:assistants"
 
 
-def assistant_key(user_id: str, assistant_id: str):
+def assistant_key(user_id: str, assistant_id: str) -> str:
     return f"opengpts:{user_id}:assistant:{assistant_id}"
 
 
-def threads_list_key(user_id: str):
+def threads_list_key(user_id: str) -> str:
     return f"opengpts:{user_id}:threads"
 
 
-def thread_key(user_id: str, thread_id: str):
+def thread_key(user_id: str, thread_id: str) -> str:
     return f"opengpts:{user_id}:thread:{thread_id}"
-
-
-def thread_messages_key(user_id: str, thread_id: str):
-    # Needs to match key used by RedisChatMessageHistory
-    # TODO we probably want to align this with the others
-    return f"message_store:{user_id}:{thread_id}"
 
 
 assistant_hash_keys = ["assistant_id", "name", "config", "updated_at", "public"]
@@ -50,7 +50,8 @@ def _get_redis_client() -> RedisType:
     return get_client(url)
 
 
-def list_assistants(user_id: str):
+def list_assistants(user_id: str) -> List[Assistant]:
+    """List all assistants for the current user."""
     client = _get_redis_client()
     ids = [orjson.loads(id) for id in client.smembers(assistants_list_key(user_id))]
     with client.pipeline() as pipe:
@@ -60,7 +61,17 @@ def list_assistants(user_id: str):
     return [load(assistant_hash_keys, values) for values in assistants]
 
 
-def list_public_assistants(assistant_ids: list[str]):
+def get_assistant(user_id: str, assistant_id: str) -> Assistant | None:
+    """Get an assistant by ID."""
+    client = _get_redis_client()
+    values = client.hmget(assistant_key(user_id, assistant_id), *assistant_hash_keys)
+    return load(assistant_hash_keys, values) if any(values) else None
+
+
+def list_public_assistants(
+    assistant_ids: Sequence[str]
+) -> List[AssistantWithoutUserId]:
+    """List all the public assistants."""
     if not assistant_ids:
         return []
     client = _get_redis_client()
@@ -84,10 +95,22 @@ def list_public_assistants(assistant_ids: list[str]):
 
 def put_assistant(
     user_id: str, assistant_id: str, *, name: str, config: dict, public: bool = False
-):
-    saved = {
-        "user_id": user_id,
-        "assistant_id": assistant_id,
+) -> Assistant:
+    """Modify an assistant.
+
+    Args:
+        user_id: The user ID.
+        assistant_id: The assistant ID.
+        name: The assistant name.
+        config: The assistant config.
+        public: Whether the assistant is public.
+
+    Returns:
+        return the assistant model if no exception is raised.
+    """
+    saved: Assistant = {
+        "user_id": user_id,  # TODO(Nuno): Could we remove this?
+        "assistant_id": assistant_id,  # TODO(Nuno): remove this?
         "name": name,
         "config": config,
         "updated_at": datetime.utcnow(),
@@ -104,7 +127,8 @@ def put_assistant(
     return saved
 
 
-def list_threads(user_id: str):
+def list_threads(user_id: str) -> List[ThreadWithoutUserId]:
+    """List all threads for the current user."""
     client = _get_redis_client()
     ids = [orjson.loads(id) for id in client.smembers(threads_list_key(user_id))]
     with client.pipeline() as pipe:
@@ -114,20 +138,48 @@ def list_threads(user_id: str):
     return [load(thread_hash_keys, values) for values in threads]
 
 
-def get_thread_messages(user_id: str, thread_id: str):
+def get_thread(user_id: str, thread_id: str) -> Thread | None:
+    """Get a thread by ID."""
     client = _get_redis_client()
-    messages = client.lrange(thread_messages_key(user_id, thread_id), 0, -1)
-    return {
-        "messages": [
-            m.dict()
-            for m in messages_from_dict([orjson.loads(m) for m in messages[::-1]])
-        ],
-    }
+    values = client.hmget(thread_key(user_id, thread_id), *thread_hash_keys)
+    return load(thread_hash_keys, values) if any(values) else None
 
 
-def put_thread(user_id: str, thread_id: str, *, assistant_id: str, name: str):
-    saved = {
-        "user_id": user_id,
+def get_thread_messages(user_id: str, thread_id: str):
+    """Get all messages for a thread."""
+    client = RedisCheckpoint()
+    checkpoint = client.get(
+        {"configurable": {"user_id": user_id, "thread_id": thread_id}}
+    )
+    # TODO replace hardcoded messages channel with
+    # channel extracted from agent
+    with ChannelsManager(
+        {"messages": Topic(AnyMessage, accumulate=True)}, checkpoint
+    ) as channels:
+        return {k: v.get() for k, v in channels.items()}
+
+
+def post_thread_messages(user_id: str, thread_id: str, messages: Sequence[AnyMessage]):
+    """Add messages to a thread."""
+    client = RedisCheckpoint()
+    config = {"configurable": {"user_id": user_id, "thread_id": thread_id}}
+    checkpoint = client.get(config)
+    # TODO replace hardcoded messages channel with
+    # channel extracted from agent
+    with ChannelsManager(
+        {"messages": Topic(AnyMessage, accumulate=True)}, checkpoint
+    ) as channels:
+        channels["messages"].update(messages)
+        checkpoint = {
+            k: v for k, v in create_checkpoint(channels).items() if k == "messages"
+        }
+        client.put(config, checkpoint)
+
+
+def put_thread(user_id: str, thread_id: str, *, assistant_id: str, name: str) -> Thread:
+    """Modify a thread."""
+    saved: Thread = {
+        "user_id": user_id,  # TODO(Nuno): Could we remove this?
         "thread_id": thread_id,
         "assistant_id": assistant_id,
         "name": name,
