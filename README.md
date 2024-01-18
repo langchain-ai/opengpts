@@ -17,6 +17,7 @@ OpenGPTs gives you more control, allowing you to configure:
 </p>
 
 **Key Links**
+
 - [GPTs: a simple hosted version](https://opengpts-example-vz4y4ooboq-uc.a.run.app/)
 - [Assistants API: a getting started guide](API.md)
 - [Memory: how to use long-term memory](MEMORY.md)
@@ -103,6 +104,7 @@ This project supports a Docker-based setup, streamlining installation and execut
 
 1. **Clone the Repository:**  
    Obtain the project files by cloning the repository.
+
    ```
    git clone https://github.com/langchain-ai/opengpts.git
    cd opengpts
@@ -110,9 +112,11 @@ This project supports a Docker-based setup, streamlining installation and execut
 
 2. **Run with Docker Compose:**  
    In the root directory of the project, execute:
+
    ```
    docker compose up
    ```
+
    This command builds the Docker images for the frontend and backend from their respective Dockerfiles and starts all necessary services, including Redis.
 
 3. **Access the Application:**  
@@ -126,6 +130,7 @@ This project supports a Docker-based setup, streamlining installation and execut
    This command rebuilds the images with your latest changes and restarts the services.
 
 ### Note
+
 - Ensure Docker and docker-compose are installed on your system.
 - Adjust the `.env` file as required for specific environment configurations.
 
@@ -314,5 +319,5 @@ You can deploy to GCP Cloud Run using the following command:
 First create a `.env.gcp.yaml` file with the contents from `.env.gcp.yaml.example` and fill in the values. Then run:
 
 ```shell
-gcloud run deploy opengpts --source . --port 8001 --env-vars-file .env.gcp.yaml --allow-unauthenticated --region us-central1 --min-instances 1
+gcloud run deploy opengpts --source . --port 8000 --env-vars-file .env.gcp.yaml --allow-unauthenticated --region us-central1 --min-instances 1
 ```
