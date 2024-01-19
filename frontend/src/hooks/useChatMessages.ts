@@ -3,7 +3,7 @@ import { Message } from "./useChatList";
 import { StreamState } from "./useStreamState";
 
 async function getMessages(threadId: string) {
-  const { messages } = await fetch(`/threads/${threadId}/messages`, {
+  const { messages } = await fetch(`/threads/${threadId}/state`, {
     headers: {
       Accept: "application/json",
     },
