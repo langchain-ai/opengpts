@@ -3,15 +3,14 @@ from typing import Any, Mapping, Optional, Sequence
 from agent_executor.checkpoint import RedisCheckpoint
 from agent_executor.dnd import create_dnd_bot
 from agent_executor.permchain import get_agent_executor
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.pydantic_v1 import BaseModel, Field
-from langchain.schema.messages import AnyMessage
-from langchain.schema.runnable import (
+from langchain_core.messages import AnyMessage
+from langchain_core.runnables import (
     ConfigurableField,
     ConfigurableFieldMultiOption,
     RunnableBinding,
 )
-
 from gizmo_agent.agent_types import (
     GizmoAgentType,
     get_openai_function_agent,

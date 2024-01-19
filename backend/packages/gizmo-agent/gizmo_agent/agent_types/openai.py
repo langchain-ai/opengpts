@@ -1,7 +1,7 @@
 import os
 
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
-from langchain.chat_models import AzureChatOpenAI, ChatOpenAI
+from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.tools.render import format_tool_to_openai_function
 

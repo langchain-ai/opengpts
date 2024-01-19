@@ -10,9 +10,9 @@ from __future__ import annotations
 
 from typing import Any, BinaryIO, List, Optional
 
-from langchain.document_loaders.blob_loaders.schema import Blob
-from langchain.schema.runnable import RunnableConfig, RunnableSerializable
-from langchain.schema.vectorstore import VectorStore
+from langchain_community.document_loaders.blob_loaders import Blob
+from langchain_core.runnables import RunnableConfig, RunnableSerializable
+from langchain_core.vectorstores import VectorStore
 from langchain.text_splitter import TextSplitter
 
 from agent_executor.ingest import ingest_blob

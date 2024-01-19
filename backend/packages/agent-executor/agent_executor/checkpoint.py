@@ -1,13 +1,14 @@
 import os
 import pickle
 from functools import partial
-from typing import Any, Mapping
+from typing import Any
 
 from langchain.pydantic_v1 import Field
 from langchain.schema.runnable import RunnableConfig
 from langchain.schema.runnable.utils import ConfigurableFieldSpec
 from langchain.utilities.redis import get_client
-from permchain.checkpoint.base import BaseCheckpointAdapter
+from langgraph.checkpoint import BaseCheckpointSaver
+from langgraph.checkpoint.base import Checkpoint
 from redis.client import Redis as RedisType
 
 
@@ -26,7 +27,7 @@ def _load(mapping: dict[bytes, bytes]) -> dict:
     }
 
 
-class RedisCheckpoint(BaseCheckpointAdapter):
+class RedisCheckpoint(BaseCheckpointSaver):
     client: RedisType = Field(
         default_factory=partial(get_client, os.environ.get("REDIS_URL"))
     )
@@ -60,8 +61,12 @@ class RedisCheckpoint(BaseCheckpointAdapter):
             config["configurable"]["user_id"], config["configurable"]["thread_id"]
         )
 
-    def get(self, config: RunnableConfig) -> Mapping[str, Any] | None:
-        return _load(self.client.hgetall(self._hash_key(config)))
+    def get(self, config: RunnableConfig) -> Checkpoint | None:
+        value = _load(self.client.hgetall(self._hash_key(config)))
+        if value.get("v") == 1:
+            return value
+        else:
+            return None
 
-    def put(self, config: RunnableConfig, checkpoint: Mapping[str, Any]) -> None:
+    def put(self, config: RunnableConfig, checkpoint: Checkpoint) -> None:
         return self.client.hmset(self._hash_key(config), _dump(checkpoint))

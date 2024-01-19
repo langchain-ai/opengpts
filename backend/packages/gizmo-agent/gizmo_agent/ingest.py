@@ -1,10 +1,10 @@
 import os
 
 from agent_executor.upload import IngestRunnable
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.schema.runnable import ConfigurableField
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores.redis import Redis
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores.redis import Redis
+from langchain_core.runnables import ConfigurableField
 
 index_schema = {
     "tag": [{"name": "namespace"}],
