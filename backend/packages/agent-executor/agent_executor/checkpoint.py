@@ -8,7 +8,7 @@ from langchain.schema.runnable import RunnableConfig
 from langchain.schema.runnable.utils import ConfigurableFieldSpec
 from langchain.utilities.redis import get_client
 from langgraph.checkpoint import BaseCheckpointSaver
-from langgraph.checkpoint.base import Checkpoint
+from langgraph.checkpoint.base import Checkpoint, empty_checkpoint
 from redis.client import Redis as RedisType
 
 
@@ -64,8 +64,17 @@ class RedisCheckpoint(BaseCheckpointSaver):
     def get(self, config: RunnableConfig) -> Checkpoint | None:
         value = _load(self.client.hgetall(self._hash_key(config)))
         if value.get("v") == 1:
+            # langgraph version 1
             return value
+        elif value.get("__pregel_version") == 1:
+            # permchain version 1
+            value.pop("__pregel_version")
+            value.pop("__pregel_ts")
+            checkpoint = empty_checkpoint()
+            checkpoint["channel_values"] = value
+            return checkpoint
         else:
+            # unknown version
             return None
 
     def put(self, config: RunnableConfig, checkpoint: Checkpoint) -> None:
