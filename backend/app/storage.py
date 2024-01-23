@@ -6,8 +6,9 @@ import orjson
 from agent_executor.checkpoint import RedisCheckpoint
 from langchain.schema.messages import AnyMessage
 from langchain.utilities.redis import get_client
-from permchain.channels import Topic
-from permchain.channels.base import ChannelsManager, create_checkpoint
+from langgraph.channels import Topic
+from langgraph.channels.base import ChannelsManager
+from langgraph.checkpoint.base import empty_checkpoint
 from redis.client import Redis as RedisType
 
 from app.schema import Assistant, AssistantWithoutUserId, Thread, ThreadWithoutUserId
@@ -148,9 +149,8 @@ def get_thread(user_id: str, thread_id: str) -> Thread | None:
 def get_thread_messages(user_id: str, thread_id: str):
     """Get all messages for a thread."""
     client = RedisCheckpoint()
-    checkpoint = client.get(
-        {"configurable": {"user_id": user_id, "thread_id": thread_id}}
-    )
+    config = {"configurable": {"user_id": user_id, "thread_id": thread_id}}
+    checkpoint = client.get(config) or empty_checkpoint()
     # TODO replace hardcoded messages channel with
     # channel extracted from agent
     with ChannelsManager(
@@ -163,16 +163,15 @@ def post_thread_messages(user_id: str, thread_id: str, messages: Sequence[AnyMes
     """Add messages to a thread."""
     client = RedisCheckpoint()
     config = {"configurable": {"user_id": user_id, "thread_id": thread_id}}
-    checkpoint = client.get(config)
+    checkpoint = client.get(config) or empty_checkpoint()
     # TODO replace hardcoded messages channel with
     # channel extracted from agent
     with ChannelsManager(
         {"messages": Topic(AnyMessage, accumulate=True)}, checkpoint
     ) as channels:
         channels["messages"].update(messages)
-        checkpoint = {
-            k: v for k, v in create_checkpoint(channels).items() if k == "messages"
-        }
+        checkpoint["channel_versions"]["messages"] += 1
+        checkpoint["channel_values"]["messages"] = channels["messages"].checkpoint()
         client.put(config, checkpoint)
 
 

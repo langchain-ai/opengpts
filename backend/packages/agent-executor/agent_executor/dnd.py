@@ -5,8 +5,9 @@ from langchain.pydantic_v1 import BaseModel, Field
 from langchain.utils.openai_functions import convert_pydantic_to_openai_function
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, AnyMessage, HumanMessage
-from permchain import BaseCheckpointAdapter, Channel, Pregel
-from permchain.channels import LastValue, Topic
+from langgraph.checkpoint import BaseCheckpointSaver
+from langgraph.channels import LastValue, Topic
+from langgraph.pregel import Channel, Pregel
 
 character_system_msg = """You are a dungeon master for a game of dungeons and dragons.
 
@@ -86,7 +87,7 @@ def _maybe_update_character(message: AnyMessage):
         )
 
 
-def create_dnd_bot(llm: BaseChatModel, checkpoint: BaseCheckpointAdapter):
+def create_dnd_bot(llm: BaseChatModel, checkpoint: BaseCheckpointSaver):
     character_model = llm.bind(
         functions=[convert_pydantic_to_openai_function(CharacterNotebook)],
     )
@@ -122,7 +123,7 @@ def create_dnd_bot(llm: BaseChatModel, checkpoint: BaseCheckpointAdapter):
         | _route_to_chain
     )
     dnd = Pregel(
-        chains={"executor": executor, "update_state": state_chain},
+        nodes={"executor": executor, "update_state": state_chain},
         channels={
             "messages": Topic(AnyMessage, accumulate=True),
             "character": LastValue(str),
@@ -131,6 +132,6 @@ def create_dnd_bot(llm: BaseChatModel, checkpoint: BaseCheckpointAdapter):
         },
         input=["messages"],
         output=["messages"],
-        checkpoint=checkpoint,
+        checkpointer=checkpoint,
     )
     return dnd

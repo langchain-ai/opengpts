@@ -11,9 +11,9 @@ from langchain.schema.runnable import (
     RunnablePassthrough,
 )
 from langchain.tools import BaseTool
-from permchain import Channel, Pregel, ReservedChannels
-from permchain.channels import Topic
-from permchain.checkpoint.base import BaseCheckpointAdapter
+from langgraph.channels import Topic
+from langgraph.checkpoint import BaseCheckpointSaver
+from langgraph.pregel import Channel, Pregel, ReservedChannels
 
 
 def _create_agent_message(
@@ -74,7 +74,7 @@ async def _arun_tool(
 def get_agent_executor(
     tools: list[BaseTool],
     agent: Runnable[dict[str, list[AnyMessage]], AgentAction | AgentFinish],
-    checkpoint: BaseCheckpointAdapter,
+    checkpoint: BaseCheckpointSaver,
 ) -> Pregel:
     tool_map = {tool.name: tool for tool in tools}
     tool_lambda = RunnableLambda(_run_tool, _arun_tool).bind(tools=tool_map)
@@ -118,9 +118,9 @@ def get_agent_executor(
     )
 
     return Pregel(
-        chains={"executor": executor},
+        nodes={"executor": executor},
         channels={"messages": Topic(AnyMessage, accumulate=True)},
         input=["messages"],
         output=["messages"],
-        checkpoint=checkpoint,
+        checkpointer=checkpoint,
     )
