@@ -57,7 +57,11 @@ class ConfigurableAgent(RunnableBinding):
                     )
                 _tools.append(get_retrieval_tool(assistant_id, retrieval_description))
             else:
-                _tools.append(TOOLS[_tool]())
+                _init_tools = TOOLS[_tool]()
+                if isinstance(_init_tools, list):
+                    _tools.extend(_init_tools)
+                else:
+                    _tools.append(_init_tools)
         if agent == GizmoAgentType.GPT_35_TURBO:
             _agent = get_openai_function_agent(_tools, system_message)
         # elif agent == GizmoAgentType.GPT_4:

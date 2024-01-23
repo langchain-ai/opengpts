@@ -86,6 +86,8 @@ export default function SingleOptionField(props: {
 
 const TOOL_DESCRIPTIONS = {
   Retrieval: "Look up information in uploaded files.",
+  "Action Server by Robocorp":
+    "Run AI actions with [Robocorp Action Server](https://github.com/robocorp/robocorp).",
   "DDG Search":
     "Search the web with [DuckDuckGo](https://pypi.org/project/duckduckgo-search/).",
   "Search (Tavily)":

@@ -5,3 +5,5 @@ langchain>=0.1.0
 langserve>=0.0.23
 langgraph
 python-multipart
+langchain-robocorp>=0.0.1
+
