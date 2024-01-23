@@ -100,7 +100,11 @@ class ConfigurableAgent(RunnableBinding):
                     )
                 _tools.append(get_retrieval_tool(assistant_id, retrieval_description))
             else:
-                _tools.append(TOOLS[_tool]())
+                _returned_tools = TOOLS[_tool]()
+                if isinstance(_returned_tools, list):
+                    _tools.extend(_returned_tools)
+                else:
+                    _tools.append(_returned_tools)
         _agent = get_agent_executor(_tools, agent, system_message)
         agent_executor = _agent.with_config({"recursion_limit": 50})
         super().__init__(
