@@ -4,6 +4,7 @@ from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.tools.render import format_tool_to_openai_function
+from langchain_core.messages import SystemMessage
 
 
 def get_openai_function_agent(
@@ -23,17 +24,15 @@ def get_openai_function_agent(
             openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],
             streaming=True,
         )
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", system_message),
-            MessagesPlaceholder(variable_name="messages"),
-        ]
-    )
+
+    def _get_messages(messages):
+        return [SystemMessage(content=system_message)] + messages
+
     if tools:
         llm_with_tools = llm.bind(
             functions=[format_tool_to_openai_function(t) for t in tools]
         )
     else:
         llm_with_tools = llm
-    agent = prompt | llm_with_tools | OpenAIFunctionsAgentOutputParser()
+    agent = _get_messages | llm_with_tools
     return agent

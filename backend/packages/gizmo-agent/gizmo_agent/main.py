@@ -71,7 +71,7 @@ class ConfigurableAgent(RunnableBinding):
         else:
             raise ValueError("Unexpected agent type")
         agent_executor = get_agent_executor(
-            tools=_tools, agent=_agent, checkpoint=RedisCheckpoint()
+            tools=_tools, llm=_agent, checkpoint=RedisCheckpoint()
         ).with_config({"recursion_limit": 10})
         super().__init__(
             tools=tools,
@@ -152,9 +152,9 @@ if __name__ == "__main__":
     from langchain.schema.messages import HumanMessage
 
     async def run():
-        async for m in agent.astream_log(
-            {"messages": HumanMessage(content="whats your name")},
+        async for m in agent.astream_events(HumanMessage(content="whats your name"),
             config={"configurable": {"user_id": "1", "thread_id": "test1"}},
+            version="v1",
         ):
             print(m)
 
