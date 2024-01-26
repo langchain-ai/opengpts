@@ -1,15 +1,16 @@
 import os
 from datetime import datetime
 from typing import List, Sequence
+from app.stream import map_chunk_to_msg
 
 import orjson
-from agent_executor.checkpoint import RedisCheckpoint
 from langchain.schema.messages import AnyMessage
 from langchain.utilities.redis import get_client
-from permchain.channels import Topic
-from permchain.channels.base import ChannelsManager, create_checkpoint
+from langgraph.channels.base import ChannelsManager
+from langgraph.checkpoint.base import empty_checkpoint
 from redis.client import Redis as RedisType
 
+from app.agent import AgentType, get_agent_executor
 from app.schema import Assistant, AssistantWithoutUserId, Thread, ThreadWithoutUserId
 
 
@@ -145,35 +146,34 @@ def get_thread(user_id: str, thread_id: str) -> Thread | None:
     return load(thread_hash_keys, values) if any(values) else None
 
 
+# TODO remove hardcoded channel name
+MESSAGES_CHANNEL_NAME = "__root__"
+
+
 def get_thread_messages(user_id: str, thread_id: str):
     """Get all messages for a thread."""
-    client = RedisCheckpoint()
-    checkpoint = client.get(
-        {"configurable": {"user_id": user_id, "thread_id": thread_id}}
-    )
-    # TODO replace hardcoded messages channel with
-    # channel extracted from agent
-    with ChannelsManager(
-        {"messages": Topic(AnyMessage, accumulate=True)}, checkpoint
-    ) as channels:
-        return {k: v.get() for k, v in channels.items()}
+    config = {"configurable": {"user_id": user_id, "thread_id": thread_id}}
+    app = get_agent_executor([], AgentType.GPT_35_TURBO, "")
+    checkpoint = app.checkpointer.get(config) or empty_checkpoint()
+    with ChannelsManager(app.channels, checkpoint) as channels:
+        return {
+            "messages": [
+                map_chunk_to_msg(msg) for msg in channels[MESSAGES_CHANNEL_NAME].get()
+            ]
+        }
 
 
 def post_thread_messages(user_id: str, thread_id: str, messages: Sequence[AnyMessage]):
     """Add messages to a thread."""
-    client = RedisCheckpoint()
     config = {"configurable": {"user_id": user_id, "thread_id": thread_id}}
-    checkpoint = client.get(config)
-    # TODO replace hardcoded messages channel with
-    # channel extracted from agent
-    with ChannelsManager(
-        {"messages": Topic(AnyMessage, accumulate=True)}, checkpoint
-    ) as channels:
-        channels["messages"].update(messages)
-        checkpoint = {
-            k: v for k, v in create_checkpoint(channels).items() if k == "messages"
-        }
-        client.put(config, checkpoint)
+    app = get_agent_executor([], AgentType.GPT_35_TURBO, "")
+    checkpoint = app.checkpointer.get(config) or empty_checkpoint()
+    with ChannelsManager(app.channels, checkpoint) as channels:
+        channel = channels[MESSAGES_CHANNEL_NAME]
+        channel.update([messages])
+        checkpoint["channel_values"][MESSAGES_CHANNEL_NAME] = channel.checkpoint()
+        checkpoint["channel_versions"][MESSAGES_CHANNEL_NAME] += 1
+        app.checkpointer.put(config, checkpoint)
 
 
 def put_thread(user_id: str, thread_id: str, *, assistant_id: str, name: str) -> Thread:

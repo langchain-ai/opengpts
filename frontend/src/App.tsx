@@ -24,16 +24,14 @@ function App() {
       )?.config;
       if (!config) return;
       await startStream(
-        {
-          messages: [
-            {
-              content: message,
-              additional_kwargs: {},
-              type: "human",
-              example: false,
-            },
-          ],
-        },
+        [
+          {
+            content: message,
+            additional_kwargs: {},
+            type: "human",
+            example: false,
+          },
+        ],
         chat.assistant_id,
         chat.thread_id
       );

@@ -305,7 +305,7 @@ export function Config(props: {
                   readonly={readonly}
                 />
               );
-            } else if (key === "type==agent/system_message") {
+            } else if (key === "system_message") {
               return (
                 <StringField
                   key={key}
@@ -323,11 +323,9 @@ export function Config(props: {
                 />
               );
             } else if (
-              key === "type==agent/retrieval_description" &&
+              key === "retrieval_description" &&
               (
-                values?.configurable?.["type==agent/tools"] as
-                  | string[]
-                  | undefined
+                values?.configurable?.["tools"] as string[] | undefined
               )?.includes("Retrieval")
             ) {
               return (
@@ -346,7 +344,7 @@ export function Config(props: {
                   readonly={readonly}
                 />
               );
-            } else if (key === "type==agent/tools") {
+            } else if (key === "tools") {
               return (
                 <MultiOptionField
                   key={key}
@@ -366,7 +364,7 @@ export function Config(props: {
               );
             }
           })}
-          {!props.config && values?.configurable?.type === "agent" && (
+          {!props.config && (
             <FileUploadDropzone
               state={dropzone}
               files={files}

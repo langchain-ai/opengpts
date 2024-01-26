@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "app"}]
 
 [tool.poetry.dependencies]
-python = "^3.8.1"
+python = "^3.9.0"
 sse-starlette = "^1.6.5"
 tomli-w = "^1.0.0"
 uvicorn = "^0.23.2"
@@ -16,16 +16,25 @@ langserve = "0.0.32"
 # Uncomment if you need to work from a development branch
 # This will only work for local development though!
 # langchain = { git = "git@github.com:langchain-ai/langchain.git/", branch = "nc/subclass-runnable-binding" , subdirectory = "libs/langchain"}
-gizmo-agent = {path = "packages/gizmo-agent", develop = true}
-agent-executor = {path = "packages/agent-executor", develop = true}
 orjson = "^3.9.10"
 redis = "^5.0.1"
 python-multipart = "^0.0.6"
 tiktoken = "^0.5.1"
 langchain = ">=0.0.338"
-permchain = ">=0.0.8"
+langgraph = "^0.0.19"
 pydantic = "<2.0"
 python-magic = "^0.4.27"
+langchain-openai = "^0.0.5"
+beautifulsoup4 = "^4.12.3"
+boto3 = "^1.34.28"
+duckduckgo-search = "^4.2"
+arxiv = "^2.1.0"
+kay = "^0.1.2"
+xmltodict = "^0.13.0"
+wikipedia = "^1.4.0"
+langchain-google-vertexai = "^0.0.3"
+setuptools = "^69.0.3"
+pdfminer-six = "^20231228"
 
 [tool.poetry.group.dev.dependencies]
 uvicorn = "^0.23.2"
