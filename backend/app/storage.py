@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 from typing import List, Sequence
-from app.stream import map_chunk_to_msg
 
 import orjson
 from langchain.schema.messages import AnyMessage
@@ -12,6 +11,7 @@ from redis.client import Redis as RedisType
 
 from app.agent import AgentType, get_agent_executor
 from app.schema import Assistant, AssistantWithoutUserId, Thread, ThreadWithoutUserId
+from app.stream import map_chunk_to_msg
 
 
 def assistants_list_key(user_id: str) -> str:
