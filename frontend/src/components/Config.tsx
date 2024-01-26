@@ -364,7 +364,7 @@ export function Config(props: {
               );
             }
           })}
-          {!props.config && values?.configurable?.type === "agent" && (
+          {!props.config && (
             <FileUploadDropzone
               state={dropzone}
               files={files}
