@@ -3,14 +3,13 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
     paths:
-      - '.github/actions/poetry_setup/action.yml'
-      - '.github/workflows/_lint.yml'
-      - '.github/workflows/langserve_ci.yml'
-      - 'backend/**'
-  workflow_dispatch:  # Allows to trigger the workflow manually in GitHub UI
+      - ".github/actions/poetry_setup/action.yml"
+      - ".github/workflows/_lint.yml"
+      - "backend/**"
+  workflow_dispatch: # Allows to trigger the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
@@ -28,8 +27,7 @@ env:
 
 jobs:
   lint:
-    uses:
-      ./.github/workflows/_lint.yml
+    uses: ./.github/workflows/_lint.yml
     with:
       working-directory: "./backend"
     secrets: inherit
@@ -43,7 +41,6 @@ jobs:
     strategy:
       matrix:
         python-version:
-          - "3.8"
           - "3.9"
           - "3.10"
           - "3.11"
