@@ -49,7 +49,9 @@ def get_openai_agent_executor(
         # We construct an ToolInvocation from the function_call
         action = ToolInvocation(
             tool=last_message.additional_kwargs["function_call"]["name"],
-            tool_input=json.loads(last_message.additional_kwargs["function_call"]["arguments"]),
+            tool_input=json.loads(
+                last_message.additional_kwargs["function_call"]["arguments"]
+            ),
         )
         # We call the tool_executor and get back a response
         response = await tool_executor.ainvoke(action)
@@ -85,13 +87,13 @@ def get_openai_agent_executor(
             # If `tools`, then we call the tool node.
             "continue": "action",
             # Otherwise we finish.
-            "end": END
-        }
+            "end": END,
+        },
     )
 
     # We now add a normal edge from `tools` to `agent`.
     # This means that after `tools` is called, `agent` node is called next.
-    workflow.add_edge('action', 'agent')
+    workflow.add_edge("action", "agent")
 
     # Finally, we compile it!
     # This compiles it into a LangChain Runnable,

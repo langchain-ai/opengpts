@@ -54,20 +54,24 @@ def construct_chat_history(messages):
     return collapsed_messages
 
 
-
 def get_xml_agent_executor(
     tools: list[BaseTool],
     llm: LanguageModelLike,
     system_message: str,
     checkpoint: BaseCheckpointSaver,
 ):
-
-    formatted_system_message = xml_template.format(system_message=system_message, tools=render_text_description(tools),
-        tool_names=", ".join([t.name for t in tools]))
+    formatted_system_message = xml_template.format(
+        system_message=system_message,
+        tools=render_text_description(tools),
+        tool_names=", ".join([t.name for t in tools]),
+    )
 
     llm_with_stop = llm.bind(stop=["</tool_input>"])
+
     def _get_messages(messages):
-        return [SystemMessage(content=formatted_system_message)] + construct_chat_history(messages)
+        return [
+            SystemMessage(content=formatted_system_message)
+        ] + construct_chat_history(messages)
 
     agent = _get_messages | llm_with_stop
     tool_executor = ToolExecutor(tools)
@@ -129,13 +133,13 @@ def get_xml_agent_executor(
             # If `tools`, then we call the tool node.
             "continue": "action",
             # Otherwise we finish.
-            "end": END
-        }
+            "end": END,
+        },
     )
 
     # We now add a normal edge from `tools` to `agent`.
     # This means that after `tools` is called, `agent` node is called next.
-    workflow.add_edge('action', 'agent')
+    workflow.add_edge("action", "agent")
 
     # Finally, we compile it!
     # This compiles it into a LangChain Runnable,

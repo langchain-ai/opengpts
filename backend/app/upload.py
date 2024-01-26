@@ -102,7 +102,6 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
         return ids
 
 
-
 index_schema = {
     "tag": [{"name": "namespace"}],
 }

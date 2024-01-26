@@ -3,9 +3,8 @@ import os
 from langchain_community.chat_models import BedrockChat, ChatAnthropic
 import boto3
 
-def get_openai_llm(
-        gpt_4: bool = False, azure: bool = False
-):
+
+def get_openai_llm(gpt_4: bool = False, azure: bool = False):
     if not azure:
         if gpt_4:
             llm = ChatOpenAI(model="gpt-4-1106-preview", temperature=0, streaming=True)

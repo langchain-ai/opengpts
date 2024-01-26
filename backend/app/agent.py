@@ -29,6 +29,7 @@ class AgentType(str, Enum):
     CLAUDE2 = "Claude 2"
     BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
 
+
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
 
@@ -65,19 +66,29 @@ class ConfigurableAgent(RunnableBinding):
                 _tools.append(TOOLS[_tool]())
         if agent == AgentType.GPT_35_TURBO:
             llm = get_openai_llm()
-            _agent = get_openai_agent_executor(_tools, llm, system_message, RedisCheckpoint())
+            _agent = get_openai_agent_executor(
+                _tools, llm, system_message, RedisCheckpoint()
+            )
         elif agent == AgentType.GPT_4:
             llm = get_openai_llm(gpt_4=True)
-            _agent = get_openai_agent_executor(_tools, llm, system_message, RedisCheckpoint())
+            _agent = get_openai_agent_executor(
+                _tools, llm, system_message, RedisCheckpoint()
+            )
         elif agent == AgentType.AZURE_OPENAI:
             llm = get_openai_llm(azure=True)
-            _agent = get_openai_agent_executor(_tools, llm, system_message, RedisCheckpoint())
+            _agent = get_openai_agent_executor(
+                _tools, llm, system_message, RedisCheckpoint()
+            )
         elif agent == AgentType.CLAUDE2:
             llm = get_anthropic_llm()
-            _agent = get_xml_agent_executor(_tools, llm, system_message, RedisCheckpoint())
+            _agent = get_xml_agent_executor(
+                _tools, llm, system_message, RedisCheckpoint()
+            )
         elif agent == AgentType.BEDROCK_CLAUDE2:
             llm = get_anthropic_llm(bedrock=True)
-            _agent = get_xml_agent_executor(_tools, llm, system_message, RedisCheckpoint())
+            _agent = get_xml_agent_executor(
+                _tools, llm, system_message, RedisCheckpoint()
+            )
         else:
             raise ValueError("Unexpected agent type")
         agent_executor = _agent.with_config({"recursion_limit": 10})
@@ -133,7 +144,8 @@ if __name__ == "__main__":
     from langchain.schema.messages import HumanMessage
 
     async def run():
-        async for m in agent.astream_events(HumanMessage(content="whats your name"),
+        async for m in agent.astream_events(
+            HumanMessage(content="whats your name"),
             config={"configurable": {"user_id": "1", "thread_id": "test1"}},
             version="v1",
         ):
