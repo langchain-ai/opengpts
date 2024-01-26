@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from agent_executor.upload import IngestRunnable, _guess_mimetype
+from app.upload import IngestRunnable, _guess_mimetype
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from tests.unit_tests.fixtures import get_sample_paths

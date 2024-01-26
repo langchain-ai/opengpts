@@ -1,9 +1,9 @@
 from typing import Any, Mapping, Optional, Sequence
 
-from agent_executor.checkpoint import RedisCheckpoint
-from agent_executor.dnd import create_dnd_bot
-from agent_executor.permchain import get_agent_executor
-from langchain_openai import ChatOpenAI
+from app.checkpoint import RedisCheckpoint
+from app.agent_types.openai_agent import get_openai_agent_executor
+from app.agent_types.xml_agent import get_xml_agent_executor
+from app.llms import get_openai_llm, get_anthropic_llm
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import (
@@ -11,12 +11,7 @@ from langchain_core.runnables import (
     ConfigurableFieldMultiOption,
     RunnableBinding,
 )
-from gizmo_agent.agent_types import (
-    GizmoAgentType,
-    get_openai_function_agent,
-    # get_xml_agent,
-)
-from gizmo_agent.tools import (
+from app.tools import (
     RETRIEVAL_DESCRIPTION,
     TOOL_OPTIONS,
     TOOLS,
@@ -24,12 +19,22 @@ from gizmo_agent.tools import (
     get_retrieval_tool,
 )
 
+from enum import Enum
+
+
+class AgentType(str, Enum):
+    GPT_35_TURBO = "GPT 3.5 Turbo"
+    GPT_4 = "GPT 4"
+    AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
+    CLAUDE2 = "Claude 2"
+    BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
+
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
 
 class ConfigurableAgent(RunnableBinding):
     tools: Sequence[str]
-    agent: GizmoAgentType
+    agent: AgentType
     system_message: str = DEFAULT_SYSTEM_MESSAGE
     retrieval_description: str = RETRIEVAL_DESCRIPTION
     assistant_id: Optional[str] = None
@@ -39,7 +44,7 @@ class ConfigurableAgent(RunnableBinding):
         self,
         *,
         tools: Sequence[str],
-        agent: GizmoAgentType = GizmoAgentType.GPT_35_TURBO,
+        agent: AgentType = AgentType.GPT_35_TURBO,
         system_message: str = DEFAULT_SYSTEM_MESSAGE,
         assistant_id: Optional[str] = None,
         retrieval_description: str = RETRIEVAL_DESCRIPTION,
@@ -58,21 +63,24 @@ class ConfigurableAgent(RunnableBinding):
                 _tools.append(get_retrieval_tool(assistant_id, retrieval_description))
             else:
                 _tools.append(TOOLS[_tool]())
-        if agent == GizmoAgentType.GPT_35_TURBO:
-            _agent = get_openai_function_agent(_tools, system_message)
-        # elif agent == GizmoAgentType.GPT_4:
-        #     _agent = get_openai_function_agent(_tools, system_message, gpt_4=True)
-        # elif agent == GizmoAgentType.AZURE_OPENAI:
-        #     _agent = get_openai_function_agent(_tools, system_message, azure=True)
-        # elif agent == GizmoAgentType.CLAUDE2:
-        #     _agent = get_xml_agent(_tools, system_message)
-        # elif agent == GizmoAgentType.BEDROCK_CLAUDE2:
-        #     _agent = get_xml_agent(_tools, system_message, bedrock=True)
+        if agent == AgentType.GPT_35_TURBO:
+            llm = get_openai_llm()
+            _agent = get_openai_agent_executor(_tools, llm, system_message, RedisCheckpoint())
+        elif agent == AgentType.GPT_4:
+            llm = get_openai_llm(gpt_4=True)
+            _agent = get_openai_agent_executor(_tools, llm, system_message, RedisCheckpoint())
+        elif agent == AgentType.AZURE_OPENAI:
+            llm = get_openai_llm(azure=True)
+            _agent = get_openai_agent_executor(_tools, llm, system_message, RedisCheckpoint())
+        elif agent == AgentType.CLAUDE2:
+            llm = get_anthropic_llm()
+            _agent = get_xml_agent_executor(_tools, llm, system_message, RedisCheckpoint())
+        elif agent == AgentType.BEDROCK_CLAUDE2:
+            llm = get_anthropic_llm(bedrock=True)
+            _agent = get_xml_agent_executor(_tools, llm, system_message, RedisCheckpoint())
         else:
             raise ValueError("Unexpected agent type")
-        agent_executor = get_agent_executor(
-            tools=_tools, llm=_agent, checkpoint=RedisCheckpoint()
-        ).with_config({"recursion_limit": 10})
+        agent_executor = _agent.with_config({"recursion_limit": 10})
         super().__init__(
             tools=tools,
             agent=agent,
@@ -92,30 +100,9 @@ class AgentOutput(BaseModel):
     messages: Sequence[AnyMessage] = Field(..., extra={"widget": {"type": "chat"}})
 
 
-dnd_llm = ChatOpenAI(
-    model="gpt-3.5-turbo-1106", temperature=0, streaming=True
-).configurable_alternatives(
-    ConfigurableField(id="llm", name="LLM"),
-    default_key="gpt-35-turbo",
-    # azure_openai=AzureChatOpenAI(
-    #     temperature=0,
-    #     deployment_name=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
-    #     openai_api_base=os.environ["AZURE_OPENAI_API_BASE"],
-    #     openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
-    #     openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],
-    #     streaming=True,
-    # ),
-)
-
-
-dnd_bot = create_dnd_bot(dnd_llm, checkpoint=RedisCheckpoint()).with_types(
-    input_type=AgentInput, output_type=AgentOutput
-)
-
-
 agent = (
     ConfigurableAgent(
-        agent=GizmoAgentType.GPT_35_TURBO,
+        agent=AgentType.GPT_35_TURBO,
         tools=[],
         system_message=DEFAULT_SYSTEM_MESSAGE,
         retrieval_description=RETRIEVAL_DESCRIPTION,
@@ -136,12 +123,6 @@ agent = (
         retrieval_description=ConfigurableField(
             id="retrieval_description", name="Retrieval Description"
         ),
-    )
-    .configurable_alternatives(
-        ConfigurableField(id="type", name="Bot Type"),
-        default_key="agent",
-        prefix_keys=True,
-        dungeons_and_dragons=dnd_bot,
     )
     .with_types(input_type=AgentInput, output_type=AgentOutput)
 )

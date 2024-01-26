@@ -14,7 +14,7 @@ from langchain_community.utilities.arxiv import ArxivAPIWrapper
 from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
 from langchain_community.vectorstores.redis import RedisFilter
 
-from gizmo_agent.ingest import vstore
+from app.upload import vstore
 
 
 class DDGInput(BaseModel):

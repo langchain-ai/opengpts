@@ -1,18 +1,11 @@
 import json
-from operator import itemgetter
-from typing import Sequence
-
-from langchain.schema.agent import AgentAction, AgentActionMessageLog, AgentFinish
-from langchain.schema.messages import AIMessage, AnyMessage, FunctionMessage
+from langchain.schema.messages import FunctionMessage
 from langchain_core.language_models.base import LanguageModelLike
-from langchain.schema.runnable import (
-    Runnable,
-    RunnableConfig,
-    RunnableLambda,
-    RunnablePassthrough,
-)
+
+from langchain.tools.render import format_tool_to_openai_function
+from langchain_core.messages import SystemMessage
+
 from langchain.tools import BaseTool
-from langgraph.channels import Topic
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph.message import MessageGraph
 from langgraph.graph import END
@@ -20,68 +13,22 @@ from langgraph.prebuilt import ToolExecutor
 from langgraph.prebuilt import ToolInvocation
 
 
-
-
-def _create_agent_message(
-    output: AgentAction | AgentFinish
-) -> list[AnyMessage] | AnyMessage:
-    if isinstance(output, AgentAction):
-        if isinstance(output, AgentActionMessageLog):
-            output.message_log[-1].additional_kwargs["agent"] = output
-            messages = output.message_log
-            output.message_log = []  # avoid circular reference for json dumps
-            return messages
-        else:
-            return AIMessage(
-                content=output.log,
-                additional_kwargs={"agent": output},
-            )
-    else:
-        return AIMessage(
-            content=output.return_values["output"],
-            additional_kwargs={"agent": output},
-        )
-
-
-def _create_function_message(
-    agent_action: AgentAction, observation: str
-) -> FunctionMessage:
-    if not isinstance(observation, str):
-        try:
-            content = json.dumps(observation, ensure_ascii=False)
-        except Exception:
-            content = str(observation)
-    else:
-        content = observation
-    return FunctionMessage(
-        name=agent_action.tool,
-        content=content,
-    )
-
-
-def _run_tool(
-    messages: list[AnyMessage], config: RunnableConfig, *, tools: dict[str, BaseTool]
-) -> FunctionMessage:
-    action: AgentAction = messages[-1].additional_kwargs["agent"]
-    tool = tools[action.tool]
-    result = tool.invoke(action.tool_input, config)
-    return _create_function_message(action, result)
-
-
-async def _arun_tool(
-    messages: list[AnyMessage], config: RunnableConfig, *, tools: dict[str, BaseTool]
-) -> FunctionMessage:
-    action: AgentAction = messages[-1].additional_kwargs["agent"]
-    tool = tools[action.tool]
-    result = await tool.ainvoke(action.tool_input, config)
-    return _create_function_message(action, result)
-
-
-def get_agent_executor(
+def get_openai_agent_executor(
     tools: list[BaseTool],
     llm: LanguageModelLike,
+    system_message: str,
     checkpoint: BaseCheckpointSaver,
 ):
+    def _get_messages(messages):
+        return [SystemMessage(content=system_message)] + messages
+
+    if tools:
+        llm_with_tools = llm.bind(
+            functions=[format_tool_to_openai_function(t) for t in tools]
+        )
+    else:
+        llm_with_tools = llm
+    agent = _get_messages | llm_with_tools
     tool_executor = ToolExecutor(tools)
 
     # Define the function that determines whether to continue or not
@@ -114,7 +61,7 @@ def get_agent_executor(
     workflow = MessageGraph()
 
     # Define the two nodes we will cycle between
-    workflow.add_node("agent", llm)
+    workflow.add_node("agent", agent)
     workflow.add_node("action", call_tool)
 
     # Set the entrypoint as `agent`

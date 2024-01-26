@@ -1,7 +1,7 @@
 """Test parsing logic."""
 import mimetypes
 
-from agent_executor.parsing import MIMETYPE_BASED_PARSER, SUPPORTED_MIMETYPES
+from app.parsing import MIMETYPE_BASED_PARSER, SUPPORTED_MIMETYPES
 from langchain.document_loaders import Blob
 
 from tests.unit_tests.fixtures import get_sample_paths

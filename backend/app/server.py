@@ -3,7 +3,7 @@ from pathlib import Path
 import orjson
 from fastapi import FastAPI, Form, UploadFile
 from fastapi.staticfiles import StaticFiles
-from gizmo_agent import ingest_runnable
+from app.upload import ingest_runnable
 
 from app.api import router as api_router
 

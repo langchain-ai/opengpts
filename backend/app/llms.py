@@ -1,14 +1,10 @@
-import os
-
-from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.tools.render import format_tool_to_openai_function
-from langchain_core.messages import SystemMessage
+import os
+from langchain_community.chat_models import BedrockChat, ChatAnthropic
+import boto3
 
-
-def get_openai_function_agent(
-    tools, system_message, gpt_4: bool = False, azure: bool = False
+def get_openai_llm(
+        gpt_4: bool = False, azure: bool = False
 ):
     if not azure:
         if gpt_4:
@@ -24,15 +20,18 @@ def get_openai_function_agent(
             openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],
             streaming=True,
         )
+    return llm
 
-    def _get_messages(messages):
-        return [SystemMessage(content=system_message)] + messages
 
-    if tools:
-        llm_with_tools = llm.bind(
-            functions=[format_tool_to_openai_function(t) for t in tools]
+def get_anthropic_llm(bedrock: bool = False):
+    if bedrock:
+        client = boto3.client(
+            "bedrock-runtime",
+            region_name="us-west-2",
+            aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
         )
+        model = BedrockChat(model_id="anthropic.claude-v2", client=client)
     else:
-        llm_with_tools = llm
-    agent = _get_messages | llm_with_tools
-    return agent
+        model = ChatAnthropic(temperature=0, max_tokens_to_sample=2000)
+    return model

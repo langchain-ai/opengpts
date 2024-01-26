@@ -7,7 +7,7 @@ import langsmith.client
 import orjson
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from gizmo_agent import agent
+from app.agent import agent
 from langchain.pydantic_v1 import ValidationError
 from langchain.schema.messages import AnyMessage, FunctionMessage
 from langchain.schema.output import ChatGeneration

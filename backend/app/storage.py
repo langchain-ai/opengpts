@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Sequence
 
 import orjson
-from agent_executor.checkpoint import RedisCheckpoint
+from app.checkpoint import RedisCheckpoint
 from langchain.schema.messages import AnyMessage
 from langchain.utilities.redis import get_client
 from langgraph.channels import Topic
