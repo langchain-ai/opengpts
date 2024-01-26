@@ -1,8 +1,10 @@
 from typing import AsyncIterator, Optional, Sequence, Union
 
+import orjson
 from langchain_core.messages import (
     AIMessage,
     AIMessageChunk,
+    AnyMessage,
     BaseMessage,
     BaseMessageChunk,
     ChatMessage,
@@ -11,11 +13,9 @@ from langchain_core.messages import (
     FunctionMessageChunk,
     HumanMessage,
     HumanMessageChunk,
-    AnyMessage,
 )
 from langchain_core.runnables import Runnable, RunnableConfig
 from langserve.serialization import WellKnownLCSerializer
-import orjson
 
 MessagesStream = AsyncIterator[Union[list[AnyMessage], str]]
 
