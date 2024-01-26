@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from typing import List, Sequence
+from app.stream import map_chunk_to_msg
 
 import orjson
 from langchain.schema.messages import AnyMessage
@@ -155,7 +156,11 @@ def get_thread_messages(user_id: str, thread_id: str):
     app = get_agent_executor([], AgentType.GPT_35_TURBO, "")
     checkpoint = app.checkpointer.get(config) or empty_checkpoint()
     with ChannelsManager(app.channels, checkpoint) as channels:
-        return {"messages": channels[MESSAGES_CHANNEL_NAME].get()}
+        return {
+            "messages": [
+                map_chunk_to_msg(msg) for msg in channels[MESSAGES_CHANNEL_NAME].get()
+            ]
+        }
 
 
 def post_thread_messages(user_id: str, thread_id: str, messages: Sequence[AnyMessage]):
