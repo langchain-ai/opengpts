@@ -107,10 +107,11 @@ def _get_tavily_answer():
     tavily_search = TavilySearchAPIWrapper()
     return TavilyAnswer(api_wrapper=tavily_search)
 
+
 def _get_action_server():
     toolkit = ActionServerToolkit(
         url=os.environ.get("ROBOCORP_ACTION_SERVER_URL"),
-        api_key=os.environ.get("ROBOCORP_ACTION_SERVER_KEY")
+        api_key=os.environ.get("ROBOCORP_ACTION_SERVER_KEY"),
     )
     tools = toolkit.get_tools()
     return tools
