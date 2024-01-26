@@ -2,7 +2,6 @@ import json
 from langchain.schema.messages import FunctionMessage
 from langchain_core.language_models.base import LanguageModelLike
 
-from langchain.tools.render import format_tool_to_openai_function
 from langchain_core.messages import SystemMessage
 
 from langchain.tools import BaseTool
