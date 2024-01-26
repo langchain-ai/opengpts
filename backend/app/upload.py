@@ -8,18 +8,19 @@ For the time being, upload and ingestion are coupled
 """
 from __future__ import annotations
 
+import os
 from typing import Any, BinaryIO, List, Optional
 
+from langchain.text_splitter import RecursiveCharacterTextSplitter, TextSplitter
 from langchain_community.document_loaders.blob_loaders import Blob
-from langchain_core.runnables import RunnableConfig, RunnableSerializable
-from langchain_core.vectorstores import VectorStore
-from langchain.text_splitter import TextSplitter
-import os
-
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores.redis import Redis
-from langchain_core.runnables import ConfigurableField
+from langchain_core.runnables import (
+    ConfigurableField,
+    RunnableConfig,
+    RunnableSerializable,
+)
+from langchain_core.vectorstores import VectorStore
+from langchain_openai import OpenAIEmbeddings
 
 from app.ingest import ingest_blob
 from app.parsing import MIMETYPE_BASED_PARSER

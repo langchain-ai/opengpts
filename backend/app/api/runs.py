@@ -7,7 +7,6 @@ import langsmith.client
 import orjson
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from app.agent import agent
 from langchain.pydantic_v1 import ValidationError
 from langchain.schema.messages import AnyMessage, FunctionMessage
 from langchain.schema.output import ChatGeneration
@@ -20,6 +19,7 @@ from langsmith.utils import tracing_is_enabled
 from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
 
+from app.agent import agent
 from app.schema import OpengptsUserId
 from app.storage import get_assistant, get_thread_messages, public_user_id
 from app.stream import StreamMessagesHandler

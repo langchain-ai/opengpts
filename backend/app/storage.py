@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 from typing import List, Sequence
-from app.agent import AgentType, get_agent_executor
 
 import orjson
 from langchain.schema.messages import AnyMessage
@@ -10,6 +9,7 @@ from langgraph.channels.base import ChannelsManager
 from langgraph.checkpoint.base import empty_checkpoint
 from redis.client import Redis as RedisType
 
+from app.agent import AgentType, get_agent_executor
 from app.schema import Assistant, AssistantWithoutUserId, Thread, ThreadWithoutUserId
 
 
