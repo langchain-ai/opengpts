@@ -54,15 +54,10 @@ class StreamMessagesHandler(BaseCallbackHandler):
             self.output[run_id] += chunk
         # Send the messages to the stream
         self.send_stream.send_nowait(
-            {
-                "messages": (
-                    self.messages
-                    + [
-                        map_chunk_to_msg(chunk.message)
-                        for chunk in self.output.values()
-                    ]
-                )
-            }
+            (
+                self.messages
+                + [map_chunk_to_msg(chunk.message) for chunk in self.output.values()]
+            )
         )
 
 

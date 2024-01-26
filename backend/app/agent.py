@@ -5,7 +5,6 @@ from app.agent_types.openai_agent import get_openai_agent_executor
 from app.agent_types.xml_agent import get_xml_agent_executor
 from app.agent_types.google_agent import get_google_agent_executor
 from app.llms import get_openai_llm, get_anthropic_llm, get_google_llm
-from langchain.pydantic_v1 import BaseModel, Field
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import (
     ConfigurableField,
@@ -33,6 +32,34 @@ class AgentType(str, Enum):
 
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
+
+
+def get_agent_executor(
+    tools: list,
+    agent: AgentType,
+    system_message: str,
+):
+    checkpointer = RedisCheckpoint()
+    if agent == AgentType.GPT_35_TURBO:
+        llm = get_openai_llm()
+        return get_openai_agent_executor(tools, llm, system_message, checkpointer)
+    elif agent == AgentType.GPT_4:
+        llm = get_openai_llm(gpt_4=True)
+        return get_openai_agent_executor(tools, llm, system_message, checkpointer)
+    elif agent == AgentType.AZURE_OPENAI:
+        llm = get_openai_llm(azure=True)
+        return get_openai_agent_executor(tools, llm, system_message, checkpointer)
+    elif agent == AgentType.CLAUDE2:
+        llm = get_anthropic_llm()
+        return get_xml_agent_executor(tools, llm, system_message, checkpointer)
+    elif agent == AgentType.BEDROCK_CLAUDE2:
+        llm = get_anthropic_llm(bedrock=True)
+        return get_xml_agent_executor(tools, llm, system_message, checkpointer)
+    elif agent == AgentType.GEMINI:
+        llm = get_google_llm()
+        return get_google_agent_executor(tools, llm, system_message, checkpointer)
+    else:
+        raise ValueError("Unexpected agent type")
 
 
 class ConfigurableAgent(RunnableBinding):
@@ -66,39 +93,8 @@ class ConfigurableAgent(RunnableBinding):
                 _tools.append(get_retrieval_tool(assistant_id, retrieval_description))
             else:
                 _tools.append(TOOLS[_tool]())
-        if agent == AgentType.GPT_35_TURBO:
-            llm = get_openai_llm()
-            _agent = get_openai_agent_executor(
-                _tools, llm, system_message, RedisCheckpoint()
-            )
-        elif agent == AgentType.GPT_4:
-            llm = get_openai_llm(gpt_4=True)
-            _agent = get_openai_agent_executor(
-                _tools, llm, system_message, RedisCheckpoint()
-            )
-        elif agent == AgentType.AZURE_OPENAI:
-            llm = get_openai_llm(azure=True)
-            _agent = get_openai_agent_executor(
-                _tools, llm, system_message, RedisCheckpoint()
-            )
-        elif agent == AgentType.CLAUDE2:
-            llm = get_anthropic_llm()
-            _agent = get_xml_agent_executor(
-                _tools, llm, system_message, RedisCheckpoint()
-            )
-        elif agent == AgentType.BEDROCK_CLAUDE2:
-            llm = get_anthropic_llm(bedrock=True)
-            _agent = get_xml_agent_executor(
-                _tools, llm, system_message, RedisCheckpoint()
-            )
-        elif agent == AgentType.GEMINI:
-            llm = get_google_llm()
-            _agent = get_google_agent_executor(
-                _tools, llm, system_message, RedisCheckpoint()
-            )
-        else:
-            raise ValueError("Unexpected agent type")
-        agent_executor = _agent.with_config({"recursion_limit": 10})
+        _agent = get_agent_executor(_tools, agent, system_message)
+        agent_executor = _agent.with_config({"recursion_limit": 50})
         super().__init__(
             tools=tools,
             agent=agent,
@@ -108,14 +104,6 @@ class ConfigurableAgent(RunnableBinding):
             kwargs=kwargs or {},
             config=config or {},
         )
-
-
-class AgentInput(BaseModel):
-    messages: Sequence[AnyMessage] = Field(default_factory=list)
-
-
-class AgentOutput(BaseModel):
-    messages: Sequence[AnyMessage] = Field(..., extra={"widget": {"type": "chat"}})
 
 
 agent = (
@@ -142,7 +130,7 @@ agent = (
             id="retrieval_description", name="Retrieval Description"
         ),
     )
-    .with_types(input_type=AgentInput, output_type=AgentOutput)
+    .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
 )
 
 if __name__ == "__main__":
