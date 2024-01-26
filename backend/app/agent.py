@@ -3,7 +3,8 @@ from typing import Any, Mapping, Optional, Sequence
 from app.checkpoint import RedisCheckpoint
 from app.agent_types.openai_agent import get_openai_agent_executor
 from app.agent_types.xml_agent import get_xml_agent_executor
-from app.llms import get_openai_llm, get_anthropic_llm
+from app.agent_types.google_agent import get_google_agent_executor
+from app.llms import get_openai_llm, get_anthropic_llm, get_google_llm
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import (
@@ -28,6 +29,7 @@ class AgentType(str, Enum):
     AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
     CLAUDE2 = "Claude 2"
     BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
+    GEMINI = "GEMINI"
 
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
@@ -89,6 +91,11 @@ class ConfigurableAgent(RunnableBinding):
             _agent = get_xml_agent_executor(
                 _tools, llm, system_message, RedisCheckpoint()
             )
+        elif agent == AgentType.GEMINI:
+            llm = get_google_llm()
+            _agent = get_google_agent_executor(
+                _tools, llm, system_message, RedisCheckpoint()
+            )
         else:
             raise ValueError("Unexpected agent type")
         agent_executor = _agent.with_config({"recursion_limit": 10})
@@ -113,7 +120,7 @@ class AgentOutput(BaseModel):
 
 agent = (
     ConfigurableAgent(
-        agent=AgentType.GPT_35_TURBO,
+        agent=AgentType.GEMINI,
         tools=[],
         system_message=DEFAULT_SYSTEM_MESSAGE,
         retrieval_description=RETRIEVAL_DESCRIPTION,
@@ -146,7 +153,7 @@ if __name__ == "__main__":
     async def run():
         async for m in agent.astream_events(
             HumanMessage(content="whats your name"),
-            config={"configurable": {"user_id": "1", "thread_id": "test1"}},
+            config={"configurable": {"user_id": "2", "thread_id": "test1"}},
             version="v1",
         ):
             print(m)

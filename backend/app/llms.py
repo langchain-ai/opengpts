@@ -2,6 +2,7 @@ from langchain_openai import AzureChatOpenAI, ChatOpenAI
 import os
 from langchain_community.chat_models import BedrockChat, ChatAnthropic
 import boto3
+from langchain_google_vertexai import ChatVertexAI
 
 
 def get_openai_llm(gpt_4: bool = False, azure: bool = False):
@@ -34,3 +35,9 @@ def get_anthropic_llm(bedrock: bool = False):
     else:
         model = ChatAnthropic(temperature=0, max_tokens_to_sample=2000)
     return model
+
+
+def get_google_llm():
+    return ChatVertexAI(
+        model_name="gemini-pro", convert_system_message_to_human=True, streaming=True
+    )
