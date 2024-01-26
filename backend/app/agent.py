@@ -108,7 +108,7 @@ class ConfigurableAgent(RunnableBinding):
 
 agent = (
     ConfigurableAgent(
-        agent=AgentType.GEMINI,
+        agent=AgentType.GPT_35_TURBO,
         tools=[],
         system_message=DEFAULT_SYSTEM_MESSAGE,
         retrieval_description=RETRIEVAL_DESCRIPTION,
