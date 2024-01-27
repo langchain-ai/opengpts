@@ -233,7 +233,7 @@ chat_retrieval = (
     ConfigurableRetrieval(llm_type=LLMType.GPT_35_TURBO, checkpoint=RedisCheckpoint())
     .configurable_fields(
         llm_type=ConfigurableField(id="llm_type", name="LLM Type"),
-        system_message=ConfigurableField(id="system_message", name="System Message"),
+        system_message=ConfigurableField(id="system_message", name="Instructions"),
         assistant_id=ConfigurableField(
             id="assistant_id", name="Assistant ID", is_shared=True
         ),
@@ -252,7 +252,7 @@ agent = (
     )
     .configurable_fields(
         agent=ConfigurableField(id="agent_type", name="Agent Type"),
-        system_message=ConfigurableField(id="system_message", name="System Message"),
+        system_message=ConfigurableField(id="system_message", name="Instructions"),
         assistant_id=ConfigurableField(
             id="assistant_id", name="Assistant ID", is_shared=True
         ),
