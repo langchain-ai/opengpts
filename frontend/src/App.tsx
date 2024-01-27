@@ -8,6 +8,7 @@ import { Chat as ChatType, useChatList } from "./hooks/useChatList";
 import { useSchemas } from "./hooks/useSchemas";
 import { useStreamState } from "./hooks/useStreamState";
 import { useConfigList } from "./hooks/useConfigList";
+import { Config } from "./components/Config";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -54,11 +55,15 @@ function App() {
         stopStream?.(true);
       }
       enterChat(id);
+      if (!id) {
+        enterConfig(configs?.[0]?.assistant_id ?? null);
+        window.scrollTo({ top: 0 });
+      }
       if (sidebarOpen) {
         setSidebarOpen(false);
       }
     },
-    [enterChat, stopStream, sidebarOpen, currentChat]
+    [enterChat, stopStream, sidebarOpen, currentChat, enterConfig, configs]
   );
 
   const content = currentChat ? (
@@ -68,7 +73,7 @@ function App() {
       stopStream={stopStream}
       stream={stream}
     />
-  ) : (
+  ) : currentConfig ? (
     <NewChat
       startChat={startChat}
       configSchema={configSchema}
@@ -77,6 +82,14 @@ function App() {
       currentConfig={currentConfig}
       saveConfig={saveConfig}
       enterConfig={enterConfig}
+    />
+  ) : (
+    <Config
+      className="mb-6"
+      config={currentConfig}
+      configSchema={configSchema}
+      configDefaults={configDefaults}
+      saveConfig={saveConfig}
     />
   );
 
@@ -112,6 +125,8 @@ function App() {
           }, [chats, configs])}
           currentChat={currentChat}
           enterChat={selectChat}
+          currentConfig={currentConfig}
+          enterConfig={enterConfig}
         />
       }
     >

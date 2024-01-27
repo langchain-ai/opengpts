@@ -197,6 +197,7 @@ function fileId(file: File) {
 }
 
 export function Config(props: {
+  className?: string;
   configSchema: Schemas["configSchema"];
   configDefaults: Schemas["configDefaults"];
   config: ConfigListProps["currentConfig"];
@@ -244,7 +245,7 @@ export function Config(props: {
   const [inflight, setInflight] = useState(false);
   const readonly = !!props.config && !inflight;
   return (
-    <>
+    <div className={props.className}>
       <div className="flex gap-2 items-center justify-between font-semibold text-lg leading-6 text-gray-600 mb-4">
         <span>
           Bot: {props.config?.name ?? "New Bot"}{" "}
@@ -407,6 +408,6 @@ export function Config(props: {
           </div>
         )}
       </form>
-    </>
+    </div>
   );
 }
