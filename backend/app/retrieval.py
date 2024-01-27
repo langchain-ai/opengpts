@@ -1,5 +1,5 @@
 import json
-
+from typing import Any
 from langchain_core.language_models.base import LanguageModelLike
 from langchain_core.messages import (
     SystemMessage,
@@ -13,6 +13,11 @@ from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph import END
 from langgraph.graph.message import MessageGraph
 from langchain_core.prompts import PromptTemplate
+
+
+# This is sadly needed to allow for arbitrary typed content
+class LiberalFunctionMessage(FunctionMessage):
+    content: Any
 
 
 search_prompt = PromptTemplate.from_template(
@@ -37,7 +42,6 @@ Respond to the user using ONLY the context provided below. Do not make anything 
 {context}"""
 
 
-
 def get_retrieval_executor(
     llm: LanguageModelLike,
     retriever: BaseRetriever,
@@ -52,7 +56,8 @@ def get_retrieval_executor(
                     chat_history.append(m)
             if isinstance(m, HumanMessage):
                 chat_history.append(m)
-        content = messages[-1].content
+        response = messages[-1].content
+        content = "\n".join([d.page_content for d in response])
         return [
             SystemMessage(
                 content=response_prompt_template.format(
@@ -103,8 +108,8 @@ def get_retrieval_executor(
         params = messages[-1].additional_kwargs["function_call"]
         query = json.loads(params["arguments"])["query"]
         response = retriever.invoke(query)
-        content = "\n".join([d.page_content for d in response])
-        return FunctionMessage(name="retrieval", content=content)
+        msg = LiberalFunctionMessage(name="retrieval", content=response)
+        return msg
 
     response = _get_messages | llm
 
