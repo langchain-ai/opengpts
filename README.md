@@ -35,7 +35,7 @@ pip install -r requirements.txt
 
 **Set up persistence layer**
 
-The backed by default uses Redis for saving agent configurations and chat message history.
+The backend by default uses Redis for saving agent configurations and chat message history.
 In order to you use this, you need to a `REDIS_URL` variable.
 
 ```shell
@@ -62,6 +62,7 @@ Other language models can be used, and in order to use them you will need to set
 See the section below on `LLMs` for how to configure Azure OpenAI, Anthropic, and Amazon Bedrock.
 
 **Set up tools**
+
 By default this uses a lot of tools.
 Some of these require additional environment variables.
 You do not need to use any of these tools, and the environment variables are not required to spin up the app
