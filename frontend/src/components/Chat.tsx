@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Chat as ChatType } from "../hooks/useChatList";
 import { StreamStateProps } from "../hooks/useStreamState";
 import { useChatMessages } from "../hooks/useChatMessages";
@@ -10,12 +10,24 @@ interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
   startStream: (message: string) => Promise<void>;
 }
 
+function usePrevious<T>(value: T): T | undefined {
+  const ref = useRef<T>();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+}
+
 export function Chat(props: ChatProps) {
   const messages = useChatMessages(props.chat.thread_id, props.stream);
+  const prevMessages = usePrevious(messages);
   useEffect(() => {
     scrollTo({
       top: document.body.scrollHeight,
-      behavior: props.stream?.messages ? "smooth" : undefined,
+      behavior:
+        prevMessages && prevMessages?.length === messages?.length
+          ? "smooth"
+          : undefined,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
