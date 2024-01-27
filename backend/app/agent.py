@@ -12,7 +12,12 @@ from app.agent_types.google_agent import get_google_agent_executor
 from app.agent_types.openai_agent import get_openai_agent_executor
 from app.agent_types.xml_agent import get_xml_agent_executor
 from app.checkpoint import RedisCheckpoint
-from app.llms import get_anthropic_llm, get_google_llm, get_openai_llm
+from app.llms import (
+    get_anthropic_llm,
+    get_google_llm,
+    get_openai_llm,
+    get_mixtral_fireworks,
+)
 from app.tools import (
     RETRIEVAL_DESCRIPTION,
     TOOL_OPTIONS,
@@ -20,6 +25,7 @@ from app.tools import (
     AvailableTools,
     get_retrieval_tool,
 )
+from app.chatbot import get_chatbot_executor
 
 
 class AgentType(str, Enum):
@@ -106,6 +112,81 @@ class ConfigurableAgent(RunnableBinding):
         )
 
 
+class LLMType(str, Enum):
+    GPT_35_TURBO = "GPT 3.5 Turbo"
+    GPT_4 = "GPT 4"
+    AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
+    CLAUDE2 = "Claude 2"
+    BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
+    GEMINI = "GEMINI"
+    MIXTRAL = "Mixtral"
+
+
+def get_chatbot(
+    llm_type: LLMType,
+    system_message: str,
+):
+    checkpointer = RedisCheckpoint()
+    if llm_type == LLMType.GPT_35_TURBO:
+        llm = get_openai_llm()
+    elif llm_type == LLMType.GPT_4:
+        llm = get_openai_llm(gpt_4=True)
+    elif llm_type == LLMType.AZURE_OPENAI:
+        llm = get_openai_llm(azure=True)
+    elif llm_type == LLMType.CLAUDE2:
+        llm = get_anthropic_llm()
+    elif llm_type == LLMType.BEDROCK_CLAUDE2:
+        llm = get_anthropic_llm(bedrock=True)
+    elif llm_type == LLMType.GEMINI:
+        llm = get_google_llm()
+    elif llm_type == LLMType.MIXTRAL:
+        llm = get_mixtral_fireworks()
+    else:
+        raise ValueError("Unexpected llm type")
+    return get_chatbot_executor(llm, system_message, checkpointer)
+
+
+class ConfigurableChatBot(RunnableBinding):
+    llm: LLMType
+    system_message: str = DEFAULT_SYSTEM_MESSAGE
+    assistant_id: Optional[str] = None
+    user_id: Optional[str] = None
+
+    def __init__(
+        self,
+        *,
+        llm: LLMType = LLMType.GPT_35_TURBO,
+        system_message: str = DEFAULT_SYSTEM_MESSAGE,
+        assistant_id: Optional[str] = None,
+        kwargs: Optional[Mapping[str, Any]] = None,
+        config: Optional[Mapping[str, Any]] = None,
+        **others: Any,
+    ) -> None:
+        others.pop("bound", None)
+
+        chatbot = get_chatbot(llm, system_message)
+        super().__init__(
+            llm=llm,
+            system_message=system_message,
+            bound=chatbot,
+            kwargs=kwargs or {},
+            config=config or {},
+        )
+
+
+chatbot = (
+    ConfigurableChatBot(llm=LLMType.GPT_35_TURBO, checkpoint=RedisCheckpoint())
+    .configurable_fields(
+        llm=ConfigurableField(id="llm_type", name="LLM Type"),
+        system_message=ConfigurableField(id="system_message", name="System Message"),
+        assistant_id=ConfigurableField(
+            id="assistant_id", name="Assistant ID", is_shared=True
+        ),
+    )
+    .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
+)
+
+
 agent = (
     ConfigurableAgent(
         agent=AgentType.GPT_35_TURBO,
@@ -129,6 +210,12 @@ agent = (
         retrieval_description=ConfigurableField(
             id="retrieval_description", name="Retrieval Description"
         ),
+    )
+    .configurable_alternatives(
+        ConfigurableField(id="type", name="Bot Type"),
+        default_key="assistant",
+        prefix_keys=True,
+        chatbot=chatbot,
     )
     .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
 )

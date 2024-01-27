@@ -1,7 +1,7 @@
 import os
 
 import boto3
-from langchain_community.chat_models import BedrockChat, ChatAnthropic
+from langchain_community.chat_models import BedrockChat, ChatAnthropic, ChatFireworks
 from langchain_google_vertexai import ChatVertexAI
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
@@ -42,3 +42,7 @@ def get_google_llm():
     return ChatVertexAI(
         model_name="gemini-pro", convert_system_message_to_human=True, streaming=True
     )
+
+
+def get_mixtral_fireworks():
+    return ChatFireworks(model="accounts/fireworks/models/mixtral-8x7b-instruct")
