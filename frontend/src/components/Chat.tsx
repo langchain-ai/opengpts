@@ -57,6 +57,9 @@ export function Chat(props: ChatProps) {
       <div className="fixed left-0 lg:left-72 bottom-0 right-0 p-4">
         <TypingBox
           onSubmit={props.startStream}
+          onInterrupt={
+            props.stream?.status === "inflight" ? props.stopStream : undefined
+          }
           disabled={props.stream?.status === "inflight"}
         />
       </div>

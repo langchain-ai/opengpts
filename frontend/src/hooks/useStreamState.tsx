@@ -89,6 +89,13 @@ export function useStreamState(): StreamStateProps {
       setController(null);
       if (clear) {
         setCurrent(null);
+      } else {
+        setCurrent((current) => ({
+          status: "done",
+          messages: current?.messages,
+          run_id: current?.run_id,
+          merge: current?.merge,
+        }));
       }
     },
     [controller]
