@@ -3,6 +3,7 @@ import { Schemas } from "../hooks/useSchemas";
 import TypingBox from "./TypingBox";
 import { Config } from "./Config";
 import { ConfigListProps } from "../hooks/useConfigList";
+import { cn } from "../utils/cn";
 
 interface NewChatProps extends ConfigListProps {
   configSchema: Schemas["configSchema"];
@@ -12,7 +13,12 @@ interface NewChatProps extends ConfigListProps {
 
 export function NewChat(props: NewChatProps) {
   return (
-    <div className="flex flex-col items-stretch pb-[76px]">
+    <div
+      className={cn(
+        "flex flex-col items-stretch",
+        props.currentConfig ? "pb-[76px]" : "pb-6"
+      )}
+    >
       <div className="flex-1 flex flex-col md:flex-row lg:items-stretch self-stretch">
         <div className="w-72 border-r border-gray-200 pr-6">
           <ConfigList
@@ -34,11 +40,9 @@ export function NewChat(props: NewChatProps) {
           </div>
         </main>
       </div>
-      {props.currentConfig && (
-        <div className="fixed left-0 lg:left-72 bottom-0 right-0 p-4">
-          <TypingBox onSubmit={props.startChat} />
-        </div>
-      )}
+      <div className="fixed left-0 lg:left-72 bottom-0 right-0 p-4">
+        <TypingBox onSubmit={props.startChat} />
+      </div>
     </div>
   );
 }

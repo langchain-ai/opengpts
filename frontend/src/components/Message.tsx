@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Message as MessageType } from "../hooks/useChatList";
 import { str } from "../utils/str";
 import { cn } from "../utils/cn";
@@ -87,7 +87,9 @@ function Function(props: {
   );
 }
 
-export function Message(props: MessageType & { runId?: string }) {
+export const Message = memo(function Message(
+  props: MessageType & { runId?: string }
+) {
   const [open, setOpen] = useState(false);
   return (
     <div className="flex flex-col mb-8">
@@ -139,4 +141,4 @@ export function Message(props: MessageType & { runId?: string }) {
       )}
     </div>
   );
-}
+});

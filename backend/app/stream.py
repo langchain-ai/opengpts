@@ -1,3 +1,4 @@
+import logging
 from typing import AsyncIterator, Optional, Sequence, Union
 
 import orjson
@@ -16,6 +17,8 @@ from langchain_core.messages import (
 )
 from langchain_core.runnables import Runnable, RunnableConfig
 from langserve.serialization import WellKnownLCSerializer
+
+logger = logging.getLogger(__name__)
 
 MessagesStream = AsyncIterator[Union[list[AnyMessage], str]]
 
@@ -96,6 +99,7 @@ async def to_sse(messages_stream: MessagesStream) -> AsyncIterator[dict]:
                     ).decode(),
                 }
     except Exception:
+        logger.warn("error in stream", exc_info=True)
         yield {
             "event": "error",
             # Do not expose the error message to the client since
