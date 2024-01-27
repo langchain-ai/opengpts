@@ -37,20 +37,6 @@ Respond to the user using ONLY the context provided below. Do not make anything 
 {context}"""
 
 
-@chain
-def get_search_query(llm, messages):
-    convo = []
-    for m in messages:
-        if isinstance(m, AIMessage):
-            if "function_call" not in m.additional_kwargs:
-                convo.append(f"AI: {m.content}")
-        if isinstance(m, HumanMessage):
-            convo.append(f"Human: {m.content}")
-    conversation = "\n".join(convo)
-    prompt = search_prompt.invoke({"conversation": conversation})
-    response = llm.invoke(prompt)
-    return response.content
-
 
 def get_retrieval_executor(
     llm: LanguageModelLike,
@@ -75,6 +61,20 @@ def get_retrieval_executor(
             )
         ] + chat_history
 
+    @chain
+    def get_search_query(messages):
+        convo = []
+        for m in messages:
+            if isinstance(m, AIMessage):
+                if "function_call" not in m.additional_kwargs:
+                    convo.append(f"AI: {m.content}")
+            if isinstance(m, HumanMessage):
+                convo.append(f"Human: {m.content}")
+        conversation = "\n".join(convo)
+        prompt = search_prompt.invoke({"conversation": conversation})
+        response = llm.invoke(prompt)
+        return response.content
+
     def invoke_retrieval(messages):
         if len(messages) == 1:
             human_input = messages[-1].content
@@ -88,7 +88,7 @@ def get_retrieval_executor(
                 },
             )
         else:
-            search_query = get_search_query.invoke({"llm": llm, "messages": messages})
+            search_query = get_search_query.invoke(messages)
             return AIMessage(
                 content="",
                 additional_kwargs={
