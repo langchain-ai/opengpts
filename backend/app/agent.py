@@ -178,7 +178,7 @@ chatbot = (
     ConfigurableChatBot(llm=LLMType.GPT_35_TURBO, checkpoint=RedisCheckpoint())
     .configurable_fields(
         llm=ConfigurableField(id="llm_type", name="LLM Type"),
-        system_message=ConfigurableField(id="system_message", name="System Message"),
+        system_message=ConfigurableField(id="system_message", name="Instructions"),
     )
     .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
 )
