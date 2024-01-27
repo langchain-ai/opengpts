@@ -13,7 +13,8 @@ async function getMessages(threadId: string) {
 
 export function useChatMessages(
   threadId: string | null,
-  stream: StreamState | null
+  stream: StreamState | null,
+  stopStream?: (clear?: boolean) => void
 ): Message[] | null {
   const [messages, setMessages] = useState<Message[] | null>(null);
 
@@ -35,6 +36,7 @@ export function useChatMessages(
     async function fetchMessages() {
       if (threadId) {
         setMessages(await getMessages(threadId));
+        stopStream?.(true);
       }
     }
 

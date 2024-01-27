@@ -19,7 +19,11 @@ function usePrevious<T>(value: T): T | undefined {
 }
 
 export function Chat(props: ChatProps) {
-  const messages = useChatMessages(props.chat.thread_id, props.stream);
+  const messages = useChatMessages(
+    props.chat.thread_id,
+    props.stream,
+    props.stopStream
+  );
   const prevMessages = usePrevious(messages);
   useEffect(() => {
     scrollTo({
