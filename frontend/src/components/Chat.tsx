@@ -60,7 +60,7 @@ export function Chat(props: ChatProps) {
           onInterrupt={
             props.stream?.status === "inflight" ? props.stopStream : undefined
           }
-          disabled={props.stream?.status === "inflight"}
+          inflight={props.stream?.status === "inflight"}
         />
       </div>
     </div>
