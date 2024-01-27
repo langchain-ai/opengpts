@@ -66,6 +66,14 @@ function App() {
     [enterChat, stopStream, sidebarOpen, currentChat, enterConfig, configs]
   );
 
+  const selectConfig = useCallback(
+    (id: string | null) => {
+      enterConfig(id);
+      enterChat(null);
+    },
+    [enterConfig, enterChat]
+  );
+
   const content = currentChat ? (
     <Chat
       chat={currentChat}
@@ -81,7 +89,7 @@ function App() {
       configs={configs}
       currentConfig={currentConfig}
       saveConfig={saveConfig}
-      enterConfig={enterConfig}
+      enterConfig={selectConfig}
     />
   ) : (
     <Config
@@ -106,8 +114,7 @@ function App() {
             <InformationCircleIcon
               className="h-5 w-5 cursor-pointer text-indigo-600"
               onClick={() => {
-                enterChat(null);
-                enterConfig(currentChatConfig.assistant_id);
+                selectConfig(currentChatConfig.assistant_id);
               }}
             />
           </span>
@@ -126,7 +133,7 @@ function App() {
           currentChat={currentChat}
           enterChat={selectChat}
           currentConfig={currentConfig}
-          enterConfig={enterConfig}
+          enterConfig={selectConfig}
         />
       }
     >
