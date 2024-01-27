@@ -9,6 +9,78 @@ import { SchemaField, Schemas } from "../hooks/useSchemas";
 import { cn } from "../utils/cn";
 import { FileUploadDropzone } from "./FileUpload";
 
+const TYPES = {
+  assistant: {
+    id: "assistant",
+    title: "Assistant",
+    description:
+      "A general-purpose assistant that can answer questions and use tools.",
+  },
+  chatbot: {
+    id: "chatbot",
+    title: "Chatbot",
+    description: "A chatbot that can answer questions and have conversations.",
+  },
+  chat_retrieval: {
+    id: "chat_retrieval",
+    title: "RAG",
+    description: "Chat with your documents as if they were people.",
+  },
+};
+
+function Types(props: {
+  field: SchemaField;
+  value: string;
+  readonly: boolean;
+  setValue: (value: string) => void;
+  alwaysExpanded?: boolean;
+}) {
+  const options =
+    props.field.enum?.map((id) => TYPES[id as keyof typeof TYPES]) ?? [];
+  return (
+    <div>
+      <div className="sm:hidden">
+        <label htmlFor="tabs" className="sr-only">
+          Select a tab
+        </label>
+        {/* Use an "onChange" listener to redirect the user to the selected tab URL. */}
+        <select
+          id="tabs"
+          name="tabs"
+          className="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+          defaultValue={options.find((o) => o.id === props.value)?.id}
+          onChange={(e) => props.setValue(e.target.value)}
+        >
+          {options.map((option) => (
+            <option key={option.id}>{option.title}</option>
+          ))}
+        </select>
+      </div>
+      <div className="hidden sm:block">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex" aria-label="Tabs">
+            {options.map((option) => (
+              <div
+                key={option.id}
+                className={cn(
+                  props.value === option.id
+                    ? "border-indigo-500 text-indigo-600"
+                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700",
+                  "w-1/4 border-b-2 py-4 px-1 text-center text-sm font-medium"
+                )}
+                aria-current={props.value === option.id ? "page" : undefined}
+                onClick={() => props.setValue(option.id)}
+              >
+                {option.title}
+              </div>
+            ))}
+          </nav>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Label(props: { id: string; title: string }) {
   return (
     <label
@@ -244,8 +316,39 @@ export function Config(props: {
   }, [dropzone.acceptedFiles]);
   const [inflight, setInflight] = useState(false);
   const readonly = !!props.config && !inflight;
+  const typeKey = "type";
+  const typeField =
+    props.configSchema?.properties.configurable.properties[typeKey];
+  if (!values?.configurable?.[typeKey] && typeField) {
+    return (
+      <Types
+        field={typeField}
+        value={values?.configurable?.[typeKey] as string}
+        setValue={(value: string) =>
+          setValues({
+            ...values,
+            configurable: { ...values!.configurable, [typeKey]: value },
+          })
+        }
+        readonly={readonly}
+      />
+    );
+  }
   return (
     <div className={props.className}>
+      {typeField && (
+        <Types
+          field={typeField}
+          value={values?.configurable?.[typeKey] as string}
+          setValue={(value: string) =>
+            setValues({
+              ...values,
+              configurable: { ...values!.configurable, [typeKey]: value },
+            })
+          }
+          readonly={readonly}
+        />
+      )}
       <div className="flex gap-2 items-center justify-between font-semibold text-lg leading-6 text-gray-600 mb-4">
         <span>
           Bot: {props.config?.name ?? "New Bot"}{" "}
@@ -288,6 +391,8 @@ export function Config(props: {
               if (values?.configurable?.[parentKey] !== parentValue) {
                 return null;
               }
+            } else {
+              return null;
             }
             if (value.type === "string" && value.enum) {
               return (
@@ -306,7 +411,7 @@ export function Config(props: {
                   readonly={readonly}
                 />
               );
-            } else if (key === "system_message") {
+            } else if (value.type === "string") {
               return (
                 <StringField
                   key={key}
@@ -324,28 +429,10 @@ export function Config(props: {
                 />
               );
             } else if (
-              key === "retrieval_description" &&
-              (
-                values?.configurable?.["tools"] as string[] | undefined
-              )?.includes("Retrieval")
+              value.type === "array" &&
+              value.items?.type === "string" &&
+              value.items?.enum
             ) {
-              return (
-                <StringField
-                  key={key}
-                  id={key}
-                  field={value}
-                  title={title}
-                  value={values?.configurable?.[key] as string}
-                  setValue={(value: string) =>
-                    setValues({
-                      ...values,
-                      configurable: { ...values!.configurable, [key]: value },
-                    })
-                  }
-                  readonly={readonly}
-                />
-              );
-            } else if (key === "tools") {
               return (
                 <MultiOptionField
                   key={key}
