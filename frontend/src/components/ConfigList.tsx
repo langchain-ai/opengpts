@@ -1,5 +1,4 @@
-import { PlusIcon } from "@heroicons/react/24/outline";
-
+import { TYPES } from "../constants";
 import { Config, ConfigListProps } from "../hooks/useConfigList";
 import { cn } from "../utils/cn";
 
@@ -34,7 +33,12 @@ function ConfigItem(props: {
             {props.config.name}
           </span>
           <span className="truncate text-xs">
-            {props.config.config.configurable?.tools?.join(", ")}
+            {
+              TYPES[
+                (props.config.config.configurable?.type ??
+                  "assistant") as keyof typeof TYPES
+              ].title
+            }
           </span>
         </div>
       </div>

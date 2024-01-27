@@ -9,28 +9,7 @@ import { SchemaField, Schemas } from "../hooks/useSchemas";
 import { cn } from "../utils/cn";
 import { FileUploadDropzone } from "./FileUpload";
 import { Switch } from "@headlessui/react";
-
-const TYPES = {
-  assistant: {
-    id: "assistant",
-    title: "Assistant",
-    description:
-      "A general-purpose assistant that can answer questions and use tools.",
-    files: true,
-  },
-  chatbot: {
-    id: "chatbot",
-    title: "Chatbot",
-    description: "A chatbot that can answer questions and have conversations.",
-    files: false,
-  },
-  chat_retrieval: {
-    id: "chat_retrieval",
-    title: "RAG",
-    description: "Chat with your documents as if they were people.",
-    files: true,
-  },
-};
+import { TYPES } from "../constants";
 
 function Types(props: {
   field: SchemaField;
