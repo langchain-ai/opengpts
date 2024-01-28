@@ -2,7 +2,7 @@ name: Build, Push, and Deploy Open GPTS
 
 on:
   push:
-    branches: [main, infra/update-dockerfile]
+    branches: [main]
   workflow_dispatch:
 
 jobs:

@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:18 AS builder
 
 WORKDIR /frontend
 
@@ -28,6 +28,6 @@ RUN rm poetry.lock
 RUN pip install .
 
 # Copy the frontend build
-COPY --from=0 /frontend/dist /ui
+COPY --from=builder /frontend/dist /ui
 
 ENTRYPOINT [ "uvicorn", "app.server:app", "--host", "0.0.0.0" ]
