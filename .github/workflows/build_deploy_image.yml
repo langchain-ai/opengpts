@@ -1,8 +1,8 @@
-name: Build, Push, and Deploy Chat Langchain
+name: Build, Push, and Deploy Open GPTS
 
 on:
   push:
-    branches: [main]
+    branches: [main, infra/update-dockerfile]
   workflow_dispatch:
 
 jobs:
@@ -33,6 +33,4 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         push: true
-        tags:
-          - docker.io/langchain/open-gpts:${{ env.GIT_SHORT_SHA }}
-          - docker.io/langchain/open-gpts:latest
+        tags: "docker.io/langchain/open-gpts:${{ env.GIT_SHORT_SHA }}, docker.io/langchain/open-gpts:latest"
