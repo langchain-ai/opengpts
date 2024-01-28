@@ -1,8 +1,8 @@
 import json
 
-from langchain.schema.messages import FunctionMessage
+from langchain.schema.messages import FunctionMessage, ToolMessage
 from langchain.tools import BaseTool
-from langchain.tools.render import format_tool_to_openai_function
+from langchain.tools.render import format_tool_to_openai_tool
 from langchain_core.language_models.base import LanguageModelLike
 from langchain_core.messages import SystemMessage
 from langgraph.checkpoint import BaseCheckpointSaver
@@ -21,9 +21,7 @@ def get_openai_agent_executor(
         return [SystemMessage(content=system_message)] + messages
 
     if tools:
-        llm_with_tools = llm.bind(
-            functions=[format_tool_to_openai_function(t) for t in tools]
-        )
+        llm_with_tools = llm.bind(tools=[format_tool_to_openai_tool(t) for t in tools])
     else:
         llm_with_tools = llm
     agent = _get_messages | llm_with_tools
@@ -33,7 +31,7 @@ def get_openai_agent_executor(
     def should_continue(messages):
         last_message = messages[-1]
         # If there is no function call, then we finish
-        if "function_call" not in last_message.additional_kwargs:
+        if "tool_calls" not in last_message.additional_kwargs:
             return "end"
         # Otherwise if there is, we continue
         else:
@@ -41,22 +39,29 @@ def get_openai_agent_executor(
 
     # Define the function to execute tools
     async def call_tool(messages):
+        tool_messages = []
         # Based on the continue condition
         # we know the last message involves a function call
         last_message = messages[-1]
-        # We construct an ToolInvocation from the function_call
-        action = ToolInvocation(
-            tool=last_message.additional_kwargs["function_call"]["name"],
-            tool_input=json.loads(
-                last_message.additional_kwargs["function_call"]["arguments"]
-            ),
-        )
-        # We call the tool_executor and get back a response
-        response = await tool_executor.ainvoke(action)
-        # We use the response to create a FunctionMessage
-        function_message = FunctionMessage(content=str(response), name=action.tool)
-        # We return a list, because this will get added to the existing list
-        return function_message
+        for tool_call in last_message.additional_kwargs["tool_calls"]:
+            function = tool_call["function"]
+            function_name = function["name"]
+            _tool_input = json.loads(function["arguments"] or "{}")
+            # We construct an ToolInvocation from the function_call
+            action = ToolInvocation(
+                tool=function_name,
+                tool_input=_tool_input,
+            )
+            # We call the tool_executor and get back a response
+            response = await tool_executor.ainvoke(action)
+            # We use the response to create a FunctionMessage
+            msg = ToolMessage(
+                tool_call_id=tool_call["id"],
+                content=json.dumps(response),
+                additional_kwargs={"name": function_name},
+            )
+            tool_messages.append(msg)
+        return tool_messages
 
     workflow = MessageGraph()
 
