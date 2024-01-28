@@ -11,9 +11,9 @@ services:
   backend:
     container_name: opengpts-backend
     build:
-      context: .
+      context: backend
     ports:
-      - "8100:8000" # Backend is accessible on localhost:8100 and serves the frontend
+      - "8100:8000" # Backend is accessible on localhost:8100
     depends_on:
       - redis
     env_file:
@@ -24,3 +24,13 @@ services:
       REDIS_URL: "redis://opengpts-redis:6379"
     command:
       - --reload
+  frontend:
+    container_name: opengpts-frontend
+    build:
+      context: frontend
+    volumes:
+      - ./frontend/src:/frontend/src
+    ports:
+      - "5173:5173" # Frontend is accessible on localhost:5173
+    environment:
+      VITE_BACKEND_URL: "http://opengpts-backend:8000"
