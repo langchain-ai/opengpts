@@ -6,6 +6,12 @@ from app.api.threads import router as threads_router
 
 router = APIRouter()
 
+
+@router.get("/ok")
+async def ok():
+    return {"ok": True}
+
+
 router.include_router(
     assistants_router,
     prefix="/assistants",
