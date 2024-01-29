@@ -1,24 +1,21 @@
 import json
 from typing import Any
+
 from langchain_core.language_models.base import LanguageModelLike
 from langchain_core.messages import (
-    SystemMessage,
-    HumanMessage,
     AIMessage,
     FunctionMessage,
+    HumanMessage,
+    SystemMessage,
 )
-from langchain_core.runnables import chain
+from langchain_core.prompts import PromptTemplate
 from langchain_core.retrievers import BaseRetriever
+from langchain_core.runnables import chain
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph import END
 from langgraph.graph.message import MessageGraph
-from langchain_core.prompts import PromptTemplate
 
-
-# This is sadly needed to allow for arbitrary typed content
-class LiberalFunctionMessage(FunctionMessage):
-    content: Any
-
+from app.message_types import LiberalFunctionMessage
 
 search_prompt = PromptTemplate.from_template(
     """Given the conversation below, come up with a search query to look up.

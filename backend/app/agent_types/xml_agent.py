@@ -1,14 +1,19 @@
-from langchain.schema.messages import FunctionMessage
 from langchain.tools import BaseTool
 from langchain.tools.render import render_text_description
 from langchain_core.language_models.base import LanguageModelLike
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import (
+    AIMessage,
+    FunctionMessage,
+    HumanMessage,
+    SystemMessage,
+)
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph import END
 from langgraph.graph.message import MessageGraph
 from langgraph.prebuilt import ToolExecutor, ToolInvocation
 
 from app.agent_types.prompts import xml_template
+from app.message_types import LiberalFunctionMessage
 
 
 def _collapse_messages(messages):
@@ -39,6 +44,11 @@ def construct_chat_history(messages):
                 collapsed_messages.append(_collapse_messages(temp_messages))
                 temp_messages = []
             collapsed_messages.append(message)
+        elif isinstance(message, LiberalFunctionMessage):
+            _dict = message.dict()
+            _dict["content"] = str(_dict["content"])
+            m_c = FunctionMessage(**_dict)
+            temp_messages.append(m_c)
         else:
             temp_messages.append(message)
 
@@ -61,7 +71,7 @@ def get_xml_agent_executor(
         tool_names=", ".join([t.name for t in tools]),
     )
 
-    llm_with_stop = llm.bind(stop=["</tool_input>"])
+    llm_with_stop = llm.bind(stop=["</tool_input>", "<observation>"])
 
     def _get_messages(messages):
         return [
@@ -87,9 +97,12 @@ def get_xml_agent_executor(
         # We construct an ToolInvocation from the function_call
         tool, tool_input = last_message.content.split("</tool>")
         _tool = tool.split("<tool>")[1]
-        _tool_input = tool_input.split("<tool_input>")[1]
-        if "</tool_input>" in _tool_input:
-            _tool_input = _tool_input.split("</tool_input>")[0]
+        if "<tool_input>" not in _tool:
+            _tool_input = ""
+        else:
+            _tool_input = tool_input.split("<tool_input>")[1]
+            if "</tool_input>" in _tool_input:
+                _tool_input = _tool_input.split("</tool_input>")[0]
         action = ToolInvocation(
             tool=_tool,
             tool_input=_tool_input,
@@ -97,7 +110,7 @@ def get_xml_agent_executor(
         # We call the tool_executor and get back a response
         response = await tool_executor.ainvoke(action)
         # We use the response to create a FunctionMessage
-        function_message = FunctionMessage(content=str(response), name=action.tool)
+        function_message = LiberalFunctionMessage(content=response, name=action.tool)
         # We return a list, because this will get added to the existing list
         return function_message
 
