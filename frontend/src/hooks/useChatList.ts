@@ -3,7 +3,10 @@ import orderBy from "lodash/orderBy";
 
 export interface Message {
   type: string;
-  content: string;
+  content:
+    | string
+    | { page_content: string; metadata: Record<string, object> }[]
+    | object;
   name?: string;
   additional_kwargs?: {
     name?: string;

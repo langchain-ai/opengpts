@@ -6,6 +6,7 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { LangSmithActions } from "./LangSmithActions";
+import { DocumentList } from "./Document";
 
 function tryJsonParse(value: string) {
   try {
@@ -91,19 +92,23 @@ export const Message = memo(function Message(
   props: MessageType & { runId?: string }
 ) {
   const [open, setOpen] = useState(false);
+  const contentIsDocuments =
+    ["function", "tool"].includes(props.type) &&
+    Array.isArray(props.content) &&
+    props.content.every((d) => !!d.page_content);
   return (
     <div className="flex flex-col mb-8">
       <div className="leading-6 flex flex-row">
         <div
           className={cn(
-            "font-medium text-sm text-gray-400 uppercase mr-2 mt-1 w-24 flex flex-col",
+            "font-medium text-sm text-gray-400 uppercase mr-2 mt-1 w-28 flex flex-col",
             props.type === "function" && "mt-2"
           )}
         >
-          {props.type}
+          {contentIsDocuments ? "Documents" : props.type}
         </div>
         <div className="flex-1">
-          {["function", "tool"].includes(props.type) && (
+          {["function", "tool"].includes(props.type) && !contentIsDocuments && (
             <Function
               call={false}
               name={props.name ?? props.additional_kwargs?.name}
@@ -127,7 +132,11 @@ export const Message = memo(function Message(
                 args={call.function?.arguments}
               />
             ))}
-          {(["function", "tool"].includes(props.type) ? open : true) ? (
+          {(
+            ["function", "tool"].includes(props.type) && !contentIsDocuments
+              ? open
+              : true
+          ) ? (
             typeof props.content === "string" ? (
               <div
                 className="text-gray-900 prose"
@@ -135,6 +144,9 @@ export const Message = memo(function Message(
                   __html: DOMPurify.sanitize(marked(props.content)).trim(),
                 }}
               />
+            ) : contentIsDocuments ? (
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              <DocumentList documents={props.content as any} />
             ) : (
               <div className="text-gray-900 prose">{str(props.content)}</div>
             )

@@ -67,7 +67,7 @@ def get_retrieval_executor(
         ] + chat_history
 
     @chain
-    def get_search_query(messages):
+    async def get_search_query(messages):
         convo = []
         for m in messages:
             if isinstance(m, AIMessage):
@@ -76,11 +76,11 @@ def get_retrieval_executor(
             if isinstance(m, HumanMessage):
                 convo.append(f"Human: {m.content}")
         conversation = "\n".join(convo)
-        prompt = search_prompt.invoke({"conversation": conversation})
-        response = llm.invoke(prompt)
+        prompt = await search_prompt.ainvoke({"conversation": conversation})
+        response = await llm.ainvoke(prompt)
         return response.content
 
-    def invoke_retrieval(messages):
+    async def invoke_retrieval(messages):
         if len(messages) == 1:
             human_input = messages[-1].content
             return AIMessage(
@@ -93,7 +93,7 @@ def get_retrieval_executor(
                 },
             )
         else:
-            search_query = get_search_query.invoke(messages)
+            search_query = await get_search_query.ainvoke(messages)
             return AIMessage(
                 content="",
                 additional_kwargs={
@@ -104,10 +104,10 @@ def get_retrieval_executor(
                 },
             )
 
-    def retrieve(messages):
+    async def retrieve(messages):
         params = messages[-1].additional_kwargs["function_call"]
         query = json.loads(params["arguments"])["query"]
-        response = retriever.invoke(query)
+        response = await retriever.ainvoke(query)
         msg = LiberalFunctionMessage(name="retrieval", content=response)
         return msg
 

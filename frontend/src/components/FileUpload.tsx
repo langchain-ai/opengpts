@@ -45,6 +45,7 @@ export function FileUploadDropzone(props: {
   state: DropzoneState;
   files: File[];
   setFiles: React.Dispatch<React.SetStateAction<File[]>>;
+  className?: string;
 }) {
   const { getRootProps, getInputProps, fileRejections } = props.state;
 
@@ -74,7 +75,7 @@ export function FileUploadDropzone(props: {
   );
 
   return (
-    <section className="">
+    <section className={props.className}>
       <aside>
         <Label id="files" title="Files" />
         <div className="prose">
@@ -86,7 +87,7 @@ export function FileUploadDropzone(props: {
         <p>
           Drag n' drop some files here, or click to select files.
           <br />
-          Accepted files: .txt, .csv, .html, .docx, .pdf. 
+          Accepted files: .txt, .csv, .html, .docx, .pdf.
           <br />
           No file should exceed 10 MB.
         </p>
