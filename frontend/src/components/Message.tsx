@@ -52,7 +52,7 @@ function Function(props: {
         </span>
       )}
       {props.args && (
-        <div className="text-gray-900 mt-2 whitespace-pre-wrap break-words">
+        <div className="text-gray-900 my-2 whitespace-pre-wrap break-words">
           <div className="ring-1 ring-gray-300 rounded">
             <table className="divide-y divide-gray-300">
               <tbody>
@@ -103,10 +103,10 @@ export const Message = memo(function Message(
           {props.type}
         </div>
         <div className="flex-1">
-          {props.type === "function" && (
+          {["function", "tool"].includes(props.type) && (
             <Function
               call={false}
-              name={props.name}
+              name={props.name ?? props.additional_kwargs?.name}
               open={open}
               setOpen={setOpen}
             />
@@ -118,7 +118,16 @@ export const Message = memo(function Message(
               args={props.additional_kwargs.function_call.arguments}
             />
           )}
-          {(props.type === "function" ? open : true) ? (
+          {props.additional_kwargs?.tool_calls
+            ?.filter((call) => call.function)
+            ?.map((call) => (
+              <Function
+                call={true}
+                name={call.function?.name}
+                args={call.function?.arguments}
+              />
+            ))}
+          {(["function", "tool"].includes(props.type) ? open : true) ? (
             typeof props.content === "string" ? (
               <div
                 className="text-gray-900 prose"
