@@ -1,6 +1,6 @@
 import json
 
-from langchain.schema.messages import FunctionMessage, ToolMessage
+from langchain.schema.messages import ToolMessage
 from langchain.tools import BaseTool
 from langchain.tools.render import format_tool_to_openai_tool
 from langchain_core.language_models.base import LanguageModelLike
@@ -39,7 +39,7 @@ def get_openai_agent_executor(
 
     # Define the function to execute tools
     async def call_tool(messages):
-        tool_messages = []
+        actions: list[ToolInvocation] = []
         # Based on the continue condition
         # we know the last message involves a function call
         last_message = messages[-1]
@@ -48,19 +48,25 @@ def get_openai_agent_executor(
             function_name = function["name"]
             _tool_input = json.loads(function["arguments"] or "{}")
             # We construct an ToolInvocation from the function_call
-            action = ToolInvocation(
-                tool=function_name,
-                tool_input=_tool_input,
+            actions.append(
+                ToolInvocation(
+                    tool=function_name,
+                    tool_input=_tool_input,
+                )
             )
-            # We call the tool_executor and get back a response
-            response = await tool_executor.ainvoke(action)
-            # We use the response to create a FunctionMessage
-            msg = ToolMessage(
+        # We call the tool_executor and get back a response
+        responses = await tool_executor.abatch(actions)
+        # We use the response to create a ToolMessage
+        tool_messages = [
+            ToolMessage(
                 tool_call_id=tool_call["id"],
                 content=json.dumps(response),
-                additional_kwargs={"name": function_name},
+                additional_kwargs={"name": tool_call["function"]["name"]},
             )
-            tool_messages.append(msg)
+            for tool_call, response in zip(
+                last_message.additional_kwargs["tool_calls"], responses
+            )
+        ]
         return tool_messages
 
     workflow = MessageGraph()
