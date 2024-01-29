@@ -36,8 +36,8 @@ function ConfigItem(props: {
             {
               TYPES[
                 (props.config.config.configurable?.type ??
-                  "assistant") as keyof typeof TYPES
-              ].title
+                  "agent") as keyof typeof TYPES
+              ]?.title
             }
           </span>
         </div>

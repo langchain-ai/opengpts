@@ -1,6 +1,6 @@
 export const TYPES = {
-  assistant: {
-    id: "assistant",
+  agent: {
+    id: "agent",
     title: "Assistant",
     description:
       "These GPTs can use an arbitrary number of tools, and you can give them arbitrary instructions. The LLM itself is responsible for deciding which tools to call and how many times to call them. This makes them super powerful and flexible, but they can be unreliable at times! As such, only a subset of the most performant models work with these.",

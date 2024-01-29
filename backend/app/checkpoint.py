@@ -71,8 +71,11 @@ class RedisCheckpoint(BaseCheckpointSaver):
             value.pop("__pregel_version")
             value.pop("__pregel_ts")
             checkpoint = empty_checkpoint()
-            checkpoint["channel_values"] = value
-            for key in value:
+            if value.get("messages"):
+                checkpoint["channel_values"] = {"__root__": value["messages"][1]}
+            else:
+                checkpoint["channel_values"] = {}
+            for key in checkpoint["channel_values"]:
                 checkpoint["channel_versions"][key] = 1
             return checkpoint
         else:

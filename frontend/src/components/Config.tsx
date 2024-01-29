@@ -321,8 +321,8 @@ export function Config(props: {
   }, [props.config, props.configDefaults]);
   useEffect(() => {
     if (dropzone.acceptedFiles.length > 0) {
-      if (typeValue === "assistant") {
-        const toolsKey = "type==assistant/tools";
+      if (typeValue === "agent") {
+        const toolsKey = "type==agent/tools";
         setValues((values) => ({
           configurable: {
             ...values?.configurable,
