@@ -1,14 +1,15 @@
 import json
 
-from langchain.schema.messages import ToolMessage
 from langchain.tools import BaseTool
 from langchain.tools.render import format_tool_to_openai_tool
 from langchain_core.language_models.base import LanguageModelLike
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import SystemMessage, ToolMessage
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph import END
 from langgraph.graph.message import MessageGraph
 from langgraph.prebuilt import ToolExecutor, ToolInvocation
+
+from app.message_types import LiberalToolMessage
 
 
 def get_openai_agent_executor(
@@ -18,7 +19,17 @@ def get_openai_agent_executor(
     checkpoint: BaseCheckpointSaver,
 ):
     def _get_messages(messages):
-        return [SystemMessage(content=system_message)] + messages
+        msgs = []
+        for m in messages:
+            if isinstance(m, LiberalToolMessage):
+                _dict = m.dict()
+                _dict["content"] = str(_dict["content"])
+                m_c = ToolMessage(**_dict)
+                msgs.append(m_c)
+            else:
+                msgs.append(m)
+
+        return [SystemMessage(content=system_message)] + msgs
 
     if tools:
         llm_with_tools = llm.bind(tools=[format_tool_to_openai_tool(t) for t in tools])
@@ -58,9 +69,9 @@ def get_openai_agent_executor(
         responses = await tool_executor.abatch(actions)
         # We use the response to create a ToolMessage
         tool_messages = [
-            ToolMessage(
+            LiberalToolMessage(
                 tool_call_id=tool_call["id"],
-                content=json.dumps(response),
+                content=response,
                 additional_kwargs={"name": tool_call["function"]["name"]},
             )
             for tool_call, response in zip(

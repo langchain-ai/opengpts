@@ -1,24 +1,15 @@
 import json
-from typing import Any
+
 from langchain_core.language_models.base import LanguageModelLike
-from langchain_core.messages import (
-    SystemMessage,
-    HumanMessage,
-    AIMessage,
-    FunctionMessage,
-)
-from langchain_core.runnables import chain
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.prompts import PromptTemplate
 from langchain_core.retrievers import BaseRetriever
+from langchain_core.runnables import chain
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph import END
 from langgraph.graph.message import MessageGraph
-from langchain_core.prompts import PromptTemplate
 
-
-# This is sadly needed to allow for arbitrary typed content
-class LiberalFunctionMessage(FunctionMessage):
-    content: Any
-
+from app.message_types import LiberalFunctionMessage
 
 search_prompt = PromptTemplate.from_template(
     """Given the conversation below, come up with a search query to look up.
@@ -67,7 +58,7 @@ def get_retrieval_executor(
         ] + chat_history
 
     @chain
-    def get_search_query(messages):
+    async def get_search_query(messages):
         convo = []
         for m in messages:
             if isinstance(m, AIMessage):
@@ -76,11 +67,11 @@ def get_retrieval_executor(
             if isinstance(m, HumanMessage):
                 convo.append(f"Human: {m.content}")
         conversation = "\n".join(convo)
-        prompt = search_prompt.invoke({"conversation": conversation})
-        response = llm.invoke(prompt)
+        prompt = await search_prompt.ainvoke({"conversation": conversation})
+        response = await llm.ainvoke(prompt)
         return response.content
 
-    def invoke_retrieval(messages):
+    async def invoke_retrieval(messages):
         if len(messages) == 1:
             human_input = messages[-1].content
             return AIMessage(
@@ -93,7 +84,7 @@ def get_retrieval_executor(
                 },
             )
         else:
-            search_query = get_search_query.invoke(messages)
+            search_query = await get_search_query.ainvoke(messages)
             return AIMessage(
                 content="",
                 additional_kwargs={
@@ -104,10 +95,10 @@ def get_retrieval_executor(
                 },
             )
 
-    def retrieve(messages):
+    async def retrieve(messages):
         params = messages[-1].additional_kwargs["function_call"]
         query = json.loads(params["arguments"])["query"]
-        response = retriever.invoke(query)
+        response = await retriever.ainvoke(query)
         msg = LiberalFunctionMessage(name="retrieval", content=response)
         return msg
 

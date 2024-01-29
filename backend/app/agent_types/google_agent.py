@@ -9,6 +9,8 @@ from langgraph.graph import END
 from langgraph.graph.message import MessageGraph
 from langgraph.prebuilt import ToolExecutor, ToolInvocation
 
+from app.message_types import LiberalFunctionMessage
+
 
 def get_google_agent_executor(
     tools: list[BaseTool],
@@ -17,7 +19,16 @@ def get_google_agent_executor(
     checkpoint: BaseCheckpointSaver,
 ):
     def _get_messages(messages):
-        return [SystemMessage(content=system_message)] + messages
+        msgs = []
+        for m in messages:
+            if isinstance(m, LiberalFunctionMessage):
+                _dict = m.dict()
+                _dict["content"] = str(_dict["content"])
+                m_c = FunctionMessage(**_dict)
+                msgs.append(m_c)
+            else:
+                msgs.append(m)
+        return [SystemMessage(content=system_message)] + msgs
 
     if tools:
         llm_with_tools = llm.bind(functions=tools)
@@ -51,7 +62,7 @@ def get_google_agent_executor(
         # We call the tool_executor and get back a response
         response = await tool_executor.ainvoke(action)
         # We use the response to create a FunctionMessage
-        function_message = FunctionMessage(content=str(response), name=action.tool)
+        function_message = LiberalFunctionMessage(content=response, name=action.tool)
         # We return a list, because this will get added to the existing list
         return function_message
 
