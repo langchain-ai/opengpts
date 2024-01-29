@@ -21,7 +21,6 @@ function Function(props: {
   args?: string;
   open?: boolean;
   setOpen?: (open: boolean) => void;
-  cl
 }) {
   return (
     <>
@@ -120,14 +119,14 @@ export const Message = memo(function Message(
             />
           )}
           {props.additional_kwargs?.tool_calls
-            ?.filter(call => call.function)
-            ?.map(call => (
-            <Function
-              call={true}
-              name={call.function.name}
-              args={call.function.arguments}
-            />
-          ))}
+            ?.filter((call) => call.function)
+            ?.map((call) => (
+              <Function
+                call={true}
+                name={call.function?.name}
+                args={call.function?.arguments}
+              />
+            ))}
           {(["function", "tool"].includes(props.type) ? open : true) ? (
             typeof props.content === "string" ? (
               <div

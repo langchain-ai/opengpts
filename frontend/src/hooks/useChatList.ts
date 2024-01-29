@@ -6,10 +6,17 @@ export interface Message {
   content: string;
   name?: string;
   additional_kwargs?: {
+    name?: string;
     function_call?: {
       name?: string;
       arguments?: string;
     };
+    tool_calls?: {
+      function?: {
+        name?: string;
+        arguments?: string;
+      };
+    }[];
   };
   example: boolean;
 }
