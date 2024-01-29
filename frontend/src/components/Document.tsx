@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { cn } from "../utils/cn";
+import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 
 export interface PageDocument {
   page_content: string;
@@ -40,12 +41,13 @@ function PageDocument(props: { document: PageDocument; className?: string }) {
     return (
       <button
         className={cn(
-          "flex min-w-0 max-w-full gap-4 overflow-hidden px-2 transition-colors hover:bg-divider-500/25 active:bg-divider-500/50",
+          "flex items-start min-w-0 max-w-full gap-4 overflow-hidden px-2 transition-colors hover:bg-divider-500/25 active:bg-divider-500/50",
           props.className
         )}
         onClick={() => setOpen(true)}
       >
-        <span className="min-w-0 flex-grow overflow-hidden text-ellipsis whitespace-nowrap text-left">
+        <ChevronRightIcon className="mt-0.5 h-5 w-5" />
+        <span className="min-w-0 flex-grow basis-0 overflow-hidden text-ellipsis whitespace-nowrap text-left">
           {props.document.page_content.trim().replace(/\n/g, " ")}
         </span>
       </button>
@@ -55,13 +57,15 @@ function PageDocument(props: { document: PageDocument; className?: string }) {
   return (
     <button
       className={cn(
-        "flex gap-4 px-2 text-left transition-colors hover:bg-divider-500/25 active:bg-divider-500/50",
+        "flex items-start gap-4 px-2 text-left transition-colors hover:bg-divider-500/25 active:bg-divider-500/50",
         props.className
       )}
       onClick={() => setOpen(false)}
     >
-      <span className="flex flex-col gap-4">
-        <span className="whitespace-pre-wrap">
+      <ChevronDownIcon className="mt-0.5 h-5 w-5" />
+
+      <span className="flex flex-grow basis-0 flex-col gap-4">
+        <span className="whitespace-pre-line">
           {props.document.page_content}
         </span>
 
