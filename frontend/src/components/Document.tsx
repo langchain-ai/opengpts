@@ -89,7 +89,7 @@ function PageDocument(props: { document: PageDocument; className?: string }) {
 
 export function DocumentList(props: { documents: PageDocument[] }) {
   return (
-    <div className="flex flex-col items-stretch gap-4 rounded-lg ring-1 ring-gray-300 overflow-hidden">
+    <div className="flex flex-col items-stretch gap-4 rounded-lg ring-1 ring-gray-300 overflow-hidden my-2">
       <div className="grid divide-y empty:hidden">
         {props.documents.map((document, idx) => (
           <PageDocument document={document} key={idx} className="py-3" />

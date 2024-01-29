@@ -35,7 +35,7 @@ function Function(props: {
           {props.name}
         </span>
       )}
-      {!props.call && (
+      {!props.call && props.setOpen && (
         <span
           className={cn(
             "inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 cursor-pointer relative top-1",
@@ -105,15 +105,15 @@ export const Message = memo(function Message(
             props.type === "function" && "mt-2"
           )}
         >
-          {contentIsDocuments ? "Documents" : props.type}
+          {props.type}
         </div>
         <div className="flex-1">
-          {["function", "tool"].includes(props.type) && !contentIsDocuments && (
+          {["function", "tool"].includes(props.type) && (
             <Function
               call={false}
               name={props.name ?? props.additional_kwargs?.name}
               open={open}
-              setOpen={setOpen}
+              setOpen={contentIsDocuments ? undefined : setOpen}
             />
           )}
           {props.additional_kwargs?.function_call && (
