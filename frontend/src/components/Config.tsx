@@ -282,10 +282,10 @@ function fileId(file: File) {
 
 const ORDER = [
   "system_message",
+  "retrieval_description",
   "tools",
   "llm_type",
   "agent_type",
-  "retrieval_description",
 ];
 
 export function Config(props: {
@@ -298,6 +298,11 @@ export function Config(props: {
   const [values, setValues] = useState(
     props.config?.config ?? props.configDefaults
   );
+  const typeKey = "type";
+  const typeField =
+    props.configSchema?.properties.configurable.properties[typeKey];
+  const typeValue = values?.configurable?.[typeKey];
+  const typeSpec = typeValue ? TYPES[typeValue as keyof typeof TYPES] : null;
   const [files, setFiles] = useState<File[]>([]);
   const dropzone = useDropzone({
     multiple: true,
@@ -316,31 +321,30 @@ export function Config(props: {
   }, [props.config, props.configDefaults]);
   useEffect(() => {
     if (dropzone.acceptedFiles.length > 0) {
-      setValues((values) => ({
-        configurable: {
-          ...values?.configurable,
-          tools: [
-            ...((values?.configurable?.tools ?? []) as string[]).filter(
-              (tool) => tool !== "Retrieval"
-            ),
-            "Retrieval",
-          ],
-        },
-      }));
+      if (typeValue === "assistant") {
+        const toolsKey = "type==assistant/tools";
+        setValues((values) => ({
+          configurable: {
+            ...values?.configurable,
+            [toolsKey]: [
+              ...((values?.configurable?.[toolsKey] ?? []) as string[]).filter(
+                (tool) => tool !== "Retrieval"
+              ),
+              "Retrieval",
+            ],
+          },
+        }));
+      }
       const acceptedFileIds = dropzone.acceptedFiles.map(fileId);
       setFiles((files) => [
         ...files.filter((f) => !acceptedFileIds.includes(fileId(f))),
         ...dropzone.acceptedFiles,
       ]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dropzone.acceptedFiles]);
   const [inflight, setInflight] = useState(false);
   const readonly = !!props.config && !inflight;
-  const typeKey = "type";
-  const typeField =
-    props.configSchema?.properties.configurable.properties[typeKey];
-  const typeValue = values?.configurable?.[typeKey];
-  const typeSpec = typeValue ? TYPES[typeValue as keyof typeof TYPES] : null;
 
   const settings = !props.config ? (
     <div className="flex flex-row gap-4">
@@ -409,6 +413,13 @@ export function Config(props: {
           setInflight(false);
         }}
       >
+        {!props.config && typeSpec?.files && (
+          <FileUploadDropzone
+            state={dropzone}
+            files={files}
+            setFiles={setFiles}
+          />
+        )}
         <div
           className={cn(
             "flex flex-col gap-8",
@@ -428,6 +439,12 @@ export function Config(props: {
                 return null;
               }
             } else {
+              return null;
+            }
+            if (
+              last(key.split("/")) === "retrieval_description" &&
+              !files.length
+            ) {
               return null;
             }
             if (value.type === "string" && value.enum) {
@@ -488,13 +505,6 @@ export function Config(props: {
               );
             }
           })}
-          {!props.config && typeSpec?.files && (
-            <FileUploadDropzone
-              state={dropzone}
-              files={files}
-              setFiles={setFiles}
-            />
-          )}
         </div>
       </form>
     </div>
