@@ -41,12 +41,12 @@ function PageDocument(props: { document: PageDocument; className?: string }) {
     return (
       <button
         className={cn(
-          "flex items-start min-w-0 max-w-full gap-4 overflow-hidden px-2 transition-colors hover:bg-divider-500/25 active:bg-divider-500/50",
+          "flex items-start min-w-0 max-w-full gap-4 overflow-hidden px-4 transition-colors hover:bg-gray-50/50 active:bg-gray-50",
           props.className
         )}
         onClick={() => setOpen(true)}
       >
-        <ChevronRightIcon className="mt-0.5 h-5 w-5" />
+        <ChevronRightIcon className="mt-1 h-4 w-4 text-gray-500" />
         <span className="min-w-0 flex-grow basis-0 overflow-hidden text-ellipsis whitespace-nowrap text-left">
           {props.document.page_content.trim().replace(/\n/g, " ")}
         </span>
@@ -57,12 +57,12 @@ function PageDocument(props: { document: PageDocument; className?: string }) {
   return (
     <button
       className={cn(
-        "flex items-start gap-4 px-2 text-left transition-colors hover:bg-divider-500/25 active:bg-divider-500/50",
+        "flex items-start gap-4 px-4 text-left transition-colors hover:bg-gray-50/50 active:bg-gray-50",
         props.className
       )}
       onClick={() => setOpen(false)}
     >
-      <ChevronDownIcon className="mt-0.5 h-5 w-5" />
+      <ChevronDownIcon className="mt-1 h-4 w-4 text-gray-500" />
 
       <span className="flex flex-grow basis-0 flex-col gap-4">
         <span className="whitespace-pre-line">
@@ -90,7 +90,7 @@ function PageDocument(props: { document: PageDocument; className?: string }) {
 export function DocumentList(props: { documents: PageDocument[] }) {
   return (
     <div className="flex flex-col items-stretch gap-4 rounded-lg ring-1 ring-gray-300 overflow-hidden">
-      <div className="mx-2 grid divide-y empty:hidden">
+      <div className="grid divide-y empty:hidden">
         {props.documents.map((document, idx) => (
           <PageDocument document={document} key={idx} className="py-3" />
         ))}
