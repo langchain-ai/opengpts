@@ -1,3 +1,5 @@
+import os
+import logging
 from pathlib import Path
 
 import orjson
@@ -6,6 +8,8 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api import router as api_router
 from app.upload import ingest_runnable
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="OpenGPTs API")
 
@@ -24,7 +28,12 @@ def ingest_files(files: list[UploadFile], config: str = Form(...)) -> None:
     return ingest_runnable.batch([file.file for file in files], config)
 
 
-app.mount("", StaticFiles(directory=str(ROOT / "ui"), html=True), name="ui")
+ui_dir = str(ROOT / "ui")
+
+if os.path.exists(ui_dir):
+    app.mount("", StaticFiles(directory=ui_dir, html=True), name="ui")
+else:
+    logger.warn("No UI directory found, serving API only.")
 
 if __name__ == "__main__":
     import uvicorn
