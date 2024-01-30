@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useReducer, useState } from "react";
 import orderBy from "lodash/orderBy";
+import { v4 as uuidv4 } from "uuid";
 
 export interface Config {
   assistant_id: string;
@@ -87,7 +88,7 @@ export function useConfigList(): ConfigListProps {
       config: Config["config"],
       files: File[],
       isPublic: boolean,
-      assistant_id: string = crypto.randomUUID()
+      assistant_id: string = uuidv4()
     ) => {
       const formData = files.reduce((formData, file) => {
         formData.append("files", file);
