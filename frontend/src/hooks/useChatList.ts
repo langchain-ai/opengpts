@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useReducer, useState } from "react";
 import orderBy from "lodash/orderBy";
+import { v4 as uuidv4 } from "uuid";
 
 export interface Message {
   type: string;
@@ -78,7 +79,7 @@ export function useChatList(): ChatListProps {
     async (
       name: string,
       assistant_id: string,
-      thread_id: string = crypto.randomUUID()
+      thread_id: string = uuidv4()
     ) => {
       const saved = await fetch(`/threads/${thread_id}`, {
         method: "PUT",
