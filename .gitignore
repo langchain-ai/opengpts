@@ -1,3 +1,4 @@
 *.env
 .env.gcp.yaml
 redis-volume/
+backend/ui
