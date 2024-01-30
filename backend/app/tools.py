@@ -1,3 +1,4 @@
+import os
 from enum import Enum
 
 from langchain.pydantic_v1 import BaseModel, Field
@@ -13,6 +14,7 @@ from langchain_community.tools.tavily_search import TavilyAnswer, TavilySearchRe
 from langchain_community.utilities.arxiv import ArxivAPIWrapper
 from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
 from langchain_community.vectorstores.redis import RedisFilter
+from langchain_robocorp import ActionServerToolkit
 
 from app.upload import vstore
 
@@ -106,7 +108,17 @@ def _get_tavily_answer():
     return TavilyAnswer(api_wrapper=tavily_search)
 
 
+def _get_action_server():
+    toolkit = ActionServerToolkit(
+        url=os.environ.get("ROBOCORP_ACTION_SERVER_URL"),
+        api_key=os.environ.get("ROBOCORP_ACTION_SERVER_KEY"),
+    )
+    tools = toolkit.get_tools()
+    return tools
+
+
 class AvailableTools(str, Enum):
+    ACTION_SERVER = "Action Server by Robocorp"
     DDG_SEARCH = "DDG Search"
     TAVILY = "Search (Tavily)"
     TAVILY_ANSWER = "Search (short answer, Tavily)"
@@ -120,6 +132,7 @@ class AvailableTools(str, Enum):
 
 
 TOOLS = {
+    AvailableTools.ACTION_SERVER: _get_action_server,
     AvailableTools.DDG_SEARCH: _get_duck_duck_go,
     AvailableTools.ARXIV: _get_arxiv,
     AvailableTools.YOU_SEARCH: _get_you_search,

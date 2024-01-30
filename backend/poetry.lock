@@ -1506,6 +1506,23 @@ openai = ">=1.10.0,<2.0.0"
 tiktoken = ">=0.5.2,<0.6.0"
 
 [[package]]
+name = "langchain-robocorp"
+version = "0.0.3"
+description = "An integration package connecting Robocorp and LangChain"
+optional = false
+python-versions = ">=3.8.1,<4.0"
+files = [
+    {file = "langchain_robocorp-0.0.3-py3-none-any.whl", hash = "sha256:e6e34acc63b62ff156e7e96b0f180540ca0c8ab0f5a49aebb8dccf0a122446f3"},
+    {file = "langchain_robocorp-0.0.3.tar.gz", hash = "sha256:67c8d4b61f23c452fe1addbc9433f5d46d46ec2565a4184df45dac44892d313b"},
+]
+
+[package.dependencies]
+langchain-core = ">=0.0.12"
+langsmith = ">=0.0.83,<0.1"
+requests = ">=2.31.0,<3.0.0"
+types-requests = ">=2.31.0.6,<3.0.0.0"
+
+[[package]]
 name = "langgraph"
 version = "0.0.19"
 description = "langgraph"
@@ -3253,4 +3270,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9.0"
-content-hash = "87914c875a6cfe86785734dd5a0cb33d14700ffb050e1186a935579def43c612"
+content-hash = "cc697e76f6b03a3e16af51b0621962e19efe3fcc27bc103fe11292309f0d475d"
