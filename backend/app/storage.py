@@ -43,12 +43,21 @@ def load(keys: list[str], values: list[bytes]) -> dict:
     return {k: orjson.loads(v) if v is not None else None for k, v in zip(keys, values)}
 
 
+CLIENT: RedisType | None = None
+
+
 def _get_redis_client() -> RedisType:
     """Get a Redis client."""
+    global CLIENT
+
+    if CLIENT is not None:
+        return CLIENT
+
     url = os.environ.get("REDIS_URL")
     if not url:
         raise ValueError("REDIS_URL not set")
-    return get_client(url)
+    CLIENT = get_client(url)
+    return CLIENT
 
 
 def list_assistants(user_id: str) -> List[Assistant]:
