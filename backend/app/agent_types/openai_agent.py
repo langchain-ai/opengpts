@@ -18,7 +18,7 @@ def get_openai_agent_executor(
     system_message: str,
     checkpoint: BaseCheckpointSaver,
 ):
-    def _get_messages(messages):
+    async def _get_messages(messages):
         msgs = []
         for m in messages:
             if isinstance(m, LiberalToolMessage):

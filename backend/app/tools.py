@@ -1,3 +1,4 @@
+from functools import lru_cache
 import os
 from enum import Enum
 
@@ -42,6 +43,7 @@ def get_retriever(assistant_id: str):
     )
 
 
+@lru_cache(maxsize=5)
 def get_retrieval_tool(assistant_id: str, description: str):
     return create_retriever_tool(
         get_retriever(assistant_id),
@@ -50,14 +52,17 @@ def get_retrieval_tool(assistant_id: str, description: str):
     )
 
 
+@lru_cache(maxsize=1)
 def _get_duck_duck_go():
     return DuckDuckGoSearchRun(args_schema=DDGInput)
 
 
+@lru_cache(maxsize=1)
 def _get_arxiv():
     return ArxivQueryRun(api_wrapper=ArxivAPIWrapper(), args_schema=ArxivInput)
 
 
+@lru_cache(maxsize=1)
 def _get_you_search():
     return create_retriever_tool(
         YouRetriever(n_hits=3, n_snippets_per_hit=3),
@@ -66,6 +71,7 @@ def _get_you_search():
     )
 
 
+@lru_cache(maxsize=1)
 def _get_sec_filings():
     return create_retriever_tool(
         KayAiRetriever.create(
@@ -76,6 +82,7 @@ def _get_sec_filings():
     )
 
 
+@lru_cache(maxsize=1)
 def _get_press_releases():
     return create_retriever_tool(
         KayAiRetriever.create(
@@ -86,28 +93,33 @@ def _get_press_releases():
     )
 
 
+@lru_cache(maxsize=1)
 def _get_pubmed():
     return create_retriever_tool(
         PubMedRetriever(), "pub_med_search", "Search for a query on PubMed"
     )
 
 
+@lru_cache(maxsize=1)
 def _get_wikipedia():
     return create_retriever_tool(
         WikipediaRetriever(), "wikipedia", "Search for a query on Wikipedia"
     )
 
 
+@lru_cache(maxsize=1)
 def _get_tavily():
     tavily_search = TavilySearchAPIWrapper()
     return TavilySearchResults(api_wrapper=tavily_search)
 
 
+@lru_cache(maxsize=1)
 def _get_tavily_answer():
     tavily_search = TavilySearchAPIWrapper()
     return TavilyAnswer(api_wrapper=tavily_search)
 
 
+@lru_cache(maxsize=1)
 def _get_action_server():
     toolkit = ActionServerToolkit(
         url=os.environ.get("ROBOCORP_ACTION_SERVER_URL"),
