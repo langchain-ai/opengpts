@@ -1552,17 +1552,17 @@ types-requests = ">=2.31.0.6,<3.0.0.0"
 
 [[package]]
 name = "langgraph"
-version = "0.0.19"
+version = "0.0.21"
 description = "langgraph"
 optional = false
 python-versions = ">=3.9.0,<4.0"
 files = [
-    {file = "langgraph-0.0.19-py3-none-any.whl", hash = "sha256:0a2e15b836d11b6a9356183c6d36e2d5b0954bce908bc3560ca19f15fc075eec"},
-    {file = "langgraph-0.0.19.tar.gz", hash = "sha256:7e25159e8f93345ada3447eb77c60b79c437d3fc46926b75d072af294100f27c"},
+    {file = "langgraph-0.0.21-py3-none-any.whl", hash = "sha256:68fe1b2d5d4d86f1fa2abfe66b2367ba68f8a3e1d604d81d3e740b2a03095c9c"},
+    {file = "langgraph-0.0.21.tar.gz", hash = "sha256:2d2f02c9441aaca15a23955080529b93fcb85dd89748a7285f6ff2825456c750"},
 ]
 
 [package.dependencies]
-langchain-core = ">=0.1.8,<0.2.0"
+langchain-core = ">=0.1.16,<0.2.0"
 
 [[package]]
 name = "langserve"
@@ -3383,4 +3383,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9.0"
-content-hash = "2fe4cc24cf6a254dd304a776f66ecb637fda701c5af765548c10ec3acf5ece4e"
+content-hash = "6c1cfbf75976964cae9412ee78324c9e21903656bd81a167d3d1f1376aaf8565"
