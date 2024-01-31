@@ -1,15 +1,14 @@
-import os
 import pickle
-from functools import partial
 from typing import Any
 
 from langchain.pydantic_v1 import Field
 from langchain.schema.runnable import RunnableConfig
 from langchain.schema.runnable.utils import ConfigurableFieldSpec
-from langchain.utilities.redis import get_client
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.checkpoint.base import Checkpoint, empty_checkpoint
 from redis.client import Redis as RedisType
+
+from app.redis import get_redis_client
 
 
 def checkpoint_key(user_id: str, thread_id: str):
@@ -28,9 +27,7 @@ def _load(mapping: dict[bytes, bytes]) -> dict:
 
 
 class RedisCheckpoint(BaseCheckpointSaver):
-    client: RedisType = Field(
-        default_factory=partial(get_client, os.environ.get("REDIS_URL"))
-    )
+    client: RedisType = Field(default_factory=get_redis_client)
 
     class Config:
         arbitrary_types_allowed = True
