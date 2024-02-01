@@ -366,6 +366,8 @@ Searches [Wikipedia](https://pypi.org/project/wikipedia/). Does not require any 
 
 ## Deployment
 
+### Deploy via Cloud Run
+
 **1. Build the frontend**
 
 ```shell
@@ -383,3 +385,7 @@ First create a `.env.gcp.yaml` file with the contents from `.env.gcp.yaml.exampl
 ```shell
 gcloud run deploy opengpts --source . --port 8000 --env-vars-file .env.gcp.yaml --allow-unauthenticated --region us-central1 --min-instances 1
 ```
+
+### Deploy in Kubernetes
+
+We have a Helm chart for deploying the backend to Kubernetes. You can find more information here: [README.md](https://github.com/langchain-ai/helm/tree/main/charts/open-gpts)
