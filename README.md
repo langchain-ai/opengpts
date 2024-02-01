@@ -292,6 +292,17 @@ ROBOCORP_ACTION_SERVER_URL=https://dummy-action-server.robocorp.link
 ROBOCORP_ACTION_SERVER_KEY=dummy-api-key
 ```
 
+**_Connery Actions_**
+
+Connect OpenGPTs to the real world with [Connery Actions](https://github.com/connery-io/connery).
+
+Requires setting an environment variable, which you get during the [Connery Runner setup](https://docs.connery.io/docs/runner/quick-start/):
+
+```shell
+CONNERY_RUNNER_URL=https://your-personal-connery-runner-url
+CONNERY_RUNNER_API_KEY=...
+```
+
 **DuckDuckGo Search**
 
 Search the web with [DuckDuckGo](https://pypi.org/project/duckduckgo-search/). Does not require any API keys.
