@@ -142,7 +142,7 @@ const TOOL_DESCRIPTIONS = {
   Retrieval: "Look up information in uploaded files.",
   "Action Server by Robocorp":
     "Run AI actions with [Robocorp Action Server](https://github.com/robocorp/robocorp).",
-  "Actions by Connery":
+  "AI Action Runner by Connery":
     "Connect OpenGPTs to the real world with [Connery Actions](https://github.com/connery-io/connery).",
   "DDG Search":
     "Search the web with [DuckDuckGo](https://pypi.org/project/duckduckgo-search/).",
