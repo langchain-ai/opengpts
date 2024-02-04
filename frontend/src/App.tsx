@@ -18,21 +18,23 @@ function App() {
   const { startStream, stopStream, stream } = useStreamState();
 
   const startTurn = useCallback(
-    async (message: string, chat: ChatType | null = currentChat) => {
+    async (message?: string, chat: ChatType | null = currentChat) => {
       if (!chat) return;
       const config = configs?.find(
         (c) => c.assistant_id === chat.assistant_id
       )?.config;
       if (!config) return;
       await startStream(
-        [
-          {
-            content: message,
-            additional_kwargs: {},
-            type: "human",
-            example: false,
-          },
-        ],
+        message
+          ? [
+              {
+                content: message,
+                additional_kwargs: {},
+                type: "human",
+                example: false,
+              },
+            ]
+          : null,
         chat.assistant_id,
         chat.thread_id
       );

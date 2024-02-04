@@ -156,7 +156,7 @@ export const Message = memo(function Message(
         </div>
       </div>
       {props.runId && (
-        <div className="mt-2 pl-[100px]">
+        <div className="mt-2 pl-[120px]">
           <LangSmithActions runId={props.runId} />
         </div>
       )}
