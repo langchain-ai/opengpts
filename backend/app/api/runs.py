@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import Sequence
+from typing import Optional, Sequence
 
 import langsmith.client
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
@@ -27,7 +27,7 @@ class CreateRunPayload(BaseModel):
 
     assistant_id: str
     thread_id: str
-    input: Sequence[AnyMessage] = Field(default_factory=list)
+    input: Optional[Sequence[AnyMessage]] = Field(default_factory=list)
 
 
 async def _run_input_and_config(request: Request, opengpts_user_id: OpengptsUserId):
@@ -56,7 +56,11 @@ async def _run_input_and_config(request: Request, opengpts_user_id: OpengptsUser
         },
     }
     try:
-        input_ = _unpack_input(agent.get_input_schema(config).validate(body["input"]))
+        input_ = (
+            _unpack_input(agent.get_input_schema(config).validate(body["input"]))
+            if body["input"] is not None
+            else None
+        )
     except ValidationError as e:
         raise RequestValidationError(e.errors(), body=body)
 

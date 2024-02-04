@@ -4,10 +4,11 @@ import { StreamStateProps } from "../hooks/useStreamState";
 import { useChatMessages } from "../hooks/useChatMessages";
 import TypingBox from "./TypingBox";
 import { Message } from "./Message";
+import { ArrowDownCircleIcon } from "@heroicons/react/24/outline";
 
 interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
   chat: ChatType;
-  startStream: (message: string) => Promise<void>;
+  startStream: (message?: string) => Promise<void>;
 }
 
 function usePrevious<T>(value: T): T | undefined {
@@ -19,7 +20,11 @@ function usePrevious<T>(value: T): T | undefined {
 }
 
 export function Chat(props: ChatProps) {
-  const messages = useChatMessages(props.chat.thread_id, props.stream);
+  const { messages, resumeable } = useChatMessages(
+    props.chat.thread_id,
+    props.stream,
+    props.stopStream
+  );
   const prevMessages = usePrevious(messages);
   useEffect(() => {
     scrollTo({
@@ -54,10 +59,22 @@ export function Chat(props: ChatProps) {
           An error has occurred. Please try again.
         </div>
       )}
+      {resumeable && props.stream?.status !== "inflight" && (
+        <div
+          className="flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 ring-1 ring-inset ring-yellow-600/20 cursor-pointer"
+          onClick={() => props.startStream()}
+        >
+          <ArrowDownCircleIcon className="h-5 w-5 mr-1" />
+          Click to continue.
+        </div>
+      )}
       <div className="fixed left-0 lg:left-72 bottom-0 right-0 p-4">
         <TypingBox
           onSubmit={props.startStream}
-          disabled={props.stream?.status === "inflight"}
+          onInterrupt={
+            props.stream?.status === "inflight" ? props.stopStream : undefined
+          }
+          inflight={props.stream?.status === "inflight"}
         />
       </div>
     </div>

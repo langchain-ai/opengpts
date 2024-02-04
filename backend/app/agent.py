@@ -7,6 +7,7 @@ from langchain_core.runnables import (
     ConfigurableFieldMultiOption,
     RunnableBinding,
 )
+from langgraph.checkpoint import CheckpointAt
 
 from app.agent_types.google_agent import get_google_agent_executor
 from app.agent_types.openai_agent import get_openai_agent_executor
@@ -41,7 +42,7 @@ class AgentType(str, Enum):
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
-CHECKPOINTER = RedisCheckpoint()
+CHECKPOINTER = RedisCheckpoint(at=CheckpointAt.END_OF_STEP)
 
 
 def get_agent_executor(
