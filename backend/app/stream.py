@@ -14,6 +14,7 @@ from langchain_core.messages import (
     FunctionMessageChunk,
     HumanMessage,
     HumanMessageChunk,
+    SystemMessage,
 )
 from langchain_core.runnables import Runnable, RunnableConfig
 from langserve.serialization import WellKnownLCSerializer
@@ -32,16 +33,31 @@ async def astream_messages(
     last_stream_run_id: Optional[str] = None
 
     async for event in app.astream_events(
-        input, config, version="v1", output_keys=["__root__"]
+        input, config, version="v1", output_keys="__root__"
     ):
         if event["event"] == "on_chain_start" and not root_run_id:
             root_run_id = event["run_id"]
 
             yield root_run_id
         elif event["event"] == "on_chain_stream" and event["run_id"] == root_run_id:
-            last_messages_list = event["data"]["chunk"]["__root__"]
+            last_messages_list = event["data"]["chunk"]
 
             yield last_messages_list
+        elif event["event"] == "on_chat_model_start":
+            input_messages_outer = event["data"]["input"].get("messages")
+            input_messages = (
+                input_messages_outer[0]
+                if isinstance(input_messages_outer, list)
+                else None
+            )
+            input_messages = (
+                [msg for msg in input_messages if not isinstance(msg, SystemMessage)]
+                if input_messages is not None
+                else None
+            )
+            if input_messages and input_messages != last_messages_list:
+                last_messages_list = input_messages
+                yield last_messages_list
         elif (
             event["event"] == "on_chat_model_stream" and last_messages_list is not None
         ):
