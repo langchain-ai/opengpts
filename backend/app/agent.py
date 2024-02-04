@@ -42,7 +42,7 @@ class AgentType(str, Enum):
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
-CHECKPOINTER = RedisCheckpoint(at=CheckpointAt.END_OF_STEP)
+CHECKPOINTER = RedisCheckpoint()
 
 
 def get_agent_executor(
