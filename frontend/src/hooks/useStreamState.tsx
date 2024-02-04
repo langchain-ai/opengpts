@@ -88,7 +88,10 @@ export function useStreamState(): StreamStateProps {
       controller?.abort();
       setController(null);
       if (clear) {
-        setCurrent(null);
+        setCurrent((current) => ({
+          status: "done",
+          run_id: current?.run_id,
+        }));
       } else {
         setCurrent((current) => ({
           status: "done",
