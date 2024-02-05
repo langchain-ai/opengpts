@@ -63,13 +63,18 @@ function Types(props: {
   );
 }
 
-function Label(props: { id?: string; title: string }) {
+function Label(props: { id?: string; title: string; description?: string }) {
   return (
     <label
       htmlFor={props.id}
-      className="block font-medium leading-6 text-gray-400 mb-2"
+      className="flex flex-col font-medium leading-6 text-gray-400 mb-2"
     >
-      {props.title}
+      <div>{props.title}</div>
+      {props.description && (
+        <div className="font-normal text-sm text-gray-600 whitespace-pre-line">
+          {props.description}
+        </div>
+      )}
     </label>
   );
 }
@@ -84,7 +89,11 @@ function StringField(props: {
 }) {
   return (
     <div>
-      <Label id={props.id} title={props.title} />
+      <Label
+        id={props.id}
+        title={props.title}
+        description={props.field.description}
+      />
       <textarea
         rows={4}
         name={props.id}
@@ -109,7 +118,11 @@ export default function SingleOptionField(props: {
 }) {
   return (
     <div>
-      <Label id={props.id} title={props.field.title} />
+      <Label
+        id={props.id}
+        title={props.field.title}
+        description={props.field.description}
+      />
       <fieldset>
         <legend className="sr-only">{props.field.title}</legend>
         <div className="space-y-2">
@@ -170,7 +183,11 @@ function MultiOptionField(props: {
 }) {
   return (
     <fieldset>
-      <Label id={props.id} title={props.title ?? props.field.items?.title} />
+      <Label
+        id={props.id}
+        title={props.title ?? props.field.items?.title}
+        description={props.field.description}
+      />
       <div className="space-y-2">
         {orderBy(props.field.items?.enum)?.map((option) => (
           <div className="relative flex items-start" key={option}>
@@ -285,6 +302,7 @@ function fileId(file: File) {
 const ORDER = [
   "system_message",
   "retrieval_description",
+  "interrupt_before_action",
   "tools",
   "llm_type",
   "agent_type",
@@ -478,6 +496,30 @@ export function Config(props: {
                   setValues({
                     ...values,
                     configurable: { ...values!.configurable, [key]: value },
+                  })
+                }
+                readonly={readonly}
+              />
+            );
+          } else if (value.type === "boolean") {
+            return (
+              <SingleOptionField
+                key={key}
+                id={key}
+                field={{
+                  ...value,
+                  type: "string",
+                  enum: ["Yes", "No"],
+                }}
+                title={title}
+                value={values?.configurable?.[key] ? "Yes" : "No"}
+                setValue={(value: string) =>
+                  setValues({
+                    ...values,
+                    configurable: {
+                      ...values!.configurable,
+                      [key]: value === "Yes",
+                    },
                   })
                 }
                 readonly={readonly}

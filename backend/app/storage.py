@@ -144,7 +144,7 @@ MESSAGES_CHANNEL_NAME = "__root__"
 def get_thread_messages(user_id: str, thread_id: str):
     """Get all messages for a thread."""
     config = {"configurable": {"user_id": user_id, "thread_id": thread_id}}
-    app = get_agent_executor([], AgentType.GPT_35_TURBO, "")
+    app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
     checkpoint = app.checkpointer.get(config) or empty_checkpoint()
     with ChannelsManager(app.channels, checkpoint) as channels:
         return {
@@ -158,7 +158,7 @@ def get_thread_messages(user_id: str, thread_id: str):
 def post_thread_messages(user_id: str, thread_id: str, messages: Sequence[AnyMessage]):
     """Add messages to a thread."""
     config = {"configurable": {"user_id": user_id, "thread_id": thread_id}}
-    app = get_agent_executor([], AgentType.GPT_35_TURBO, "")
+    app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
     checkpoint = app.checkpointer.get(config) or empty_checkpoint()
     with ChannelsManager(app.channels, checkpoint) as channels:
         channel = channels[MESSAGES_CHANNEL_NAME]
