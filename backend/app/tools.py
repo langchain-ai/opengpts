@@ -1,9 +1,10 @@
-from functools import lru_cache
 import os
 from enum import Enum
+from functools import lru_cache
 
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools.retriever import create_retriever_tool
+from langchain_community.agent_toolkits.connery import ConneryToolkit
 from langchain_community.retrievers import (
     KayAiRetriever,
     PubMedRetriever,
@@ -11,6 +12,7 @@ from langchain_community.retrievers import (
 )
 from langchain_community.retrievers.you import YouRetriever
 from langchain_community.tools import ArxivQueryRun, DuckDuckGoSearchRun
+from langchain_community.tools.connery import ConneryService
 from langchain_community.tools.tavily_search import TavilyAnswer, TavilySearchResults
 from langchain_community.utilities.arxiv import ArxivAPIWrapper
 from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
@@ -129,8 +131,20 @@ def _get_action_server():
     return tools
 
 
+@lru_cache(maxsize=1)
+def _get_connery_actions():
+    connery_service = ConneryService(
+        runner_url=os.environ.get("CONNERY_RUNNER_URL"),
+        api_key=os.environ.get("CONNERY_RUNNER_API_KEY"),
+    )
+    connery_toolkit = ConneryToolkit.create_instance(connery_service)
+    tools = connery_toolkit.get_tools()
+    return tools
+
+
 class AvailableTools(str, Enum):
     ACTION_SERVER = "Action Server by Robocorp"
+    CONNERY = '"AI Action Runner" by Connery'
     DDG_SEARCH = "DDG Search"
     TAVILY = "Search (Tavily)"
     TAVILY_ANSWER = "Search (short answer, Tavily)"
@@ -145,6 +159,7 @@ class AvailableTools(str, Enum):
 
 TOOLS = {
     AvailableTools.ACTION_SERVER: _get_action_server,
+    AvailableTools.CONNERY: _get_connery_actions,
     AvailableTools.DDG_SEARCH: _get_duck_duck_go,
     AvailableTools.ARXIV: _get_arxiv,
     AvailableTools.YOU_SEARCH: _get_you_search,
