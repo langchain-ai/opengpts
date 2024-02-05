@@ -144,7 +144,7 @@ def _get_connery_actions():
 
 class AvailableTools(str, Enum):
     ACTION_SERVER = "Action Server by Robocorp"
-    CONNERY = "AI Action Runner by Connery"
+    CONNERY = "\"AI Action Runner\" by Connery"
     DDG_SEARCH = "DDG Search"
     TAVILY = "Search (Tavily)"
     TAVILY_ANSWER = "Search (short answer, Tavily)"

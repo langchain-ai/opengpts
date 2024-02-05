@@ -294,7 +294,7 @@ ROBOCORP_ACTION_SERVER_KEY=dummy-api-key
 
 **_Connery Actions_**
 
-Connect OpenGPTs to the real world with [Connery Actions](https://github.com/connery-io/connery).
+Connect OpenGPTs to the real world with [Connery](https://github.com/connery-io/connery).
 
 Requires setting an environment variable, which you get during the [Connery Runner setup](https://docs.connery.io/docs/runner/quick-start/):
 
