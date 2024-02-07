@@ -43,7 +43,7 @@ async def astream_messages(
             last_messages_list = event["data"]["chunk"]
 
             yield last_messages_list
-        elif event["event"] == "on_chat_model_start":
+        elif event["event"] == "on_chat_model_start" and last_messages_list is None:
             input_messages_outer = event["data"]["input"].get("messages")
             input_messages = (
                 input_messages_outer[0]
@@ -55,7 +55,7 @@ async def astream_messages(
                 if input_messages is not None
                 else None
             )
-            if input_messages and input_messages != last_messages_list:
+            if input_messages:
                 last_messages_list = input_messages
                 yield last_messages_list
         elif (
