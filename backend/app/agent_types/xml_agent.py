@@ -98,7 +98,7 @@ def get_xml_agent_executor(
         # We construct an ToolInvocation from the function_call
         tool, tool_input = last_message.content.split("</tool>")
         _tool = tool.split("<tool>")[1]
-        if "<tool_input>" not in _tool:
+        if "<tool_input>" not in tool_input:
             _tool_input = ""
         else:
             _tool_input = tool_input.split("<tool_input>")[1]
