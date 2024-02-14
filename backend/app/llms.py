@@ -9,7 +9,7 @@ from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
 @lru_cache(maxsize=4)
 def get_openai_llm(gpt_4: bool = False, azure: bool = False):
-    proxy_url = os.environ["PROXY_URLS"]
+    proxy_url = os.environ["PROXY_URL"]
     if proxy_url is not None or proxy_url != "":
         http_client = httpx.AsyncClient(proxies=proxy_url)
     else:
