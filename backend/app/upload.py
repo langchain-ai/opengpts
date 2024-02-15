@@ -9,7 +9,7 @@ For the time being, upload and ingestion are coupled
 from __future__ import annotations
 
 import os
-from typing import Any, BinaryIO, List, Optional
+from typing import BinaryIO, List, Optional
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter, TextSplitter
 from langchain_community.document_loaders.blob_loaders import Blob
@@ -77,30 +77,15 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
     def invoke(
         self, input: BinaryIO, config: Optional[RunnableConfig] = None
     ) -> List[str]:
-        return self.batch([input], config)
-
-    def batch(
-        self,
-        inputs: List[BinaryIO],
-        config: RunnableConfig | List[RunnableConfig] | None = None,
-        *,
-        return_exceptions: bool = False,
-        **kwargs: Any | None,
-    ) -> List:
-        """Ingest a batch of files into the vectorstore."""
-        ids = []
-        for data in inputs:
-            blob = _convert_ingestion_input_to_blob(data)
-            ids.extend(
-                ingest_blob(
-                    blob,
-                    MIMETYPE_BASED_PARSER,
-                    self.text_splitter,
-                    self.vectorstore,
-                    self.namespace,
-                )
-            )
-        return ids
+        blob = _convert_ingestion_input_to_blob(input)
+        out = ingest_blob(
+            blob,
+            MIMETYPE_BASED_PARSER,
+            self.text_splitter,
+            self.vectorstore,
+            self.namespace,
+        )
+        return out
 
 
 index_schema = {
