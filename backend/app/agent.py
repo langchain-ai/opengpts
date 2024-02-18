@@ -37,6 +37,7 @@ class AgentType(str, Enum):
     AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
     CLAUDE2 = "Claude 2"
     BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
+    GPT_4 = "GPT 4 Turbo"
     GEMINI = "GEMINI"
 
 
