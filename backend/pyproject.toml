@@ -38,6 +38,7 @@ pdfminer-six = "^20231228"
 langchain-robocorp = "^0.0.3"
 fireworks-ai = "^0.11.2"
 anthropic = "^0.13.0"
+gigachat = "^0.1.16"
 httpx = { version = "0.25.2", extras = ["socks"] }
 
 [tool.poetry.group.dev.dependencies]
