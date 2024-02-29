@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import os
 import httpx
+import logging
+
 from typing import Any, BinaryIO, List, Optional
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter, TextSplitter
@@ -22,9 +24,13 @@ from langchain_core.runnables import (
 )
 from langchain_core.vectorstores import VectorStore
 from langchain_openai import OpenAIEmbeddings
+from urllib.parse import urlparse
+
 
 from app.ingest import ingest_blob
 from app.parsing import MIMETYPE_BASED_PARSER
+
+logger = logging.getLogger(__name__)
 
 
 def _guess_mimetype(file_bytes: bytes) -> str:
@@ -110,7 +116,12 @@ index_schema = {
 
 proxy_url = os.getenv("PROXY_URL")
 if proxy_url is not None and proxy_url != "":
-    http_client = httpx.Client(proxies=proxy_url)
+    parsed_url = urlparse(proxy_url)
+    if parsed_url.scheme and parsed_url.netloc:
+        http_client = httpx.Client(proxies=proxy_url)
+    else:
+        http_client = None
+        logger.warn("Invalid proxy URL provided. Proceeding without proxy.")
 else:
     http_client = None
 
