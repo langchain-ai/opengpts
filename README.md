@@ -38,9 +38,12 @@ Because this is open source, if you do not like those architectures or want to m
 
 **Install requirements**
 
+The backend service uses [poetry](https://python-poetry.org/docs/#installation) to manage dependencies.
+It assumes libmagic to be [installed](https://github.com/ahupp/python-magic?tab=readme-ov-file#installation) in your host system.
+
 ```shell
 cd backend
-pip install -r requirements.txt
+poetry install
 ```
 
 **Set up persistence layer**
