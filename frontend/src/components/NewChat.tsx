@@ -4,11 +4,12 @@ import TypingBox from "./TypingBox";
 import { Config } from "./Config";
 import { ConfigListProps } from "../hooks/useConfigList";
 import { cn } from "../utils/cn";
+import {MessageWithFiles} from "../utils/formTypes.ts";
 
 interface NewChatProps extends ConfigListProps {
   configSchema: Schemas["configSchema"];
   configDefaults: Schemas["configDefaults"];
-  startChat: (message: string) => Promise<void>;
+  startChat: (message: MessageWithFiles) => Promise<void>;
 }
 
 export function NewChat(props: NewChatProps) {

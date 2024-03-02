@@ -2,17 +2,39 @@ import {
   PaperAirplaneIcon,
   ChatBubbleLeftIcon,
   XCircleIcon,
+  DocumentPlusIcon,
 } from "@heroicons/react/20/solid";
 import { cn } from "../utils/cn";
-import { useState } from "react";
+import {useCallback, useState} from "react";
+import {useDropzone} from "react-dropzone";
+import {MessageWithFiles} from "../utils/formTypes.ts";
 
 export default function TypingBox(props: {
-  onSubmit: (message: string) => Promise<void>;
+  onSubmit: (data: MessageWithFiles) => Promise<void>;
   onInterrupt?: () => void;
   inflight?: boolean;
 }) {
   const [inflight, setInflight] = useState(false);
   const isInflight = props.inflight || inflight;
+  const [files, setFiles] = useState<File[]>([])
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    setFiles(prevFiles => [...prevFiles, ...acceptedFiles]);
+  }, []);
+
+  const {open} = useDropzone({
+    onDrop,
+    // Disable click and keydown behavior
+    noClick: true,
+    noKeyboard: true
+  });
+
+  const FilesToShow = files.map(file => (
+    <li key={file.name}>
+      {file.name} - {file.size} bytes
+    </li>
+  ));
+
   return (
     <form
       className="mt-2 flex rounded-md shadow-sm"
@@ -23,11 +45,12 @@ export default function TypingBox(props: {
         const message = form.message.value;
         if (!message) return;
         setInflight(true);
-        await props.onSubmit(message);
+        await props.onSubmit({ message, files });
         setInflight(false);
         form.message.value = "";
+        setFiles([]);
       }}
-    >
+    >{files.length > 0 ? <ul>{FilesToShow}</ul> : null}
       <div
         className={cn(
           "relative flex flex-grow items-stretch focus-within:z-10",
@@ -50,6 +73,13 @@ export default function TypingBox(props: {
           placeholder="Send a message"
           readOnly={isInflight}
         />
+        <div className="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-3">
+          <DocumentPlusIcon
+              className="h-5 w-5 text-gray-400"
+              aria-hidden="true"
+              onClick={open}
+          />
+        </div>
       </div>
       <button
         type="submit"

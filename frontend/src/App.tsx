@@ -9,6 +9,7 @@ import { useSchemas } from "./hooks/useSchemas";
 import { useStreamState } from "./hooks/useStreamState";
 import { useConfigList } from "./hooks/useConfigList";
 import { Config } from "./components/Config";
+import {MessageWithFiles} from "./utils/formTypes.ts";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -18,7 +19,7 @@ function App() {
   const { startStream, stopStream, stream } = useStreamState();
 
   const startTurn = useCallback(
-    async (message?: string, chat: ChatType | null = currentChat) => {
+    async (message?: MessageWithFiles, chat: ChatType | null = currentChat) => {
       if (!chat) return;
       const config = configs?.find(
         (c) => c.assistant_id === chat.assistant_id
@@ -28,7 +29,7 @@ function App() {
         message
           ? [
               {
-                content: message,
+                content: message.message,
                 additional_kwargs: {},
                 type: "human",
                 example: false,
@@ -43,9 +44,9 @@ function App() {
   );
 
   const startChat = useCallback(
-    async (message: string) => {
+    async (message: MessageWithFiles) => {
       if (!currentConfig) return;
-      const chat = await createChat(message, currentConfig.assistant_id);
+      const chat = await createChat(message.message, currentConfig.assistant_id);
       return startTurn(message, chat);
     },
     [createChat, startTurn, currentConfig]

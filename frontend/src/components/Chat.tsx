@@ -5,10 +5,11 @@ import { useChatMessages } from "../hooks/useChatMessages";
 import TypingBox from "./TypingBox";
 import { Message } from "./Message";
 import { ArrowDownCircleIcon } from "@heroicons/react/24/outline";
+import {MessageWithFiles} from "../utils/formTypes.ts";
 
 interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
   chat: ChatType;
-  startStream: (message?: string) => Promise<void>;
+  startStream: (message?: MessageWithFiles) => Promise<void>;
 }
 
 function usePrevious<T>(value: T): T | undefined {
