@@ -19,6 +19,7 @@ from app.llms import (
     get_google_llm,
     get_mixtral_fireworks,
     get_openai_llm,
+    get_together_mixtral,
 )
 from app.retrieval import get_retrieval_executor
 from app.tools import (
@@ -38,9 +39,10 @@ class AgentType(str, Enum):
     CLAUDE2 = "Claude 2"
     BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
     GEMINI = "GEMINI"
+    TOGETHER = "Together"
 
 
-DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
+DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant that can access external functions. The responses from these function calls will be appended to this dialogue. Please provide responses based on the information from these function calls."
 
 CHECKPOINTER = RedisCheckpoint(at=CheckpointAt.END_OF_STEP)
 
@@ -79,6 +81,11 @@ def get_agent_executor(
     elif agent == AgentType.GEMINI:
         llm = get_google_llm()
         return get_google_agent_executor(
+            tools, llm, system_message, interrupt_before_action, CHECKPOINTER
+        )
+    elif agent == AgentType.TOGETHER:
+        llm = get_together_mixtral()
+        return get_openai_agent_executor(
             tools, llm, system_message, interrupt_before_action, CHECKPOINTER
         )
     else:
@@ -145,6 +152,7 @@ class LLMType(str, Enum):
     BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
     GEMINI = "GEMINI"
     MIXTRAL = "Mixtral"
+    TOGETHER = "Together"
 
 
 def get_chatbot(
@@ -165,6 +173,8 @@ def get_chatbot(
         llm = get_google_llm()
     elif llm_type == LLMType.MIXTRAL:
         llm = get_mixtral_fireworks()
+    elif llm_type == LLMType.TOGETHER:
+        llm = get_together_mixtral()
     else:
         raise ValueError("Unexpected llm type")
     return get_chatbot_executor(llm, system_message, CHECKPOINTER)
@@ -238,6 +248,8 @@ class ConfigurableRetrieval(RunnableBinding):
             llm = get_google_llm()
         elif llm_type == LLMType.MIXTRAL:
             llm = get_mixtral_fireworks()
+        elif llm_type == LLMType.TOGETHER:
+            llm = get_together_mixtral()
         else:
             raise ValueError("Unexpected llm type")
         chatbot = get_retrieval_executor(llm, retriever, system_message, CHECKPOINTER)

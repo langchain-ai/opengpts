@@ -50,6 +50,17 @@ def get_openai_llm(gpt_4: bool = False, azure: bool = False):
     return llm
 
 
+@lru_cache(maxsize=1)
+def get_together_mixtral():
+    llm = ChatOpenAI(
+        base_url = "https://api.together.xyz/v1",
+        api_key=os.environ['TOGETHER_API_KEY'],
+        model="mistralai/Mixtral-8x7B-Instruct-v0.1",
+        temperature=0,
+    )
+    return llm
+
+
 @lru_cache(maxsize=2)
 def get_anthropic_llm(bedrock: bool = False):
     if bedrock:
