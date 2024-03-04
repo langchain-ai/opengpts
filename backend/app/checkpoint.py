@@ -1,5 +1,5 @@
 import pickle
-from typing import Any
+from typing import Any, Optional
 
 from langchain.pydantic_v1 import Field
 from langchain.schema.runnable import RunnableConfig
@@ -45,10 +45,10 @@ class RedisCheckpoint(BaseCheckpointSaver):
             ),
             ConfigurableFieldSpec(
                 id="thread_id",
-                annotation=str,
+                annotation=Optional[str],
                 name="Thread ID",
                 description=None,
-                default="",
+                default=None,
                 is_shared=True,
             ),
         ]

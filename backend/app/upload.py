@@ -64,15 +64,18 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
     
     The assistant ID is used as the namespace, and is filtered on at query time.
     """
+    thread_id: Optional[str]
 
     class Config:
         arbitrary_types_allowed = True
 
     @property
     def namespace(self) -> str:
-        if self.assistant_id is None:
-            raise ValueError("assistant_id must be provided")
-        return self.assistant_id
+        if self.thread_id is not None:
+            return self.thread_id
+        if self.assistant_id is not None:
+            return self.assistant_id
+        raise ValueError("thread_id or assistant_id must be provided")
 
     def invoke(
         self, input: BinaryIO, config: Optional[RunnableConfig] = None
@@ -122,5 +125,10 @@ ingest_runnable = IngestRunnable(
         id="assistant_id",
         annotation=str,
         name="Assistant ID",
+    ),
+    thread_id=ConfigurableField(
+        id="thread_id",
+        annotation=str,
+        name="Thread ID",
     ),
 )
