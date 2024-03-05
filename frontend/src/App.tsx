@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Chat } from "./components/Chat";
 import { ChatList } from "./components/ChatList";
@@ -17,6 +17,13 @@ function App() {
   const { chats, currentChat, createChat, enterChat } = useChatList();
   const { configs, currentConfig, saveConfig, enterConfig } = useConfigList();
   const { startStream, stopStream, stream } = useStreamState();
+  const [ isRetrievalToolActive, setIsRetrievalToolActive ] = useState(false);
+
+  useEffect(() => {
+      //TODO: only works with assistant creation.
+      const tools = (currentConfig?.config?.configurable?.["type==agent/tools"] as string[]) ?? [];
+      setIsRetrievalToolActive(tools.includes("Retrieval"));
+  }, [currentConfig]);
 
   const startTurn = useCallback(
     async (message?: MessageWithFiles, chat: ChatType | null = currentChat) => {
@@ -98,6 +105,7 @@ function App() {
       startStream={startTurn}
       stopStream={stopStream}
       stream={stream}
+      isRetrievalActive={isRetrievalToolActive}
     />
   ) : currentConfig ? (
     <NewChat
@@ -108,6 +116,7 @@ function App() {
       currentConfig={currentConfig}
       saveConfig={saveConfig}
       enterConfig={selectConfig}
+      isRetrievalActive={isRetrievalToolActive}
     />
   ) : (
     <Config

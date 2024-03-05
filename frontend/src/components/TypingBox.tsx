@@ -50,6 +50,7 @@ export default function TypingBox(props: {
   onSubmit: (data: MessageWithFiles) => Promise<void>;
   onInterrupt?: () => void;
   inflight?: boolean;
+  isRetrievalToolActive: boolean;
 }) {
   const [inflight, setInflight] = useState(false);
   const isInflight = props.inflight || inflight;
@@ -90,7 +91,10 @@ export default function TypingBox(props: {
 
   return (
       <div className="flex flex-col">{files.length > 0 ? <div
-      className="self-end w-fit grid grid-cols-[auto,1fr,auto] gap-2 p-2 bg-white rounded-md text-sm text-gray-900 shadow-sm border border-gray-300"
+      className={cn(
+          "self-end w-fit grid grid-cols-[auto,1fr,auto] gap-2 p-2 bg-white rounded-md text-sm text-gray-900 shadow-sm border border-gray-300",
+          isInflight && "opacity-50 cursor-not-allowed")
+      }
       >{FilesToShow}</div> : null}
     <form
       className="mt-2 flex rounded-md shadow-sm"
@@ -128,13 +132,13 @@ export default function TypingBox(props: {
           placeholder="Send a message"
           readOnly={isInflight}
         />
-        <div className="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-3">
+        {props.isRetrievalToolActive && <div className="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-3">
           <DocumentPlusIcon
               className="h-5 w-5 text-gray-400"
               aria-hidden="true"
               onClick={open}
           />
-        </div>
+        </div>}
       </div>
       <button
         type="submit"
