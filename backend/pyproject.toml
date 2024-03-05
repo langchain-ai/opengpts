@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "app"}]
 
 [tool.poetry.dependencies]
-python = "^3.9.0"
+python = "^3.9.0, <3.12"
 sse-starlette = "^1.6.5"
 tomli-w = "^1.0.0"
 uvicorn = "^0.23.2"
@@ -39,6 +39,7 @@ langchain-robocorp = "^0.0.3"
 fireworks-ai = "^0.11.2"
 anthropic = "^0.13.0"
 httpx = { version = "0.25.2", extras = ["socks"] }
+unstructured = {extras = ["all-docs"], version = "^0.12.5"}
 
 [tool.poetry.group.dev.dependencies]
 uvicorn = "^0.23.2"
