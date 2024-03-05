@@ -1,13 +1,50 @@
 import {
-  PaperAirplaneIcon,
-  ChatBubbleLeftIcon,
-  XCircleIcon,
-  DocumentPlusIcon,
+    PaperAirplaneIcon,
+    ChatBubbleLeftIcon,
+    XCircleIcon,
+    DocumentPlusIcon, DocumentTextIcon, DocumentIcon,
+
 } from "@heroicons/react/20/solid";
 import { cn } from "../utils/cn";
-import {useCallback, useState} from "react";
+import {Fragment, useCallback, useState} from "react";
 import {useDropzone} from "react-dropzone";
 import {MessageWithFiles} from "../utils/formTypes.ts";
+import {DROPZONE_CONFIG} from "../constants.ts";
+
+function getFileTypeIcon(fileType: string) {
+  switch (fileType) {
+    case 'text/plain':
+    case 'text/csv':
+    case 'text/html':
+      return <DocumentTextIcon className="h-5 w-5 text-gray-500" />;
+    case 'application/pdf':
+      return <DocumentIcon className="h-5 w-5 text-red-500" />;
+    case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+    case 'application/msword':
+      return <DocumentIcon className="h-5 w-5 text-blue-500" />;
+    default:
+      return <DocumentIcon className="h-5 w-5 text-gray-500" />;
+  }
+}
+
+
+function FileIcon(props: { fileType: string }) {
+  return (
+    <div>
+      {getFileTypeIcon(props.fileType)}
+    </div>
+  );
+}
+
+function convertBytesToReadableSize(bytes: number) {
+  const units = ['bytes', 'KB', 'MB', 'GB', 'TB'];
+  let i = 0;
+  while (bytes >= 1024 && i < units.length - 1) {
+    bytes /= 1024;
+    i++;
+  }
+  return `${bytes.toFixed(1)} ${units[i]}`;
+}
 
 export default function TypingBox(props: {
   onSubmit: (data: MessageWithFiles) => Promise<void>;
@@ -23,19 +60,38 @@ export default function TypingBox(props: {
   }, []);
 
   const {open} = useDropzone({
-    onDrop,
-    // Disable click and keydown behavior
-    noClick: true,
-    noKeyboard: true
+      ...DROPZONE_CONFIG,
+        onDrop,
+        // Disable click and keydown behavior
+        noClick: true,
+        noKeyboard: true
   });
 
-  const FilesToShow = files.map(file => (
-    <li key={file.name}>
-      {file.name} - {file.size} bytes
-    </li>
-  ));
+  const FilesToShow = files.map(file => {
+  const readableSize = convertBytesToReadableSize(file.size); // This would be a new utility function.
+  return (
+    <Fragment key={file.name}>
+      <div className="flex items-center">
+        <FileIcon fileType={file.type} /> {/* New component to render file type icons */}
+        <span className="ml-2">{file.name}</span>
+      </div>
+      <span className="text-sm text-gray-600">{readableSize}</span>
+      <span
+        className="justify-center not-prose ml-2  inline-flex items-center rounded-full text-xs font-medium cursor-pointer bg-gray-50 text-gray-600 relative top-[1px]"
+        onClick={() =>
+          setFiles((files) => files.filter((f) => f !== file))
+        }
+      >
+        <XCircleIcon className="h-4 w-4" />
+      </span>
+    </Fragment>
+  );
+});
 
   return (
+      <div className="flex flex-col">{files.length > 0 ? <div
+      className="self-end w-fit grid grid-cols-[auto,1fr,auto] gap-2 p-2 bg-white rounded-md text-sm text-gray-900 shadow-sm border border-gray-300"
+      >{FilesToShow}</div> : null}
     <form
       className="mt-2 flex rounded-md shadow-sm"
       onSubmit={async (e) => {
@@ -50,8 +106,7 @@ export default function TypingBox(props: {
         form.message.value = "";
         setFiles([]);
       }}
-    >{files.length > 0 ? <ul>{FilesToShow}</ul> : null}
-      <div
+    > <div
         className={cn(
           "relative flex flex-grow items-stretch focus-within:z-10",
           isInflight && "opacity-50 cursor-not-allowed"
@@ -110,6 +165,6 @@ export default function TypingBox(props: {
         )}
         {isInflight ? (props.onInterrupt ? "Cancel" : "Sending...") : "Send"}
       </button>
-    </form>
+    </form></div>
   );
 }

@@ -9,7 +9,7 @@ import { SchemaField, Schemas } from "../hooks/useSchemas";
 import { cn } from "../utils/cn";
 import { FileUploadDropzone } from "./FileUpload";
 import { Switch } from "@headlessui/react";
-import { TYPES } from "../constants";
+import {DROPZONE_CONFIG, TYPES} from "../constants";
 
 function Types(props: {
   field: SchemaField;
@@ -326,17 +326,7 @@ export function Config(props: {
   const typeValue = values?.configurable?.[typeKey];
   const typeSpec = typeValue ? TYPES[typeValue as keyof typeof TYPES] : null;
   const [files, setFiles] = useState<File[]>([]);
-  const dropzone = useDropzone({
-    multiple: true,
-    accept: {
-      "text/*": [".txt", ".csv", ".htm", ".html"],
-      "application/pdf": [".pdf"],
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        [".docx"],
-      "application/msword": [".doc"],
-    },
-    maxSize: 10_000_000, // Up to 10 MB file size.
-  });
+  const dropzone = useDropzone(DROPZONE_CONFIG);
   const [isPublic, setPublic] = useState(props.config?.public ?? false);
   useEffect(() => {
     setValues(props.config?.config ?? props.configDefaults);
