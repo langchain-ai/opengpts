@@ -113,9 +113,9 @@ class ConfigurableAgent(RunnableBinding):
         _tools = []
         for _tool in tools:
             if _tool == AvailableTools.RETRIEVAL:
-                if assistant_id is None:
+                if assistant_id is None or thread_id is None:
                     raise ValueError(
-                        "assistant_id must be provided if Retrieval tool is used"
+                        "Both assistant_id and thread_id must be provided if Retrieval tool is used"
                     )
                 _tools.append(
                     get_retrieval_tool(assistant_id, thread_id, retrieval_description)
