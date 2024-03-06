@@ -37,7 +37,8 @@ class AgentType(str, Enum):
     AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
     CLAUDE2 = "Claude 2"
     BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
-    GEMINI = "GEMINI"
+    GEMINI = "GEMINI (VertexAI)"
+    GEMINI_GENAI = "GEMINI (GenAI)"
 
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
@@ -78,6 +79,11 @@ def get_agent_executor(
         )
     elif agent == AgentType.GEMINI:
         llm = get_google_llm()
+        return get_google_agent_executor(
+            tools, llm, system_message, interrupt_before_action, CHECKPOINTER
+        )
+    elif agent == AgentType.GEMINI_GENAI:
+        llm = get_google_llm(genai=True)
         return get_google_agent_executor(
             tools, llm, system_message, interrupt_before_action, CHECKPOINTER
         )
@@ -143,7 +149,8 @@ class LLMType(str, Enum):
     AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
     CLAUDE2 = "Claude 2"
     BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
-    GEMINI = "GEMINI"
+    GEMINI = "GEMINI (VertexAI)"
+    GEMINI_GENAI = "GEMINI (GenAI)"
     MIXTRAL = "Mixtral"
 
 
@@ -163,6 +170,8 @@ def get_chatbot(
         llm = get_anthropic_llm(bedrock=True)
     elif llm_type == LLMType.GEMINI:
         llm = get_google_llm()
+    elif llm_type == LLMType.GEMINI_GENAI:
+        llm = get_google_llm(genai=True)
     elif llm_type == LLMType.MIXTRAL:
         llm = get_mixtral_fireworks()
     else:
@@ -236,6 +245,8 @@ class ConfigurableRetrieval(RunnableBinding):
             llm = get_anthropic_llm(bedrock=True)
         elif llm_type == LLMType.GEMINI:
             llm = get_google_llm()
+        elif llm_type == LLMType.GEMINI_GENAI:
+            llm = get_google_llm(genai=True)
         elif llm_type == LLMType.MIXTRAL:
             llm = get_mixtral_fireworks()
         else:

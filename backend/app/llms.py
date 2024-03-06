@@ -6,6 +6,7 @@ import httpx
 import boto3
 from langchain_community.chat_models import BedrockChat, ChatAnthropic, ChatFireworks
 from langchain_google_vertexai import ChatVertexAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
 logger = logging.getLogger(__name__)
@@ -66,7 +67,11 @@ def get_anthropic_llm(bedrock: bool = False):
 
 
 @lru_cache(maxsize=1)
-def get_google_llm():
+def get_google_llm(genai: bool = False):
+    if genai:
+        return ChatGoogleGenerativeAI(
+            model="gemini-pro", convert_system_message_to_human=True
+        )
     return ChatVertexAI(
         model_name="gemini-pro", convert_system_message_to_human=True, streaming=True
     )
