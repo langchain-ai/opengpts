@@ -10,7 +10,7 @@ import {MessageWithFiles} from "../utils/formTypes.ts";
 interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
   chat: ChatType;
   startStream: (message?: MessageWithFiles) => Promise<void>;
-  isRetrievalActive: boolean;
+  isDocumentRetrievalActive: boolean;
 }
 
 function usePrevious<T>(value: T): T | undefined {
@@ -77,7 +77,7 @@ export function Chat(props: ChatProps) {
             props.stream?.status === "inflight" ? props.stopStream : undefined
           }
           inflight={props.stream?.status === "inflight"}
-          isRetrievalToolActive={props.isRetrievalActive}
+          isDocumentRetrievalActive={props.isDocumentRetrievalActive}
         />
       </div>
     </div>

@@ -50,14 +50,21 @@ export default function TypingBox(props: {
   onSubmit: (data: MessageWithFiles) => Promise<void>;
   onInterrupt?: () => void;
   inflight?: boolean;
-  isRetrievalToolActive: boolean;
+  isDocumentRetrievalActive: boolean;
 }) {
   const [inflight, setInflight] = useState(false);
   const isInflight = props.inflight || inflight;
   const [files, setFiles] = useState<File[]>([])
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    setFiles(prevFiles => [...prevFiles, ...acceptedFiles]);
+    setFiles(prevFiles => {
+        const newFiles = acceptedFiles.filter(acceptedFile =>
+            !prevFiles.some(prevFile =>
+                prevFile.name === acceptedFile.name && prevFile.size === acceptedFile.size
+            )
+        );
+        return [...prevFiles, ...newFiles]
+    });
   }, []);
 
   const {open} = useDropzone({
@@ -132,7 +139,7 @@ export default function TypingBox(props: {
           placeholder="Send a message"
           readOnly={isInflight}
         />
-        {props.isRetrievalToolActive && <div className="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-3">
+        {props.isDocumentRetrievalActive && <div className="cursor-pointer absolute m-1 p-3 inset-y-0 right-0 flex items-center pr-3 hover:bg-gray-50">
           <DocumentPlusIcon
               className="h-5 w-5 text-gray-400"
               aria-hidden="true"

@@ -10,6 +10,7 @@ import { useStreamState } from "./hooks/useStreamState";
 import { useConfigList } from "./hooks/useConfigList";
 import { Config } from "./components/Config";
 import {MessageWithFiles} from "./utils/formTypes.ts";
+import { TYPE_NAME } from "./constants.ts";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -17,13 +18,29 @@ function App() {
   const { chats, currentChat, createChat, enterChat } = useChatList();
   const { configs, currentConfig, saveConfig, enterConfig } = useConfigList();
   const { startStream, stopStream, stream } = useStreamState();
-  const [ isRetrievalToolActive, setIsRetrievalToolActive ] = useState(false);
+  const [ isDocumentRetrievalActive, setIsDocumentRetrievalActive ] = useState(false);
 
   useEffect(() => {
-      //TODO: only works with assistant creation.
-      const tools = (currentConfig?.config?.configurable?.["type==agent/tools"] as string[]) ?? [];
-      setIsRetrievalToolActive(tools.includes("Retrieval"));
-  }, [currentConfig]);
+      let configurable = null;
+      if (currentConfig) {
+        configurable = currentConfig?.config?.configurable;
+      }
+      if (currentChat && configs) {
+        const conf = configs.find(c => c.assistant_id === currentChat.assistant_id)
+        configurable = conf?.config?.configurable;
+      }
+      const agent_type = configurable?.["type"] as TYPE_NAME | null;
+      if (agent_type === null || agent_type === 'chatbot') {
+          setIsDocumentRetrievalActive(false);
+          return;
+      }
+      if (agent_type === 'chat_retrieval') {
+          setIsDocumentRetrievalActive(true);
+          return;
+      }
+      const tools = configurable?.["type==agent/tools"] as string[] ?? [];
+      setIsDocumentRetrievalActive(tools.includes("Retrieval"));
+  }, [currentConfig, currentChat, configs]);
 
   const startTurn = useCallback(
     async (message?: MessageWithFiles, chat: ChatType | null = currentChat) => {
@@ -105,7 +122,7 @@ function App() {
       startStream={startTurn}
       stopStream={stopStream}
       stream={stream}
-      isRetrievalActive={isRetrievalToolActive}
+      isDocumentRetrievalActive={isDocumentRetrievalActive}
     />
   ) : currentConfig ? (
     <NewChat
@@ -116,7 +133,7 @@ function App() {
       currentConfig={currentConfig}
       saveConfig={saveConfig}
       enterConfig={selectConfig}
-      isRetrievalActive={isRetrievalToolActive}
+      isDocumentRetrievalActive={isDocumentRetrievalActive}
     />
   ) : (
     <Config
