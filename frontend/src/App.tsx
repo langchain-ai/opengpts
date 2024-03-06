@@ -33,10 +33,7 @@ function App() {
           }, new FormData());
           formData.append(
             "config",
-            JSON.stringify({ configurable: {
-                assistant_id: chat.assistant_id,
-                thread_id: chat.thread_id
-            }})
+            JSON.stringify({ configurable: { thread_id: chat.thread_id }})
           );
           await fetch(`/ingest`, {
                   method: "POST",
