@@ -25,6 +25,24 @@ function App() {
         (c) => c.assistant_id === chat.assistant_id
       )?.config;
       if (!config) return;
+      const files = message?.files || [];
+      if (files.length > 0) {
+          const formData = files.reduce((formData, file) => {
+            formData.append("files", file);
+            return formData;
+          }, new FormData());
+          formData.append(
+            "config",
+            JSON.stringify({ configurable: {
+                assistant_id: chat.assistant_id,
+                thread_id: chat.thread_id
+            }})
+          );
+          await fetch(`/ingest`, {
+                  method: "POST",
+                  body: formData,
+          });
+      }
       await startStream(
         message
           ? [
