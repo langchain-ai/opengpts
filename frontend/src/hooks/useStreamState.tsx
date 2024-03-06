@@ -14,7 +14,7 @@ export interface StreamStateProps {
   startStream: (
     input: Message[] | null,
     assistant_id: string,
-    thread_id: string
+    thread_id: string,
   ) => Promise<void>;
   stopStream?: (clear?: boolean) => void;
 }
@@ -27,7 +27,7 @@ export function useStreamState(): StreamStateProps {
     async (
       input: Message[] | null,
       assistant_id: string,
-      thread_id: string
+      thread_id: string,
     ) => {
       const controller = new AbortController();
       setController(controller);
@@ -84,7 +84,7 @@ export function useStreamState(): StreamStateProps {
         },
       });
     },
-    []
+    [],
   );
 
   const stopStream = useCallback(
@@ -105,7 +105,7 @@ export function useStreamState(): StreamStateProps {
         }));
       }
     },
-    [controller]
+    [controller],
   );
 
   return {

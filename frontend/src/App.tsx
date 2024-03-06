@@ -21,7 +21,7 @@ function App() {
     async (message?: string, chat: ChatType | null = currentChat) => {
       if (!chat) return;
       const config = configs?.find(
-        (c) => c.assistant_id === chat.assistant_id
+        (c) => c.assistant_id === chat.assistant_id,
       )?.config;
       if (!config) return;
       await startStream(
@@ -36,10 +36,10 @@ function App() {
             ]
           : null,
         chat.assistant_id,
-        chat.thread_id
+        chat.thread_id,
       );
     },
-    [currentChat, startStream, configs]
+    [currentChat, startStream, configs],
   );
 
   const startChat = useCallback(
@@ -48,7 +48,7 @@ function App() {
       const chat = await createChat(message, currentConfig.assistant_id);
       return startTurn(message, chat);
     },
-    [createChat, startTurn, currentConfig]
+    [createChat, startTurn, currentConfig],
   );
 
   const selectChat = useCallback(
@@ -65,7 +65,7 @@ function App() {
         setSidebarOpen(false);
       }
     },
-    [enterChat, stopStream, sidebarOpen, currentChat, enterConfig, configs]
+    [enterChat, stopStream, sidebarOpen, currentChat, enterConfig, configs],
   );
 
   const selectConfig = useCallback(
@@ -73,7 +73,7 @@ function App() {
       enterConfig(id);
       enterChat(null);
     },
-    [enterConfig, enterChat]
+    [enterConfig, enterChat],
   );
 
   const content = currentChat ? (
@@ -104,7 +104,7 @@ function App() {
   );
 
   const currentChatConfig = configs?.find(
-    (c) => c.assistant_id === currentChat?.assistant_id
+    (c) => c.assistant_id === currentChat?.assistant_id,
   );
 
   return (
@@ -129,7 +129,7 @@ function App() {
           chats={useMemo(() => {
             if (configs === null || chats === null) return null;
             return chats.filter((c) =>
-              configs.some((config) => config.assistant_id === c.assistant_id)
+              configs.some((config) => config.assistant_id === c.assistant_id),
             );
           }, [chats, configs])}
           currentChat={currentChat}

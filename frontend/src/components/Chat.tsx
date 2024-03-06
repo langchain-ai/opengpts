@@ -23,7 +23,7 @@ export function Chat(props: ChatProps) {
   const { messages, resumeable } = useChatMessages(
     props.chat.thread_id,
     props.stream,
-    props.stopStream
+    props.stopStream,
   );
   const prevMessages = usePrevious(messages);
   useEffect(() => {

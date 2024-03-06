@@ -9,7 +9,7 @@ async function getMessages(threadId: string) {
       headers: {
         Accept: "application/json",
       },
-    }
+    },
   ).then((r) => r.json());
   return { messages, resumeable };
 }
@@ -17,7 +17,7 @@ async function getMessages(threadId: string) {
 export function useChatMessages(
   threadId: string | null,
   stream: StreamState | null,
-  stopStream?: (clear?: boolean) => void
+  stopStream?: (clear?: boolean) => void,
 ): { messages: Message[] | null; resumeable: boolean } {
   const [messages, setMessages] = useState<Message[] | null>(null);
   const [resumeable, setResumeable] = useState(false);
@@ -63,6 +63,6 @@ export function useChatMessages(
         : stream?.messages ?? messages,
       resumeable,
     }),
-    [messages, stream?.merge, stream?.messages, resumeable]
+    [messages, stream?.merge, stream?.messages, resumeable],
   );
 }

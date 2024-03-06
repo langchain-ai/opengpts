@@ -19,7 +19,7 @@ export function ChatList(props: {
           props.currentChat === null && props.currentConfig !== null
             ? "bg-gray-50 text-indigo-600"
             : "text-gray-700 hover:text-indigo-600 hover:bg-gray-50",
-          "group flex gap-x-3 rounded-md -mx-2 p-2 leading-6 font-semibold cursor-pointer"
+          "group flex gap-x-3 rounded-md -mx-2 p-2 leading-6 font-semibold cursor-pointer",
         )}
       >
         <span
@@ -27,7 +27,7 @@ export function ChatList(props: {
             props.currentChat === null && props.currentConfig !== null
               ? "text-indigo-600 border-indigo-600"
               : "text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600",
-            "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white"
+            "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white",
           )}
         >
           <PlusIcon className="h-4 w-4" />
@@ -41,7 +41,7 @@ export function ChatList(props: {
           props.currentConfig === null
             ? "bg-gray-50 text-indigo-600"
             : "text-gray-700 hover:text-indigo-600 hover:bg-gray-50",
-          "mt-1 group flex gap-x-3 rounded-md -mx-2 p-2 leading-6 font-semibold cursor-pointer"
+          "mt-1 group flex gap-x-3 rounded-md -mx-2 p-2 leading-6 font-semibold cursor-pointer",
         )}
       >
         <span
@@ -49,7 +49,7 @@ export function ChatList(props: {
             props.currentConfig === null
               ? "text-indigo-600 border-indigo-600"
               : "text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600",
-            "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white"
+            "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white",
           )}
         >
           <PlusIcon className="h-4 w-4" />
@@ -69,7 +69,7 @@ export function ChatList(props: {
                 chat === props.currentChat
                   ? "bg-gray-50 text-indigo-600"
                   : "text-gray-700 hover:text-indigo-600 hover:bg-gray-50",
-                "group flex gap-x-3 rounded-md p-2 leading-6 cursor-pointer"
+                "group flex gap-x-3 rounded-md p-2 leading-6 cursor-pointer",
               )}
             >
               <span
@@ -77,7 +77,7 @@ export function ChatList(props: {
                   chat === props.currentChat
                     ? "text-indigo-600 border-indigo-600"
                     : "text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600",
-                  "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white"
+                  "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white",
                 )}
               >
                 {chat.name?.[0] ?? " "}
