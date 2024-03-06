@@ -37,7 +37,7 @@ class RedisCheckpoint(BaseCheckpointSaver):
         return [
             ConfigurableFieldSpec(
                 id="user_id",
-                annotation=str,
+                annotation=Optional[str],
                 name="User ID",
                 description=None,
                 default=None,
