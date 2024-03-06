@@ -38,14 +38,14 @@ export interface ChatListProps {
   createChat: (
     name: string,
     assistant_id: string,
-    thread_id?: string
+    thread_id?: string,
   ) => Promise<Chat>;
   enterChat: (id: string | null) => void;
 }
 
 function chatsReducer(
   state: Chat[] | null,
-  action: Chat | Chat[]
+  action: Chat | Chat[],
 ): Chat[] | null {
   state = state ?? [];
   if (!Array.isArray(action)) {
@@ -79,7 +79,7 @@ export function useChatList(): ChatListProps {
     async (
       name: string,
       assistant_id: string,
-      thread_id: string = uuidv4()
+      thread_id: string = uuidv4(),
     ) => {
       const saved = await fetch(`/threads/${thread_id}`, {
         method: "PUT",
@@ -93,7 +93,7 @@ export function useChatList(): ChatListProps {
       setCurrent(saved.thread_id);
       return saved;
     },
-    []
+    [],
   );
 
   const enterChat = useCallback((id: string | null) => {
