@@ -18,7 +18,7 @@ export function NewChat(props: NewChatProps) {
     <div
       className={cn(
         "flex flex-col items-stretch",
-        props.currentConfig ? "pb-[76px]" : "pb-6"
+        props.currentConfig ? "pb-[76px]" : "pb-6",
       )}
     >
       <div className="flex-1 flex flex-col md:flex-row lg:items-stretch self-stretch">

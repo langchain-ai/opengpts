@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite --host",
     "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "lint": "prettier -c src && tsc --noEmit && eslint src --ext ts,tsx --report-unused-disable-directives",
+    "preview": "vite preview",
+    "format": "prettier -w src"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.17",
@@ -40,6 +41,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
     "postcss": "^8.4.31",
+    "prettier": "^3.2.5",
     "tailwindcss": "^3.3.5",
     "typescript": "^5.0.2",
     "vite": "^4.4.5"
