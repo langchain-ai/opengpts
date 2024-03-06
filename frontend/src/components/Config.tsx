@@ -9,7 +9,7 @@ import { SchemaField, Schemas } from "../hooks/useSchemas";
 import { cn } from "../utils/cn";
 import { FileUploadDropzone } from "./FileUpload";
 import { Switch } from "@headlessui/react";
-import {DROPZONE_CONFIG, TYPES} from "../constants";
+import { DROPZONE_CONFIG, TYPES } from "../constants";
 
 function Types(props: {
   field: SchemaField;

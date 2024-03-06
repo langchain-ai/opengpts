@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useMemo, useState} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Chat } from "./components/Chat";
 import { ChatList } from "./components/ChatList";
@@ -9,7 +9,7 @@ import { useSchemas } from "./hooks/useSchemas";
 import { useStreamState } from "./hooks/useStreamState";
 import { useConfigList } from "./hooks/useConfigList";
 import { Config } from "./components/Config";
-import {MessageWithFiles} from "./utils/formTypes.ts";
+import { MessageWithFiles } from "./utils/formTypes.ts";
 import { TYPE_NAME } from "./constants.ts";
 
 function App() {
@@ -18,28 +18,31 @@ function App() {
   const { chats, currentChat, createChat, enterChat } = useChatList();
   const { configs, currentConfig, saveConfig, enterConfig } = useConfigList();
   const { startStream, stopStream, stream } = useStreamState();
-  const [ isDocumentRetrievalActive, setIsDocumentRetrievalActive ] = useState(false);
+  const [isDocumentRetrievalActive, setIsDocumentRetrievalActive] =
+    useState(false);
 
   useEffect(() => {
-      let configurable = null;
-      if (currentConfig) {
-        configurable = currentConfig?.config?.configurable;
-      }
-      if (currentChat && configs) {
-        const conf = configs.find(c => c.assistant_id === currentChat.assistant_id)
-        configurable = conf?.config?.configurable;
-      }
-      const agent_type = configurable?.["type"] as TYPE_NAME | null;
-      if (agent_type === null || agent_type === 'chatbot') {
-          setIsDocumentRetrievalActive(false);
-          return;
-      }
-      if (agent_type === 'chat_retrieval') {
-          setIsDocumentRetrievalActive(true);
-          return;
-      }
-      const tools = configurable?.["type==agent/tools"] as string[] ?? [];
-      setIsDocumentRetrievalActive(tools.includes("Retrieval"));
+    let configurable = null;
+    if (currentConfig) {
+      configurable = currentConfig?.config?.configurable;
+    }
+    if (currentChat && configs) {
+      const conf = configs.find(
+        (c) => c.assistant_id === currentChat.assistant_id,
+      );
+      configurable = conf?.config?.configurable;
+    }
+    const agent_type = configurable?.["type"] as TYPE_NAME | null;
+    if (agent_type === null || agent_type === "chatbot") {
+      setIsDocumentRetrievalActive(false);
+      return;
+    }
+    if (agent_type === "chat_retrieval") {
+      setIsDocumentRetrievalActive(true);
+      return;
+    }
+    const tools = (configurable?.["type==agent/tools"] as string[]) ?? [];
+    setIsDocumentRetrievalActive(tools.includes("Retrieval"));
   }, [currentConfig, currentChat, configs]);
 
   const startTurn = useCallback(
@@ -51,18 +54,18 @@ function App() {
       if (!config) return;
       const files = message?.files || [];
       if (files.length > 0) {
-          const formData = files.reduce((formData, file) => {
-            formData.append("files", file);
-            return formData;
-          }, new FormData());
-          formData.append(
-            "config",
-            JSON.stringify({ configurable: { thread_id: chat.thread_id }})
-          );
-          await fetch(`/ingest`, {
-                  method: "POST",
-                  body: formData,
-          });
+        const formData = files.reduce((formData, file) => {
+          formData.append("files", file);
+          return formData;
+        }, new FormData());
+        formData.append(
+          "config",
+          JSON.stringify({ configurable: { thread_id: chat.thread_id } }),
+        );
+        await fetch(`/ingest`, {
+          method: "POST",
+          body: formData,
+        });
       }
       await startStream(
         message
@@ -85,7 +88,10 @@ function App() {
   const startChat = useCallback(
     async (message: MessageWithFiles) => {
       if (!currentConfig) return;
-      const chat = await createChat(message.message, currentConfig.assistant_id);
+      const chat = await createChat(
+        message.message,
+        currentConfig.assistant_id,
+      );
       return startTurn(message, chat);
     },
     [createChat, startTurn, currentConfig],
