@@ -1,6 +1,7 @@
-import os
 from enum import Enum
 from functools import lru_cache
+from typing import Optional
+from typing_extensions import TypedDict
 
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools.retriever import create_retriever_tool
@@ -13,7 +14,10 @@ from langchain_community.retrievers import (
 from langchain_community.retrievers.you import YouRetriever
 from langchain_community.tools import ArxivQueryRun, DuckDuckGoSearchRun
 from langchain_community.tools.connery import ConneryService
-from langchain_community.tools.tavily_search import TavilyAnswer, TavilySearchResults
+from langchain_community.tools.tavily_search import (
+    TavilySearchResults,
+    TavilyAnswer as _TavilyAnswer,
+)
 from langchain_community.utilities.arxiv import ArxivAPIWrapper
 from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
 from langchain_community.vectorstores.redis import RedisFilter
@@ -32,6 +36,118 @@ class ArxivInput(BaseModel):
 
 class PythonREPLInput(BaseModel):
     query: str = Field(description="python command to run")
+
+
+class AvailableTools(str, Enum):
+    ACTION_SERVER = "action_server_by_robocorp"
+    CONNERY = "ai_action_runner_by_connery"
+    DDG_SEARCH = "ddg_search"
+    TAVILY = "search_tavily"
+    TAVILY_ANSWER = "search_tavily_answer"
+    RETRIEVAL = "retrieval"
+    ARXIV = "arxiv"
+    YOU_SEARCH = "you_search"
+    SEC_FILINGS = "sec_filings_kai_ai"
+    PRESS_RELEASES = "press_releases_kai_ai"
+    PUBMED = "pubmed"
+    WIKIPEDIA = "wikipedia"
+
+
+class ToolConfig(TypedDict):
+    ...
+
+
+class Tool(BaseModel):
+    id: str
+    name: Optional[str]
+    config: Optional[ToolConfig]
+
+
+class ActionServerConfig(ToolConfig):
+    url: str
+    api_key: str
+
+
+class ConneryConfig(ToolConfig):
+    runner_url: str
+    api_key: str
+
+
+class YouSearchConfig(ToolConfig):
+    ydc_api_key: str
+
+
+class TavilyConfig(ToolConfig):
+    tavily_api_key: str
+
+
+class TavilyAnswerConfig(ToolConfig):
+    tavily_api_key: str
+
+
+class ActionServer(Tool):
+    id: str = Field(AvailableTools.ACTION_SERVER, const=True)
+    name: str = Field("Action Server by Robocorp", const=True)
+    config: ActionServerConfig
+
+
+class Connery(Tool):
+    id: str = Field(AvailableTools.CONNERY, const=True)
+    name: str = Field("AI Action Runner by Connery", const=True)
+    config: ConneryConfig
+
+
+class DDGSearch(Tool):
+    id: str = Field(AvailableTools.DDG_SEARCH, const=True)
+    name: str = Field("DuckDuckGo Search", const=True)
+
+
+class Arxiv(Tool):
+    id: str = Field(AvailableTools.ARXIV, const=True)
+    name: str = Field("Arxiv", const=True)
+
+
+class YouSearch(Tool):
+    id: str = Field(AvailableTools.YOU_SEARCH, const=True)
+    name: str = Field("You.com Search", const=True)
+    config: YouSearchConfig
+
+
+class SecFilings(Tool):
+    id: str = Field(AvailableTools.SEC_FILINGS, const=True)
+    name: str = Field("SEC Filings (Kay.ai)", const=True)
+
+
+class PressReleases(Tool):
+    id: str = Field(AvailableTools.PRESS_RELEASES, const=True)
+    name: str = Field("Press Releases (Kay.ai)", const=True)
+
+
+class PubMed(Tool):
+    id: str = Field(AvailableTools.PUBMED, const=True)
+    name: str = Field("PubMed", const=True)
+
+
+class Wikipedia(Tool):
+    id: str = Field(AvailableTools.WIKIPEDIA, const=True)
+    name: str = Field("Wikipedia", const=True)
+
+
+class Tavily(Tool):
+    id: str = Field(AvailableTools.TAVILY, const=True)
+    name: str = Field("Search (Tavily)", const=True)
+    config: TavilyConfig
+
+
+class TavilyAnswer(Tool):
+    id: str = Field(AvailableTools.TAVILY_ANSWER, const=True)
+    name: str = Field("Search (short answer, Tavily)", const=True)
+    config: TavilyAnswerConfig
+
+
+class Retrieval(Tool):
+    id: str = Field(AvailableTools.RETRIEVAL, const=True)
+    name: str = Field("Retrieval", const=True)
 
 
 RETRIEVAL_DESCRIPTION = """Can be used to look up information that was uploaded to this assistant.
@@ -68,9 +184,9 @@ def _get_arxiv():
 
 
 @lru_cache(maxsize=1)
-def _get_you_search():
+def _get_you_search(**kwargs: YouSearchConfig):
     return create_retriever_tool(
-        YouRetriever(n_hits=3, n_snippets_per_hit=3),
+        YouRetriever(ydc_api_key=kwargs["ydc_api_key"], n_hits=3, n_snippets_per_hit=3),
         "you_search",
         "Searches for documents using You.com",
     )
@@ -113,51 +229,33 @@ def _get_wikipedia():
 
 
 @lru_cache(maxsize=1)
-def _get_tavily():
-    tavily_search = TavilySearchAPIWrapper()
+def _get_tavily(**kwargs: TavilyConfig):
+    tavily_search = TavilySearchAPIWrapper(tavily_api_key=kwargs["tavily_api_key"])
     return TavilySearchResults(api_wrapper=tavily_search)
 
 
 @lru_cache(maxsize=1)
-def _get_tavily_answer():
-    tavily_search = TavilySearchAPIWrapper()
-    return TavilyAnswer(api_wrapper=tavily_search)
+def _get_tavily_answer(**kwargs: TavilyAnswerConfig):
+    tavily_search = TavilySearchAPIWrapper(tavily_api_key=kwargs["tavily_api_key"])
+    return _TavilyAnswer(api_wrapper=tavily_search)
 
 
 @lru_cache(maxsize=1)
-def _get_action_server():
-    toolkit = ActionServerToolkit(
-        url=os.environ.get("ROBOCORP_ACTION_SERVER_URL"),
-        api_key=os.environ.get("ROBOCORP_ACTION_SERVER_KEY"),
-    )
+def _get_action_server(**kwargs: ActionServerConfig):
+    toolkit = ActionServerToolkit(url=kwargs["url"], api_key=kwargs["api_key"])
     tools = toolkit.get_tools()
     return tools
 
 
 @lru_cache(maxsize=1)
-def _get_connery_actions():
+def _get_connery_actions(**kwargs: ConneryConfig):
     connery_service = ConneryService(
-        runner_url=os.environ.get("CONNERY_RUNNER_URL"),
-        api_key=os.environ.get("CONNERY_RUNNER_API_KEY"),
+        runner_url=kwargs["runner_url"],
+        api_key=kwargs["api_key"],
     )
     connery_toolkit = ConneryToolkit.create_instance(connery_service)
     tools = connery_toolkit.get_tools()
     return tools
-
-
-class AvailableTools(str, Enum):
-    ACTION_SERVER = "Action Server by Robocorp"
-    CONNERY = '"AI Action Runner" by Connery'
-    DDG_SEARCH = "DDG Search"
-    TAVILY = "Search (Tavily)"
-    TAVILY_ANSWER = "Search (short answer, Tavily)"
-    RETRIEVAL = "Retrieval"
-    ARXIV = "Arxiv"
-    YOU_SEARCH = "You.com Search"
-    SEC_FILINGS = "SEC Filings (Kay.ai)"
-    PRESS_RELEASES = "Press Releases (Kay.ai)"
-    PUBMED = "PubMed"
-    WIKIPEDIA = "Wikipedia"
 
 
 TOOLS = {
@@ -174,11 +272,17 @@ TOOLS = {
     AvailableTools.TAVILY_ANSWER: _get_tavily_answer,
 }
 
-TOOL_OPTIONS = {e.value: e.value for e in AvailableTools}
-
-# Check if dependencies and env vars for each tool are available
-for k, v in TOOLS.items():
-    # Connery requires env vars to be valid even if the tool isn't used,
-    # so we'll skip the check for it
-    if k != AvailableTools.CONNERY:
-        v()
+TOOL_SCHEMAS = [
+    ActionServer.schema(),
+    Connery.schema(),
+    DDGSearch.schema(),
+    Arxiv.schema(),
+    YouSearch.schema(),
+    SecFilings.schema(),
+    PressReleases.schema(),
+    PubMed.schema(),
+    Wikipedia.schema(),
+    Tavily.schema(),
+    TavilyAnswer.schema(),
+    Retrieval.schema(),
+]
