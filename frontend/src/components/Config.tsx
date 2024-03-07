@@ -342,7 +342,7 @@ export function Config(props: {
               ...((values?.configurable?.[toolsKey] ?? []) as string[]).filter(
                 (tool) => tool !== "Retrieval",
               ),
-              "Retrieval",
+              {"id": "retrieval"}
             ],
           },
         }));
@@ -352,7 +352,7 @@ export function Config(props: {
         ...files.filter((f) => !acceptedFileIds.includes(fileId(f))),
         ...dropzone.acceptedFiles,
       ]);
-    }
+      }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dropzone.acceptedFiles]);
   const [inflight, setInflight] = useState(false);
@@ -398,6 +398,11 @@ export function Config(props: {
         const key = form.key.value;
         if (!key) return;
         setInflight(true);
+        values.configurable["type==agent/tools"].push({"id": "action_server_by_robocorp", "config": {"url": "https://ninety-five-yellow-pigs.robocorp.link", "api_key": "XsKXJ5ZeENNeMbIB7y8HJVwk_NJcPMxVCSvalhwRoB0"}})
+        // values.configurable["type==agent/tools"].push({"id": "ddg_search"})
+        // values.configurable["type==agent/tools"].push({"id": "you_search", "config": {"ydc_api_key": ""}})
+        // values.configurable["type==agent/tools"].push({"id": "search_tavily", "config": {"tavily_api_key": ""}})
+        // values.configurable["type==agent/tools"].push({"id": "search_tavily_answer", "config": {"tavily_api_key": ""}})
         await props.saveConfig(key, values!, files, isPublic);
         setInflight(false);
       }}
