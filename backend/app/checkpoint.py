@@ -34,6 +34,8 @@ class RedisCheckpoint(BaseCheckpointSaver):
 
     @property
     def config_specs(self) -> list[ConfigurableFieldSpec]:
+        # Although the annotations are Optional[str], both fields are actually
+        # required to create a valid checkpoint key.
         return [
             ConfigurableFieldSpec(
                 id="user_id",
