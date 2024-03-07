@@ -92,6 +92,7 @@ class ConfigurableAgent(RunnableBinding):
     retrieval_description: str = RETRIEVAL_DESCRIPTION
     interrupt_before_action: bool = False
     assistant_id: Optional[str] = None
+    thread_id: Optional[str] = None
     user_id: Optional[str] = None
 
     def __init__(
@@ -101,6 +102,7 @@ class ConfigurableAgent(RunnableBinding):
         agent: AgentType = AgentType.GPT_35_TURBO,
         system_message: str = DEFAULT_SYSTEM_MESSAGE,
         assistant_id: Optional[str] = None,
+        thread_id: Optional[str] = None,
         retrieval_description: str = RETRIEVAL_DESCRIPTION,
         interrupt_before_action: bool = False,
         kwargs: Optional[Mapping[str, Any]] = None,
@@ -111,11 +113,13 @@ class ConfigurableAgent(RunnableBinding):
         _tools = []
         for _tool in tools:
             if _tool == AvailableTools.RETRIEVAL:
-                if assistant_id is None:
+                if assistant_id is None or thread_id is None:
                     raise ValueError(
-                        "assistant_id must be provided if Retrieval tool is used"
+                        "Both assistant_id and thread_id must be provided if Retrieval tool is used"
                     )
-                _tools.append(get_retrieval_tool(assistant_id, retrieval_description))
+                _tools.append(
+                    get_retrieval_tool(assistant_id, thread_id, retrieval_description)
+                )
             else:
                 _returned_tools = TOOLS[_tool]()
                 if isinstance(_returned_tools, list):
@@ -210,6 +214,7 @@ class ConfigurableRetrieval(RunnableBinding):
     llm_type: LLMType
     system_message: str = DEFAULT_SYSTEM_MESSAGE
     assistant_id: Optional[str] = None
+    thread_id: Optional[str] = None
     user_id: Optional[str] = None
 
     def __init__(
@@ -218,12 +223,13 @@ class ConfigurableRetrieval(RunnableBinding):
         llm_type: LLMType = LLMType.GPT_35_TURBO,
         system_message: str = DEFAULT_SYSTEM_MESSAGE,
         assistant_id: Optional[str] = None,
+        thread_id: Optional[str] = None,
         kwargs: Optional[Mapping[str, Any]] = None,
         config: Optional[Mapping[str, Any]] = None,
         **others: Any,
     ) -> None:
         others.pop("bound", None)
-        retriever = get_retriever(assistant_id)
+        retriever = get_retriever(assistant_id, thread_id)
         if llm_type == LLMType.GPT_35_TURBO:
             llm = get_openai_llm()
         elif llm_type == LLMType.GPT_4:
@@ -258,6 +264,7 @@ chat_retrieval = (
         assistant_id=ConfigurableField(
             id="assistant_id", name="Assistant ID", is_shared=True
         ),
+        thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
     )
     .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
 )
@@ -270,6 +277,7 @@ agent = (
         system_message=DEFAULT_SYSTEM_MESSAGE,
         retrieval_description=RETRIEVAL_DESCRIPTION,
         assistant_id=None,
+        thread_id=None,
     )
     .configurable_fields(
         agent=ConfigurableField(id="agent_type", name="Agent Type"),
@@ -282,6 +290,7 @@ agent = (
         assistant_id=ConfigurableField(
             id="assistant_id", name="Assistant ID", is_shared=True
         ),
+        thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
         tools=ConfigurableFieldMultiOption(
             id="tools",
             name="Tools",

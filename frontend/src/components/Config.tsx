@@ -9,7 +9,7 @@ import { SchemaField, Schemas } from "../hooks/useSchemas";
 import { cn } from "../utils/cn";
 import { FileUploadDropzone } from "./FileUpload";
 import { Switch } from "@headlessui/react";
-import { TYPES } from "../constants";
+import { DROPZONE_CONFIG, TYPES } from "../constants";
 
 function Types(props: {
   field: SchemaField;
@@ -48,7 +48,7 @@ function Types(props: {
                   props.value === option.id
                     ? "border-indigo-500 text-indigo-600"
                     : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700",
-                  "w-1/4 border-b-2 py-4 px-1 text-center text-sm font-medium cursor-pointer"
+                  "w-1/4 border-b-2 py-4 px-1 text-center text-sm font-medium cursor-pointer",
                 )}
                 aria-current={props.value === option.id ? "page" : undefined}
                 onClick={() => props.setValue(option.id)}
@@ -155,7 +155,7 @@ const TOOL_DESCRIPTIONS = {
   Retrieval: "Look up information in uploaded files.",
   "Action Server by Robocorp":
     "Run AI actions with [Robocorp Action Server](https://github.com/robocorp/robocorp).",
-  "\"AI Action Runner\" by Connery":
+  '"AI Action Runner" by Connery':
     "Connect OpenGPTs to the real world with [Connery](https://github.com/connery-io/connery).",
   "DDG Search":
     "Search the web with [DuckDuckGo](https://pypi.org/project/duckduckgo-search/).",
@@ -279,14 +279,14 @@ function PublicToggle(props: {
         onChange={props.setEnabled}
         className={cn(
           props.enabled ? "bg-indigo-600" : "bg-gray-200",
-          "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+          "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
         )}
       >
         <span
           aria-hidden="true"
           className={cn(
             props.enabled ? "translate-x-5" : "translate-x-0",
-            "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+            "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
           )}
         />
       </Switch>
@@ -318,7 +318,7 @@ export function Config(props: {
   saveConfig: ConfigListProps["saveConfig"];
 }) {
   const [values, setValues] = useState(
-    props.config?.config ?? props.configDefaults
+    props.config?.config ?? props.configDefaults,
   );
   const typeKey = "type";
   const typeField =
@@ -326,17 +326,7 @@ export function Config(props: {
   const typeValue = values?.configurable?.[typeKey];
   const typeSpec = typeValue ? TYPES[typeValue as keyof typeof TYPES] : null;
   const [files, setFiles] = useState<File[]>([]);
-  const dropzone = useDropzone({
-    multiple: true,
-    accept: {
-      "text/*": [".txt", ".csv", ".htm", ".html"],
-      "application/pdf": [".pdf"],
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        [".docx"],
-      "application/msword": [".doc"],
-    },
-    maxSize: 10_000_000, // Up to 10 MB file size.
-  });
+  const dropzone = useDropzone(DROPZONE_CONFIG);
   const [isPublic, setPublic] = useState(props.config?.public ?? false);
   useEffect(() => {
     setValues(props.config?.config ?? props.configDefaults);
@@ -350,7 +340,7 @@ export function Config(props: {
             ...values?.configurable,
             [toolsKey]: [
               ...((values?.configurable?.[toolsKey] ?? []) as string[]).filter(
-                (tool) => tool !== "Retrieval"
+                (tool) => tool !== "Retrieval",
               ),
               "Retrieval",
             ],
@@ -445,14 +435,14 @@ export function Config(props: {
       <div
         className={cn(
           "flex flex-col gap-8",
-          readonly && "opacity-50 cursor-not-allowed"
+          readonly && "opacity-50 cursor-not-allowed",
         )}
       >
         {orderBy(
           Object.entries(
-            props.configSchema?.properties.configurable.properties ?? {}
+            props.configSchema?.properties.configurable.properties ?? {},
           ),
-          ([key]) => ORDER.indexOf(last(key.split("/"))!)
+          ([key]) => ORDER.indexOf(last(key.split("/"))!),
         ).map(([key, value]) => {
           const title = value.title;
           if (key.split("/")[0].includes("==")) {

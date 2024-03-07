@@ -34,7 +34,7 @@ export const JsonRefs = (function (t) {
             o,
             function (n) {
               return t[n];
-            }.bind(null, o)
+            }.bind(null, o),
           );
       return e;
     }),
@@ -184,8 +184,8 @@ export const JsonRefs = (function (t) {
           ? "[object Undefined]"
           : "[object Null]"
         : u && u in Object(t)
-        ? o(t)
-        : i(t);
+          ? o(t)
+          : i(t);
     };
   },
   function (t, n, r) {
@@ -501,7 +501,7 @@ export const JsonRefs = (function (t) {
       a = e(
         (function () {
           return arguments;
-        })()
+        })(),
       )
         ? e
         : function (t) {
@@ -559,12 +559,12 @@ export const JsonRefs = (function (t) {
       return "function" == typeof t
         ? t
         : null == t
-        ? u
-        : "object" == e(t)
-        ? c(t)
-          ? i(t[0], t[1])
-          : o(t)
-        : a(t);
+          ? u
+          : "object" == e(t)
+            ? c(t)
+              ? i(t[0], t[1])
+              : o(t)
+            : a(t);
     };
   },
   function (t, n, r) {
@@ -747,7 +747,7 @@ export const JsonRefs = (function (t) {
           for (var r = (n += ""); !o.isUndefined(r); r = this.parent(r))
             if (r === t)
               throw new Error(
-                "Setting " + n + " as parent of " + t + " would create a cycle"
+                "Setting " + n + " as parent of " + t + " would create a cycle",
               );
           this.setNode(n);
         }
@@ -820,9 +820,9 @@ export const JsonRefs = (function (t) {
                   return void 0 === i || n.hasNode(i)
                     ? ((e[o] = i), i)
                     : i in e
-                    ? e[i]
-                    : t(i);
-                })(t)
+                      ? e[i]
+                      : t(i);
+                })(t),
               );
             }),
           n
@@ -1545,7 +1545,7 @@ export const JsonRefs = (function (t) {
                 "dijkstra does not allow negative edge weights. Bad edge: " +
                   t +
                   " Weight: " +
-                  o
+                  o,
               );
             s < e.distance &&
               ((e.distance = s), (e.predecessor = i), a.decrease(n, s));
@@ -1570,7 +1570,7 @@ export const JsonRefs = (function (t) {
         e ||
           function (n) {
             return t.outEdges(n);
-          }
+          },
       );
     };
     var i = e.constant(1);
@@ -1625,7 +1625,7 @@ export const JsonRefs = (function (t) {
               " Old: " +
               this._arr[r].priority +
               " New: " +
-              n
+              n,
           );
         (this._arr[r].priority = n), this._decrease(r);
       }),
@@ -1767,7 +1767,7 @@ export const JsonRefs = (function (t) {
                   "options.method must be one of the following: " +
                     o.slice(0, o.length - 1).join(", ") +
                     " or " +
-                    o[o.length - 1]
+                    o[o.length - 1],
                 ))
             : void 0 !== r.prepareRequest &&
               "function" != typeof r.prepareRequest &&
@@ -1869,7 +1869,7 @@ export const JsonRefs = (function (t) {
             f(
               this,
               1 === this.state ? this.chain[t].success : this.chain[t].failure,
-              this.chain[t]
+              this.chain[t],
             );
           this.chain.length = 0;
         }
@@ -1879,10 +1879,10 @@ export const JsonRefs = (function (t) {
             !1 === n
               ? r.reject(t.msg)
               : (e = !0 === n ? t.msg : n.call(void 0, t.msg)) === r.promise
-              ? r.reject(TypeError("Promise-chain cycle"))
-              : (o = c(e))
-              ? o.call(e, r.resolve, r.reject)
-              : r.resolve(e);
+                ? r.reject(TypeError("Promise-chain cycle"))
+                : (o = c(e))
+                  ? o.call(e, r.resolve, r.reject)
+                  : r.resolve(e);
           } catch (t) {
             r.reject(t);
           }
@@ -1904,7 +1904,7 @@ export const JsonRefs = (function (t) {
                         },
                         function () {
                           p.apply(e, arguments);
-                        }
+                        },
                       );
                     } catch (t) {
                       p.call(e, t);
@@ -1975,7 +1975,7 @@ export const JsonRefs = (function (t) {
               },
               function (t) {
                 p.call(n, t);
-              }
+              },
             );
           } catch (t) {
             p.call(n, t);
@@ -2024,22 +2024,22 @@ export const JsonRefs = (function (t) {
             return "[object Array]" != e.call(t)
               ? n.reject(TypeError("Not an array"))
               : 0 === t.length
-              ? n.resolve([])
-              : new n(function (r, e) {
-                  if ("function" != typeof r || "function" != typeof e)
-                    throw TypeError("Not a function");
-                  var o = t.length,
-                    i = Array(o),
-                    u = 0;
-                  h(
-                    n,
-                    t,
-                    function (t, n) {
-                      (i[t] = n), ++u === o && r(i);
-                    },
-                    e
-                  );
-                });
+                ? n.resolve([])
+                : new n(function (r, e) {
+                    if ("function" != typeof r || "function" != typeof e)
+                      throw TypeError("Not a function");
+                    var o = t.length,
+                      i = Array(o),
+                      u = 0;
+                    h(
+                      n,
+                      t,
+                      function (t, n) {
+                        (i[t] = n), ++u === o && r(i);
+                      },
+                      e,
+                    );
+                  });
           }),
           t(y, "race", function (t) {
             var n = this;
@@ -2054,7 +2054,7 @@ export const JsonRefs = (function (t) {
                     function (t, n) {
                       r(n);
                     },
-                    e
+                    e,
                   );
                 });
           }),
@@ -2222,7 +2222,7 @@ export const JsonRefs = (function (t) {
           )
         )
           throw new TypeError(
-            "options.filter must be an Array, a Function of a String"
+            "options.filter must be an Array, a Function of a String",
           );
         if (!e.isUndefined(t.includeInvalid) && !e.isBoolean(t.includeInvalid))
           throw new TypeError("options.includeInvalid must be a Boolean");
@@ -2244,7 +2244,7 @@ export const JsonRefs = (function (t) {
           !k(t.subDocPath)
         )
           throw new TypeError(
-            "options.subDocPath must be an Array of path segments or a valid JSON Pointer"
+            "options.subDocPath must be an Array of path segments or a valid JSON Pointer",
           );
         if (
           (e.isUndefined(t.resolveCirculars) && (t.resolveCirculars = !1),
@@ -2257,11 +2257,11 @@ export const JsonRefs = (function (t) {
                     return r.indexOf(t.type) > -1 || r.indexOf(m(t)) > -1;
                   }))
                 : e.isFunction(t.filter)
-                ? (n = t.filter)
-                : e.isUndefined(t.filter) &&
-                  (n = function () {
-                    return !0;
-                  }),
+                  ? (n = t.filter)
+                  : e.isUndefined(t.filter) &&
+                    (n = function () {
+                      return !0;
+                    }),
               function (r, e) {
                 return (
                   ("invalid" !== r.type || !0 === t.includeInvalid) && n(r, e)
@@ -2280,8 +2280,8 @@ export const JsonRefs = (function (t) {
               e.isArray(t.subDocPath)
                 ? (n = t.subDocPath)
                 : e.isString(t.subDocPath)
-                ? (n = R(t.subDocPath))
-                : e.isUndefined(t.subDocPath) && (n = []),
+                  ? (n = R(t.subDocPath))
+                  : e.isUndefined(t.subDocPath) && (n = []),
               n
             );
           })(t)),
@@ -2293,7 +2293,7 @@ export const JsonRefs = (function (t) {
             throw (
               ((t.message = t.message.replace(
                 "JSON Pointer",
-                "options.subDocPath"
+                "options.subDocPath",
               )),
               t)
             );
@@ -2371,7 +2371,7 @@ export const JsonRefs = (function (t) {
                   b(o).length > 0 && (a = !1)),
                 a
               );
-            }
+            },
           ),
           r
         );
@@ -2472,14 +2472,14 @@ export const JsonRefs = (function (t) {
                       g = (i.refdId = decodeURI(
                         j(y(i) ? d(l, i.uri) : r.location) +
                           "#" +
-                          (i.uri.indexOf("#") > -1 ? i.uri.split("#")[1] : "")
+                          (i.uri.indexOf("#") > -1 ? i.uri.split("#")[1] : ""),
                       ));
                     ((o.refs[v] = i), _(i)) &&
                       ((i.fqURI = g),
                       (o.deps[p][u === s ? "#" : u.replace(s + "/", "#/")] = g),
                       0 !== v.indexOf(g + "/") && v !== g
                         ? (((c = e.cloneDeep(r)).subDocPath = e.isUndefined(
-                            i.uriDetails.fragment
+                            i.uriDetails.fragment,
                           )
                             ? []
                             : R(decodeURI(i.uriDetails.fragment))),
@@ -2499,7 +2499,7 @@ export const JsonRefs = (function (t) {
                                     : Promise.resolve().then(function () {
                                         return n;
                                       });
-                                })
+                                }),
                               )))
                             : (a = a.then(function () {
                                 return n;
@@ -2517,7 +2517,7 @@ export const JsonRefs = (function (t) {
                                     E(o, t);
                                   }
                               };
-                            })(o, c, i)
+                            })(o, c, i),
                           )))
                         : (i.circular = !0));
                   })),
@@ -2636,19 +2636,19 @@ export const JsonRefs = (function (t) {
                                 e(
                                   s.refdId,
                                   s.refdId + t.substr(1),
-                                  u.concat(R(t))
+                                  u.concat(R(t)),
                                 );
                               }))
                           : !s.circular &&
                             s.error &&
                             ((s.error = s.error.replace(
                               "options.subDocPath",
-                              "JSON Pointer"
+                              "JSON Pointer",
                             )),
                             s.error.indexOf("#") > -1 &&
                               (s.error = s.error.replace(
                                 s.uri.substr(s.uri.indexOf("#")),
-                                s.uri
+                                s.uri,
                               )),
                             (0 !== s.error.indexOf("ENOENT:") &&
                               0 !== s.error.indexOf("Not Found")) ||
@@ -2904,7 +2904,7 @@ export const JsonRefs = (function (t) {
               gt,
               Pt,
             ].join("|"),
-            "g"
+            "g",
           ),
           zt = RegExp("[\\u200d\\ud800-\\udfff" + ht + "\\ufe0e\\ufe0f]"),
           Ft =
@@ -3511,9 +3511,9 @@ export const JsonRefs = (function (t) {
                   .replace(G, "\\$&")
                   .replace(
                     /hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g,
-                    "$1.*?"
+                    "$1.*?",
                   ) +
-                "$"
+                "$",
             ),
             kt = Kt ? n.Buffer : void 0,
             Ut = n.Symbol,
@@ -3744,7 +3744,7 @@ export const JsonRefs = (function (t) {
                         t,
                         (function (t, n) {
                           return t && mo(n, xc(n), t);
-                        })(u, t)
+                        })(u, t),
                       )
                     : (function (t, n) {
                         return mo(t, ri(t), n);
@@ -4045,20 +4045,20 @@ export const JsonRefs = (function (t) {
                 ? "[object Undefined]"
                 : "[object Null]"
               : mn && mn in yt(t)
-              ? (function (t) {
-                  var n = St.call(t, mn),
-                    r = t[mn];
-                  try {
-                    t[mn] = void 0;
-                    var e = !0;
-                  } catch (t) {}
-                  var o = Tt.call(t);
-                  e && (n ? (t[mn] = r) : delete t[mn]);
-                  return o;
-                })(t)
-              : (function (t) {
-                  return Tt.call(t);
-                })(t);
+                ? (function (t) {
+                    var n = St.call(t, mn),
+                      r = t[mn];
+                    try {
+                      t[mn] = void 0;
+                      var e = !0;
+                    } catch (t) {}
+                    var o = Tt.call(t);
+                    e && (n ? (t[mn] = r) : delete t[mn]);
+                    return o;
+                  })(t)
+                : (function (t) {
+                    return Tt.call(t);
+                  })(t);
           }
           function de(t, n) {
             return t > n;
@@ -4274,12 +4274,12 @@ export const JsonRefs = (function (t) {
             return "function" == typeof t
               ? t
               : null == t
-              ? Gc
-              : "object" == i(t)
-              ? Du(t)
-                ? Ie(t[0], t[1])
-                : Ce(t)
-              : ra(t);
+                ? Gc
+                : "object" == i(t)
+                  ? Du(t)
+                    ? Ie(t[0], t[1])
+                    : Ce(t)
+                  : ra(t);
           }
           function Se(t) {
             if (!hi(t)) return ur(t);
@@ -4352,18 +4352,18 @@ export const JsonRefs = (function (t) {
                             ? Du(c)
                               ? (f = c)
                               : zu(c)
-                              ? (f = bo(c))
-                              : h
-                              ? ((l = !1), (f = po(a, !0)))
-                              : v
-                              ? ((l = !1), (f = vo(a, !0)))
-                              : (f = [])
+                                ? (f = bo(c))
+                                : h
+                                  ? ((l = !1), (f = po(a, !0)))
+                                  : v
+                                    ? ((l = !1), (f = vo(a, !0)))
+                                    : (f = [])
                             : Zu(a) || Ru(a)
-                            ? ((f = c),
-                              Ru(c)
-                                ? (f = cc(c))
-                                : (Hu(c) && !Mu(c)) || (f = ui(a)))
-                            : (l = !1);
+                              ? ((f = c),
+                                Ru(c)
+                                  ? (f = cc(c))
+                                  : (Hu(c) && !Mu(c)) || (f = ui(a)))
+                              : (l = !1);
                       }
                       l && (u.set(a, f), o(f, a, e, i, u), u.delete(a));
                       Br(t, r, f);
@@ -4373,7 +4373,7 @@ export const JsonRefs = (function (t) {
                     void 0 === c && (c = i), Br(t, u, c);
                   }
                 },
-                xc
+                xc,
               );
           }
           function ke(t, n) {
@@ -4415,7 +4415,7 @@ export const JsonRefs = (function (t) {
                     }
                     return t.index - n.index;
                   })(t, n, r);
-                }
+                },
               )
             );
           }
@@ -4565,10 +4565,10 @@ export const JsonRefs = (function (t) {
                 y = s
                   ? v && (e || p)
                   : c
-                  ? v && p && (e || !h)
-                  : a
-                  ? v && p && !h && (e || !d)
-                  : !h && !d && (e ? l <= n : l < n);
+                    ? v && p && (e || !h)
+                    : a
+                      ? v && p && !h && (e || !d)
+                      : !h && !d && (e ? l <= n : l < n);
               y ? (o = f + 1) : (i = f);
             }
             return ar(i, 4294967294);
@@ -4642,7 +4642,7 @@ export const JsonRefs = (function (t) {
                 function (t, n) {
                   return n.func.apply(n.thisArg, yn([t], n.args));
                 },
-                r
+                r,
               )
             );
           }
@@ -4893,8 +4893,8 @@ export const JsonRefs = (function (t) {
                   s && li(s[0]) && 424 == s[1] && !s[4].length && 1 == s[9]
                     ? c[Xo(s[0])].apply(c, s[3])
                     : 1 == i.length && li(i)
-                    ? c[a]()
-                    : c.thru(i);
+                      ? c[a]()
+                      : c.thru(i);
               }
               return function () {
                 var t = arguments,
@@ -5057,12 +5057,12 @@ export const JsonRefs = (function (t) {
               return r == y
                 ? $n(n)
                 : r == m
-                ? Vn(n)
-                : (function (t, n) {
-                    return dn(n, function (n) {
-                      return [n, t[n]];
-                    });
-                  })(n, t(n));
+                  ? Vn(n)
+                  : (function (t, n) {
+                      return dn(n, function (n) {
+                        return [n, t[n]];
+                      });
+                    })(n, t(n));
             };
           }
           function Mo(t, n, r, o, i, a, s, f) {
@@ -5145,7 +5145,7 @@ export const JsonRefs = (function (t) {
                             f,
                             void 0,
                             void 0,
-                            r - u
+                            r - u,
                           );
                         var l =
                           this && this !== Zt && this instanceof i ? o : t;
@@ -5153,27 +5153,29 @@ export const JsonRefs = (function (t) {
                       };
                     })(t, n, f)
                   : (32 != n && 33 != n) || i.length
-                  ? Io.apply(void 0, y)
-                  : (function (t, n, r, o) {
-                      var i = 1 & n,
-                        u = Ao(t);
-                      return function n() {
-                        for (
-                          var c = -1,
-                            a = arguments.length,
-                            s = -1,
-                            f = o.length,
-                            l = e(f + a),
-                            p =
-                              this && this !== Zt && this instanceof n ? u : t;
-                          ++s < f;
+                    ? Io.apply(void 0, y)
+                    : (function (t, n, r, o) {
+                        var i = 1 & n,
+                          u = Ao(t);
+                        return function n() {
+                          for (
+                            var c = -1,
+                              a = arguments.length,
+                              s = -1,
+                              f = o.length,
+                              l = e(f + a),
+                              p =
+                                this && this !== Zt && this instanceof n
+                                  ? u
+                                  : t;
+                            ++s < f;
 
-                        )
-                          l[s] = o[s];
-                        for (; a--; ) l[s++] = arguments[++c];
-                        return cn(p, i ? r : this, l);
-                      };
-                    })(t, n, r, o);
+                          )
+                            l[s] = o[s];
+                          for (; a--; ) l[s++] = arguments[++c];
+                          return cn(p, i ? r : this, l);
+                        };
+                      })(t, n, r, o);
             else
               var _ = (function (t, n, r) {
                 var e = 1 & n,
@@ -5484,9 +5486,9 @@ export const JsonRefs = (function (t) {
                     var n = t.match(Q);
                     return n ? n[1].split(tt) : [];
                   })(e),
-                  r
-                )
-              )
+                  r,
+                ),
+              ),
             );
           }
           function Ei(t) {
@@ -5629,7 +5631,7 @@ export const JsonRefs = (function (t) {
                 t,
                 dn(n, function (t) {
                   return ai(t, r) ? +t : t;
-                }).sort(yo)
+                }).sort(yo),
               ),
               e
             );
@@ -5761,7 +5763,7 @@ export const JsonRefs = (function (t) {
             },
             function () {
               return [[], []];
-            }
+            },
           );
           var du = Le(function (t, n) {
               if (null == t) return [];
@@ -5788,7 +5790,7 @@ export const JsonRefs = (function (t) {
                 void 0,
                 void 0,
                 void 0,
-                (n = t && null == n ? t.length : n)
+                (n = t && null == n ? t.length : n),
               )
             );
           }
@@ -5854,7 +5856,7 @@ export const JsonRefs = (function (t) {
                 (function (t) {
                   var r = n - (t - s);
                   return p ? ar(r, i - (t - f)) : r;
-                })(t)
+                })(t),
               );
             }
             function g(t) {
@@ -5951,7 +5953,7 @@ export const JsonRefs = (function (t) {
             Ru = me(
               (function () {
                 return arguments;
-              })()
+              })(),
             )
               ? me
               : function (t) {
@@ -6070,11 +6072,11 @@ export const JsonRefs = (function (t) {
               ? (t = uc(t)) === 1 / 0 || t === -1 / 0
                 ? 17976931348623157e292 * (t < 0 ? -1 : 1)
                 : t == t
-                ? t
-                : 0
+                  ? t
+                  : 0
               : 0 === t
-              ? t
-              : 0;
+                ? t
+                : 0;
           }
           function oc(t) {
             var n = ec(t),
@@ -6097,8 +6099,8 @@ export const JsonRefs = (function (t) {
             return r || at.test(t)
               ? Wt(t.slice(2), r ? 2 : 8)
               : it.test(t)
-              ? NaN
-              : +t;
+                ? NaN
+                : +t;
           }
           function cc(t) {
             return mo(t, xc(t));
@@ -6443,7 +6445,7 @@ export const JsonRefs = (function (t) {
                 void 0,
                 void 0,
                 void 0,
-                (r = e ? void 0 : r)
+                (r = e ? void 0 : r),
               );
               return (o.placeholder = t.placeholder), o;
             }),
@@ -6456,7 +6458,7 @@ export const JsonRefs = (function (t) {
                 void 0,
                 void 0,
                 void 0,
-                (r = e ? void 0 : r)
+                (r = e ? void 0 : r),
               );
               return (o.placeholder = t.placeholder), o;
             }),
@@ -6480,7 +6482,7 @@ export const JsonRefs = (function (t) {
                 ? Ve(
                     t,
                     0,
-                    (n = e - (n = r || void 0 === n ? 1 : oc(n))) < 0 ? 0 : n
+                    (n = e - (n = r || void 0 === n ? 1 : oc(n))) < 0 ? 0 : n,
                   )
                 : [];
             }),
@@ -6745,7 +6747,7 @@ export const JsonRefs = (function (t) {
                 ? Ve(
                     t,
                     (n = e - (n = r || void 0 === n ? 1 : oc(n))) < 0 ? 0 : n,
-                    e
+                    e,
                   )
                 : [];
             }),
@@ -7018,7 +7020,7 @@ export const JsonRefs = (function (t) {
             (Cr.isNative = function (t) {
               if (pi(t))
                 throw new ht(
-                  "Unsupported core-js use. Try https://npms.io/search?q=ponyfill."
+                  "Unsupported core-js use. Try https://npms.io/search?q=ponyfill.",
                 );
               return je(t);
             }),
@@ -7154,7 +7156,7 @@ export const JsonRefs = (function (t) {
                 var o = lr();
                 return ar(
                   t + o * (n - t + Ht("1e-" + ((o + "").length - 1))),
-                  n
+                  n,
                 );
               }
               return ze(t, n);
@@ -7269,7 +7271,7 @@ export const JsonRefs = (function (t) {
                     "|" +
                     (n.evaluate || lt).source +
                     "|$",
-                  "g"
+                  "g",
                 ),
                 h =
                   "//# sourceURL=" +
@@ -7332,8 +7334,8 @@ export const JsonRefs = (function (t) {
               return t
                 ? Xr(oc(t), -9007199254740991, 9007199254740991)
                 : 0 === t
-                ? t
-                : 0;
+                  ? t
+                  : 0;
             }),
             (Cr.toString = ac),
             (Cr.toUpper = function (t) {
@@ -7414,7 +7416,7 @@ export const JsonRefs = (function (t) {
                 St.call(Cr.prototype, n) || (la[n] = t);
               }),
               la),
-              { chain: !1 }
+              { chain: !1 },
             ),
             (Cr.VERSION = "4.17.15"),
             sn(
@@ -7428,7 +7430,7 @@ export const JsonRefs = (function (t) {
               ],
               function (t) {
                 Cr[t].placeholder = Cr;
-              }
+              },
             ),
             sn(["drop", "take"], function (t, n) {
               (Rr.prototype[t] = function (r) {
@@ -7566,7 +7568,7 @@ export const JsonRefs = (function (t) {
                     return n.apply(Du(r) ? r : [], t);
                   });
                 };
-              }
+              },
             ),
             se(Rr.prototype, function (t, n) {
               var r = Cr[n];
@@ -7715,8 +7717,8 @@ export const JsonRefs = (function (t) {
                 return Xn;
               }.call(n, r, n, e)) || (e.exports = o))
           : Xt
-          ? (((Xt.exports = Xn)._ = Xn), (Jt._ = Xn))
-          : (Zt._ = Xn);
+            ? (((Xt.exports = Xn)._ = Xn), (Jt._ = Xn))
+            : (Zt._ = Xn);
       }).call(this);
     }).call(this, r(11), r(14)(t));
   },
@@ -7930,9 +7932,9 @@ export const JsonRefs = (function (t) {
             .replace(/[\\^$.*+?()[\]{}|]/g, "\\$&")
             .replace(
               /hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g,
-              "$1.*?"
+              "$1.*?",
             ) +
-          "$"
+          "$",
       );
     t.exports = function (t) {
       return !(!i(t) || o(t)) && (e(t) ? p : c).test(u(t));
@@ -8922,7 +8924,7 @@ export const JsonRefs = (function (t) {
   },
   function (t, n) {
     var r = RegExp(
-      "[\\u200d\\ud800-\\udfff\\u0300-\\u036f\\ufe20-\\ufe2f\\u20d0-\\u20ff\\ufe0e\\ufe0f]"
+      "[\\u200d\\ud800-\\udfff\\u0300-\\u036f\\ufe20-\\ufe2f\\u20d0-\\u20ff\\ufe0e\\ufe0f]",
     );
     t.exports = function (t) {
       return r.test(t);
@@ -9301,7 +9303,7 @@ export const JsonRefs = (function (t) {
         function (o, i) {
           o[i] = e(t, i, n, r);
         },
-        {}
+        {},
       );
     };
   },
@@ -9355,7 +9357,7 @@ export const JsonRefs = (function (t) {
         r ||
           function (n) {
             return t.outEdges(n);
-          }
+          },
       );
     };
     var o = e.constant(1);
@@ -9426,8 +9428,8 @@ export const JsonRefs = (function (t) {
           "." === o
             ? t.splice(e, 1)
             : ".." === o
-            ? (t.splice(e, 1), r++)
-            : r && (t.splice(e, 1), r--);
+              ? (t.splice(e, 1), r++)
+              : r && (t.splice(e, 1), r--);
         }
         if (n) for (; r--; r) t.unshift("..");
         return t;
@@ -9451,7 +9453,7 @@ export const JsonRefs = (function (t) {
               e(n.split("/"), function (t) {
                 return !!t;
               }),
-              !o
+              !o,
             ).join("/")) || "."
         );
       }),
@@ -9463,7 +9465,7 @@ export const JsonRefs = (function (t) {
               e(t.split("/"), function (t) {
                 return !!t;
               }),
-              !i
+              !i,
             ).join("/")) ||
               i ||
               (t = "."),
@@ -9481,7 +9483,7 @@ export const JsonRefs = (function (t) {
               if ("string" != typeof t)
                 throw new TypeError("Arguments to path.join must be strings");
               return t;
-            }).join("/")
+            }).join("/"),
           );
         }),
         (n.relative = function (t, r) {
@@ -9532,8 +9534,8 @@ export const JsonRefs = (function (t) {
               ? "/"
               : "."
             : r && 1 === e
-            ? "/"
-            : t.slice(0, e);
+              ? "/"
+              : t.slice(0, e);
         }),
         (n.basename = function (t, n) {
           var r = (function (t) {
@@ -9635,7 +9637,7 @@ export const JsonRefs = (function (t) {
                 "function" != typeof n.processContent
               )
                 throw new TypeError(
-                  "options.processContent must be a function"
+                  "options.processContent must be a function",
                 );
             }
           }))
@@ -9671,8 +9673,8 @@ export const JsonRefs = (function (t) {
                       });
                   })
                 : "object" === e(r)
-                ? r.text
-                : r;
+                  ? r.text
+                  : r;
             }))
         );
       });
@@ -9709,11 +9711,11 @@ export const JsonRefs = (function (t) {
     "undefined" != typeof window
       ? (o = window)
       : "undefined" != typeof self
-      ? (o = self)
-      : (console.warn(
-          "Using browser-only version of superagent in non-browser environment"
-        ),
-        (o = this));
+        ? (o = self)
+        : (console.warn(
+            "Using browser-only version of superagent in non-browser environment",
+          ),
+          (o = this));
     var i = r(227),
       u = r(228),
       c = r(82),
@@ -9727,8 +9729,8 @@ export const JsonRefs = (function (t) {
           return "function" == typeof r
             ? new n.Request("GET", t).end(r)
             : 1 == arguments.length
-            ? new n.Request("GET", t)
-            : new n.Request(t, r);
+              ? new n.Request("GET", t)
+              : new n.Request(t, r);
         });
     (n.Request = g),
       (l.getXHR = function () {
@@ -9781,7 +9783,7 @@ export const JsonRefs = (function (t) {
         -1 == (r = (n = o[i]).indexOf("="))
           ? (e[decodeURIComponent(n)] = "")
           : (e[decodeURIComponent(n.slice(0, r))] = decodeURIComponent(
-              n.slice(r + 1)
+              n.slice(r + 1),
             ));
       return e;
     }
@@ -9960,7 +9962,7 @@ export const JsonRefs = (function (t) {
       }),
       (g.prototype.crossDomainError = function () {
         var t = new Error(
-          "Request has been terminated\nPossible causes: the network is offline, Origin is not allowed by Access-Control-Allow-Origin, the page is being unloaded, etc."
+          "Request has been terminated\nPossible causes: the network is offline, Origin is not allowed by Access-Control-Allow-Origin, the page is being unloaded, etc.",
         );
         (t.crossDomain = !0),
           (t.status = this.status),
@@ -9974,7 +9976,7 @@ export const JsonRefs = (function (t) {
           function () {
             return (
               console.warn(
-                "This is not supported in browser version of superagent"
+                "This is not supported in browser version of superagent",
               ),
               this
             );
@@ -9982,7 +9984,7 @@ export const JsonRefs = (function (t) {
       (g.prototype.pipe = g.prototype.write =
         function () {
           throw Error(
-            "Streaming is not supported in browser version of superagent"
+            "Streaming is not supported in browser version of superagent",
           );
         }),
       (g.prototype._isHost = function (t) {
@@ -9997,7 +9999,7 @@ export const JsonRefs = (function (t) {
         return (
           this._endCalled &&
             console.warn(
-              "Warning: .end() was called twice. This is not supported in superagent"
+              "Warning: .end() was called twice. This is not supported in superagent",
             ),
           (this._endCalled = !0),
           (this._callback = t || f),
@@ -10074,14 +10076,14 @@ export const JsonRefs = (function (t) {
       (l.agent = function () {
         return new s();
       }),
-      ["GET", "POST", "OPTIONS", "PATCH", "PUT", "DELETE"].forEach(function (
-        t
-      ) {
-        s.prototype[t.toLowerCase()] = function (n, r) {
-          var e = new l.Request(t, n);
-          return this._setDefaults(e), r && e.end(r), e;
-        };
-      }),
+      ["GET", "POST", "OPTIONS", "PATCH", "PUT", "DELETE"].forEach(
+        function (t) {
+          s.prototype[t.toLowerCase()] = function (n, r) {
+            var e = new l.Request(t, n);
+            return this._setDefaults(e), r && e.end(r), e;
+          };
+        },
+      ),
       (s.prototype.del = s.prototype.delete),
       (l.get = function (t, n, r) {
         var e = l("GET", t);
@@ -10306,7 +10308,7 @@ export const JsonRefs = (function (t) {
           var r = this;
           this._endCalled &&
             console.warn(
-              "Warning: superagent request was sent twice, because both .end() and .then() were called. Never call .end() if you use promises"
+              "Warning: superagent request was sent twice, because both .end() and .then() were called. Never call .end() if you use promises",
             ),
             (this._fullfilledPromise = new Promise(function (t, n) {
               r.end(function (r, e) {
@@ -10356,7 +10358,7 @@ export const JsonRefs = (function (t) {
         if (
           (this._data &&
             console.error(
-              ".field() can't be used if .send() is used. Please use only .send() or only .field() & .attach()"
+              ".field() can't be used if .send() is used. Please use only .send() or only .field() & .attach()",
             ),
           o(t))
         ) {
@@ -10423,7 +10425,7 @@ export const JsonRefs = (function (t) {
         if (
           (this._formData &&
             console.error(
-              ".send() can't be used if .attach() or .field() is used. Please use only .send() or only .field() & .attach()"
+              ".send() can't be used if .attach() or .field() is used. Please use only .send() or only .field() & .attach()",
             ),
           n && !this._data)
         )
@@ -10491,7 +10493,7 @@ export const JsonRefs = (function (t) {
               t._timeoutError(
                 "Response timeout of ",
                 t._responseTimeout,
-                "ETIMEDOUT"
+                "ETIMEDOUT",
               );
             }, this._responseTimeout));
       });
@@ -10681,54 +10683,56 @@ export const JsonRefs = (function (t) {
                   });
                 })
               : !(function () {
-                  if (t.postMessage && !t.importScripts) {
-                    var n = !0,
-                      r = t.onmessage;
-                    return (
-                      (t.onmessage = function () {
-                        n = !1;
-                      }),
-                      t.postMessage("", "*"),
-                      (t.onmessage = r),
-                      n
-                    );
-                  }
-                })()
-              ? t.MessageChannel
-                ? (((i = new MessageChannel()).port1.onmessage = function (t) {
-                    v(t.data);
-                  }),
-                  (e = function (t) {
-                    i.port2.postMessage(t);
-                  }))
-                : l && "onreadystatechange" in l.createElement("script")
-                ? ((o = l.documentElement),
-                  (e = function (t) {
-                    var n = l.createElement("script");
-                    (n.onreadystatechange = function () {
-                      v(t),
-                        (n.onreadystatechange = null),
-                        o.removeChild(n),
-                        (n = null);
+                    if (t.postMessage && !t.importScripts) {
+                      var n = !0,
+                        r = t.onmessage;
+                      return (
+                        (t.onmessage = function () {
+                          n = !1;
+                        }),
+                        t.postMessage("", "*"),
+                        (t.onmessage = r),
+                        n
+                      );
+                    }
+                  })()
+                ? t.MessageChannel
+                  ? (((i = new MessageChannel()).port1.onmessage = function (
+                      t,
+                    ) {
+                      v(t.data);
                     }),
-                      o.appendChild(n);
-                  }))
-                : (e = function (t) {
-                    setTimeout(v, 0, t);
-                  })
-              : ((u = "setImmediate$" + Math.random() + "$"),
-                (c = function (n) {
-                  n.source === t &&
-                    "string" == typeof n.data &&
-                    0 === n.data.indexOf(u) &&
-                    v(+n.data.slice(u.length));
-                }),
-                t.addEventListener
-                  ? t.addEventListener("message", c, !1)
-                  : t.attachEvent("onmessage", c),
-                (e = function (n) {
-                  t.postMessage(u + n, "*");
-                })),
+                    (e = function (t) {
+                      i.port2.postMessage(t);
+                    }))
+                  : l && "onreadystatechange" in l.createElement("script")
+                    ? ((o = l.documentElement),
+                      (e = function (t) {
+                        var n = l.createElement("script");
+                        (n.onreadystatechange = function () {
+                          v(t),
+                            (n.onreadystatechange = null),
+                            o.removeChild(n),
+                            (n = null);
+                        }),
+                          o.appendChild(n);
+                      }))
+                    : (e = function (t) {
+                        setTimeout(v, 0, t);
+                      })
+                : ((u = "setImmediate$" + Math.random() + "$"),
+                  (c = function (n) {
+                    n.source === t &&
+                      "string" == typeof n.data &&
+                      0 === n.data.indexOf(u) &&
+                      v(+n.data.slice(u.length));
+                  }),
+                  t.addEventListener
+                    ? t.addEventListener("message", c, !1)
+                    : t.attachEvent("onmessage", c),
+                  (e = function (n) {
+                    t.postMessage(u + n, "*");
+                  })),
             (p.setImmediate = function (t) {
               "function" != typeof t && (t = new Function("" + t));
               for (
@@ -10866,8 +10870,8 @@ export const JsonRefs = (function (t) {
                 : c + encodeURIComponent(o(t[e]));
             }).join(n)
           : a
-          ? encodeURIComponent(o(a)) + r + encodeURIComponent(o(t))
-          : ""
+            ? encodeURIComponent(o(a)) + r + encodeURIComponent(o(t))
+            : ""
       );
     };
     var i =
@@ -10935,14 +10939,14 @@ export const JsonRefs = (function (t) {
           return void 0 === t
             ? "undefined"
             : null === t
-            ? "null"
-            : Object.prototype.toString
-                .call(t)
-                .split(" ")
-                .pop()
-                .split("]")
-                .shift()
-                .toLowerCase();
+              ? "null"
+              : Object.prototype.toString
+                  .call(t)
+                  .split(" ")
+                  .pop()
+                  .split("]")
+                  .shift()
+                  .toLowerCase();
         }
         function o(t) {
           return t.toUpperCase();
@@ -10954,7 +10958,7 @@ export const JsonRefs = (function (t) {
                 "|" +
                 r("%[89A-Fa-f]" + e + "%" + e + e) +
                 "|" +
-                r("%" + e + e)
+                r("%" + e + e),
             ),
             i = "[\\!\\$\\&\\'\\(\\)\\*\\+\\,\\;\\=]",
             u = n("[\\:\\/\\?\\#\\[\\]\\@]", i),
@@ -10965,7 +10969,7 @@ export const JsonRefs = (function (t) {
               "[\\-\\.\\_\\~]",
               t
                 ? "[\\xA0-\\u200D\\u2010-\\u2029\\u202F-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFEF]"
-                : "[]"
+                : "[]",
             ),
             s = r("[A-Za-z]" + n("[A-Za-z]", "[0-9]", "[\\+\\-\\.]") + "*"),
             f = r(r(o + "|" + n(a, i, "[\\:]")) + "*"),
@@ -10978,7 +10982,7 @@ export const JsonRefs = (function (t) {
                   r("1[0-9][0-9]") +
                   "|" +
                   r("[1-9][0-9]") +
-                  "|[0-9]"
+                  "|[0-9]",
               ),
               r(
                 r("25[0-5]") +
@@ -10988,7 +10992,7 @@ export const JsonRefs = (function (t) {
                   r("1[0-9][0-9]") +
                   "|" +
                   r("0?[1-9][0-9]") +
-                  "|0?0?[0-9]"
+                  "|0?0?[0-9]",
               )),
             p = r(l + "\\." + l + "\\." + l + "\\." + l),
             h = r(e + "{1,4}"),
@@ -11001,14 +11005,14 @@ export const JsonRefs = (function (t) {
                 "?\\:\\:" +
                 r(h + "\\:") +
                 "{3}" +
-                v
+                v,
             ),
             b = r(
               r(r(h + "\\:") + "{0,2}" + h) +
                 "?\\:\\:" +
                 r(h + "\\:") +
                 "{2}" +
-                v
+                v,
             ),
             m = r(r(r(h + "\\:") + "{0,3}" + h) + "?\\:\\:" + h + "\\:" + v),
             w = r(r(r(h + "\\:") + "{0,4}" + h) + "?\\:\\:" + v),
@@ -11051,7 +11055,7 @@ export const JsonRefs = (function (t) {
                   I +
                   ")" +
                   r("\\:(" + P + ")") +
-                  "?)"
+                  "?)",
               ) +
                 "?(" +
                 z +
@@ -11061,7 +11065,7 @@ export const JsonRefs = (function (t) {
                 q +
                 "|" +
                 M +
-                ")"
+                ")",
             ),
             r("\\?(" + $ + ")"),
             r("\\#(" + B + ")"),
@@ -11073,7 +11077,7 @@ export const JsonRefs = (function (t) {
                   I +
                   ")" +
                   r("\\:(" + P + ")") +
-                  "?)"
+                  "?)",
               ) +
                 "?(" +
                 z +
@@ -11083,7 +11087,7 @@ export const JsonRefs = (function (t) {
                 L +
                 "|" +
                 M +
-                ")"
+                ")",
             ),
             r("\\?(" + $ + ")"),
             r("\\#(" + B + ")"),
@@ -11095,7 +11099,7 @@ export const JsonRefs = (function (t) {
                   I +
                   ")" +
                   r("\\:(" + P + ")") +
-                  "?)"
+                  "?)",
               ) +
                 "?(" +
                 z +
@@ -11105,7 +11109,7 @@ export const JsonRefs = (function (t) {
                 q +
                 "|" +
                 M +
-                ")"
+                ")",
             ),
             r("\\?(" + $ + ")"),
             r("\\#(" + B + ")"),
@@ -11114,7 +11118,7 @@ export const JsonRefs = (function (t) {
             {
               NOT_SCHEME: new RegExp(
                 n("[^]", "[A-Za-z]", "[0-9]", "[\\+\\-\\.]"),
-                "g"
+                "g",
               ),
               NOT_USERINFO: new RegExp(n("[^\\%\\:]", a, i), "g"),
               NOT_HOST: new RegExp(n("[^\\%\\[\\]\\:]", a, i), "g"),
@@ -11122,11 +11126,11 @@ export const JsonRefs = (function (t) {
               NOT_PATH_NOSCHEME: new RegExp(n("[^\\%\\/\\@]", a, i), "g"),
               NOT_QUERY: new RegExp(
                 n("[^\\%]", a, i, "[\\:\\@\\/\\?]", c),
-                "g"
+                "g",
               ),
               NOT_FRAGMENT: new RegExp(
                 n("[^\\%]", a, i, "[\\:\\@\\/\\?]"),
-                "g"
+                "g",
               ),
               ESCAPE: new RegExp(n("[^]", a, i), "g"),
               UNRESERVED: new RegExp(a, "g"),
@@ -11138,7 +11142,7 @@ export const JsonRefs = (function (t) {
                   E +
                   ")" +
                   r(r("\\%25|\\%(?!" + e + "{2})") + "(" + S + ")") +
-                  "?\\]?$"
+                  "?\\]?$",
               ),
             }
           );
@@ -11172,7 +11176,7 @@ export const JsonRefs = (function (t) {
                 return r;
               })(t, n);
             throw new TypeError(
-              "Invalid attempt to destructure non-iterable instance"
+              "Invalid attempt to destructure non-iterable instance",
             );
           },
           s = 2147483647,
@@ -11238,10 +11242,10 @@ export const JsonRefs = (function (t) {
                   (n = t.charCodeAt(f++)) - 48 < 10
                     ? n - 22
                     : n - 65 < 26
-                    ? n - 65
-                    : n - 97 < 26
-                    ? n - 97
-                    : 36;
+                      ? n - 65
+                      : n - 97 < 26
+                        ? n - 97
+                        : 36;
                 (d >= 36 || d > v((s - o) / p)) && y("overflow"), (o += d * p);
                 var _ = h <= u ? 1 : h >= u + 26 ? 26 : h - u;
                 if (d < _) break;
@@ -11363,18 +11367,18 @@ export const JsonRefs = (function (t) {
           return n < 16
             ? "%0" + n.toString(16).toUpperCase()
             : n < 128
-            ? "%" + n.toString(16).toUpperCase()
-            : n < 2048
-            ? "%" +
-              ((n >> 6) | 192).toString(16).toUpperCase() +
-              "%" +
-              ((63 & n) | 128).toString(16).toUpperCase()
-            : "%" +
-              ((n >> 12) | 224).toString(16).toUpperCase() +
-              "%" +
-              (((n >> 6) & 63) | 128).toString(16).toUpperCase() +
-              "%" +
-              ((63 & n) | 128).toString(16).toUpperCase();
+              ? "%" + n.toString(16).toUpperCase()
+              : n < 2048
+                ? "%" +
+                  ((n >> 6) | 192).toString(16).toUpperCase() +
+                  "%" +
+                  ((63 & n) | 128).toString(16).toUpperCase()
+                : "%" +
+                  ((n >> 12) | 224).toString(16).toUpperCase() +
+                  "%" +
+                  (((n >> 6) & 63) | 128).toString(16).toUpperCase() +
+                  "%" +
+                  ((63 & n) | 128).toString(16).toUpperCase();
         }
         function A(t) {
           for (var n = "", r = 0, e = t.length; r < e; ) {
@@ -11391,7 +11395,7 @@ export const JsonRefs = (function (t) {
                 var u = parseInt(t.substr(r + 4, 2), 16),
                   c = parseInt(t.substr(r + 7, 2), 16);
                 n += String.fromCharCode(
-                  ((15 & o) << 12) | ((63 & u) << 6) | (63 & c)
+                  ((15 & o) << 12) | ((63 & u) << 6) | (63 & c),
                 );
               } else n += t.substr(r, 9);
               r += 9;
@@ -11537,8 +11541,8 @@ export const JsonRefs = (function (t) {
                 ? void 0 === r.scheme
                   ? (r.reference = "relative")
                   : void 0 === r.fragment
-                  ? (r.reference = "absolute")
-                  : (r.reference = "uri")
+                    ? (r.reference = "absolute")
+                    : (r.reference = "uri")
                 : (r.reference = "same-document"),
               n.reference &&
                 "suffix" !== n.reference &&
@@ -11574,8 +11578,8 @@ export const JsonRefs = (function (t) {
                   r.IPV6ADDRESS,
                   function (t, n, r) {
                     return "[" + n + (r ? "%25" + r : "") + "]";
-                  }
-                )
+                  },
+                ),
               ),
             "number" == typeof t.port &&
               (e.push(":"), e.push(t.port.toString(10))),
@@ -11679,7 +11683,7 @@ export const JsonRefs = (function (t) {
                                 ? (o.path =
                                     t.path.slice(
                                       0,
-                                      t.path.lastIndexOf("/") + 1
+                                      t.path.lastIndexOf("/") + 1,
                                     ) + n.path)
                                 : (o.path = n.path)
                               : (o.path = "/" + n.path),
@@ -11738,11 +11742,11 @@ export const JsonRefs = (function (t) {
               "|" +
               r("%[89A-Fa-f][0-9A-Fa-f]%" + Z + Z) +
               "|" +
-              r("%" + Z + Z)
+              r("%" + Z + Z),
           ),
           X = n(
             "[\\!\\$\\%\\'\\(\\)\\*\\+\\,\\-\\.0-9\\<\\>A-Z\\x5E-\\x7E]",
-            '[\\"\\\\]'
+            '[\\"\\\\]',
           ),
           K = new RegExp(G, "g"),
           Y = new RegExp(J, "g"),
@@ -11752,13 +11756,13 @@ export const JsonRefs = (function (t) {
               "[A-Za-z0-9\\!\\$\\%\\'\\*\\+\\-\\^\\_\\`\\{\\|\\}\\~]",
               "[\\.]",
               '[\\"]',
-              X
+              X,
             ),
-            "g"
+            "g",
           ),
           tt = new RegExp(
             n("[^]", G, "[\\!\\$\\'\\(\\)\\*\\+\\,\\;\\:\\@]"),
-            "g"
+            "g",
           ),
           nt = tt;
         function rt(t) {
@@ -11828,11 +11832,11 @@ export const JsonRefs = (function (t) {
                     ? r instanceof Array
                       ? r
                       : "number" != typeof r.length ||
-                        r.split ||
-                        r.setInterval ||
-                        r.call
-                      ? [r]
-                      : Array.prototype.slice.call(r)
+                          r.split ||
+                          r.setInterval ||
+                          r.call
+                        ? [r]
+                        : Array.prototype.slice.call(r)
                     : [];
               if (i) {
                 for (var u = 0, c = i.length; u < c; ++u) {
@@ -11866,7 +11870,7 @@ export const JsonRefs = (function (t) {
                   h.push(
                     v.replace(Y, rt).replace(Y, o).replace(tt, O) +
                       "=" +
-                      p[v].replace(Y, rt).replace(Y, o).replace(nt, O)
+                      p[v].replace(Y, rt).replace(Y, o).replace(nt, O),
                   );
               return h.length && (e.query = h.join("&")), e;
             },

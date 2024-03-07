@@ -5,10 +5,12 @@ import { useChatMessages } from "../hooks/useChatMessages";
 import TypingBox from "./TypingBox";
 import { Message } from "./Message";
 import { ArrowDownCircleIcon } from "@heroicons/react/24/outline";
+import { MessageWithFiles } from "../utils/formTypes.ts";
 
 interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
   chat: ChatType;
-  startStream: (message?: string) => Promise<void>;
+  startStream: (message?: MessageWithFiles) => Promise<void>;
+  isDocumentRetrievalActive: boolean;
 }
 
 function usePrevious<T>(value: T): T | undefined {
@@ -23,7 +25,7 @@ export function Chat(props: ChatProps) {
   const { messages, resumeable } = useChatMessages(
     props.chat.thread_id,
     props.stream,
-    props.stopStream
+    props.stopStream,
   );
   const prevMessages = usePrevious(messages);
   useEffect(() => {
@@ -75,6 +77,7 @@ export function Chat(props: ChatProps) {
             props.stream?.status === "inflight" ? props.stopStream : undefined
           }
           inflight={props.stream?.status === "inflight"}
+          isDocumentRetrievalActive={props.isDocumentRetrievalActive}
         />
       </div>
     </div>

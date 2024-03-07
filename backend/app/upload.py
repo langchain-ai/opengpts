@@ -60,9 +60,10 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
     vectorstore: VectorStore
     """Vectorstore to ingest into."""
     assistant_id: Optional[str]
-    """Ingested documents will be associated with this assistant id.
+    thread_id: Optional[str]
+    """Ingested documents will be associated with assistant_id or thread_id.
     
-    The assistant ID is used as the namespace, and is filtered on at query time.
+    ID is used as the namespace, and is filtered on at query time.
     """
 
     class Config:
@@ -70,9 +71,13 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
 
     @property
     def namespace(self) -> str:
-        if self.assistant_id is None:
-            raise ValueError("assistant_id must be provided")
-        return self.assistant_id
+        if (self.assistant_id is None and self.thread_id is None) or (
+            self.assistant_id is not None and self.thread_id is not None
+        ):
+            raise ValueError(
+                "Exactly one of assistant_id or thread_id must be provided"
+            )
+        return self.assistant_id if self.assistant_id is not None else self.thread_id
 
     def invoke(
         self, input: BinaryIO, config: Optional[RunnableConfig] = None
@@ -122,5 +127,10 @@ ingest_runnable = IngestRunnable(
         id="assistant_id",
         annotation=str,
         name="Assistant ID",
+    ),
+    thread_id=ConfigurableField(
+        id="thread_id",
+        annotation=str,
+        name="Thread ID",
     ),
 )

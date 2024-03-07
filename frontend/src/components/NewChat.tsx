@@ -4,11 +4,13 @@ import TypingBox from "./TypingBox";
 import { Config } from "./Config";
 import { ConfigListProps } from "../hooks/useConfigList";
 import { cn } from "../utils/cn";
+import { MessageWithFiles } from "../utils/formTypes.ts";
 
 interface NewChatProps extends ConfigListProps {
   configSchema: Schemas["configSchema"];
   configDefaults: Schemas["configDefaults"];
-  startChat: (message: string) => Promise<void>;
+  startChat: (message: MessageWithFiles) => Promise<void>;
+  isDocumentRetrievalActive: boolean;
 }
 
 export function NewChat(props: NewChatProps) {
@@ -16,7 +18,7 @@ export function NewChat(props: NewChatProps) {
     <div
       className={cn(
         "flex flex-col items-stretch",
-        props.currentConfig ? "pb-[76px]" : "pb-6"
+        props.currentConfig ? "pb-[76px]" : "pb-6",
       )}
     >
       <div className="flex-1 flex flex-col md:flex-row lg:items-stretch self-stretch">
@@ -41,7 +43,10 @@ export function NewChat(props: NewChatProps) {
         </main>
       </div>
       <div className="fixed left-0 lg:left-72 bottom-0 right-0 p-4">
-        <TypingBox onSubmit={props.startChat} />
+        <TypingBox
+          onSubmit={props.startChat}
+          isDocumentRetrievalActive={props.isDocumentRetrievalActive}
+        />
       </div>
     </div>
   );
