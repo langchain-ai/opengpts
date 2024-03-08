@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { ShareIcon } from "@heroicons/react/24/outline";
+import { Fragment, useEffect, useState } from "react";
+import { CheckIcon, ShareIcon } from "@heroicons/react/24/outline";
 import { useDropzone } from "react-dropzone";
 import { orderBy, last } from "lodash";
 
@@ -7,10 +7,11 @@ import { ConfigListProps } from "../hooks/useConfigList";
 import { SchemaField, Schemas } from "../hooks/useSchemas";
 import { cn } from "../utils/cn";
 import { FileUploadDropzone } from "./FileUpload";
-import { Switch } from "@headlessui/react";
+import { Combobox, Dialog, Switch, Transition } from "@headlessui/react";
 import { DROPZONE_CONFIG, TYPES } from "../constants";
 import { Tool, ToolConfig } from "../utils/formTypes.ts";
-import {useToolsSchemas} from "../hooks/useToolsSchemas.ts";
+import { useToolsSchemas } from "../hooks/useToolsSchemas.ts";
+import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 
 function Types(props: {
   field: SchemaField;
@@ -158,39 +159,126 @@ function ToolSelectionField(props: {
   onRemoveTool: (toolId: string) => void;
   onUpdateToolConfig: (toolId: string, config: ToolConfig) => void;
 }) {
+  const { tools: availableTools, loading } = useToolsSchemas();
+  const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
+  const [query, setQuery] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-    const {tools: availableTools} = useToolsSchemas();
-
-  // Handle adding a new tool. For simplicity, this example directly adds a tool. In practice, you may want to use a modal or another form to set initial config.
-  const handleAddTool = (toolId: string) => {
-    const tool = availableTools.find((t) => t.id === toolId);
-    if (tool) props.onAddTool({ ...tool });
+  const handleSelectTool = (tool: Tool) => {
+    props.onAddTool(tool);
+    setSelectedTool(null); // Reset the selection
+    setQuery(""); // Clear the query
   };
+
+  // Filter tools based on the query
+  const filteredTools =
+    query === ""
+      ? availableTools
+      : availableTools.filter((tool) =>
+          tool.name
+            .toLowerCase()
+            .replace(/\s+/g, "")
+            .includes(query.toLowerCase().replace(/\s+/g, "")),
+        );
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    if (selectedTool) {
+      props.onAddTool(selectedTool); // Add the tool to the selected tools list
+      setSelectedTool(null); // Reset selection
+    }
+  };
+
+  // Render function for the selected tool's configuration dialog
+  const renderConfigDialog = () => (
+    <Transition appear show={isDialogOpen} as={Fragment}>
+      <Dialog as="div" className="relative z-10" onClose={handleDialogClose}>
+        {/* Dialog and Transition.Child components as shown in your example */}
+        {/* This is where you'd implement the form based on the selectedTool's config schema */}
+      </Dialog>
+    </Transition>
+  );
 
   // Render function to display each selected tool and its config, with edit and remove options
   const renderSelectedTool = (tool: Tool, index: number) => (
-    <div key={'tool-'+index}>
+    <div key={"tool-" + index}>
       <span>{tool.name}</span>
-      {/* Implement a UI for editing tool config here */}
+      {/* You might also want to have a button here to open the configuration dialog for editing */}
       <button onClick={() => props.onRemoveTool(tool.id)}>Remove</button>
     </div>
   );
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div>
-      <Label
-        title="Tools"
-        description="Select tools for use"
-      />
-      <div>{props.selectedTools.map(renderSelectedTool)}</div>
-      <select onChange={(e) => handleAddTool(e.target.value)} value="">
-        <option value="">Add a tool</option>
-        {availableTools.map((tool) => (
-          <option key={tool.id} value={tool.id}>
-            {tool.name}
-          </option>
-        ))}
-      </select>
+      <Label title="Tools" />
+      <div className="w-full max-w-xs">
+        <Combobox value={selectedTool} onChange={handleSelectTool}>
+          <div className="relative mt-1">
+            <Combobox.Input
+              className="w-full border border-gray-300 bg-white py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
+              onChange={(event) => setQuery(event.target.value)}
+              displayValue={(tool: Tool) => tool?.name ?? ""}
+              placeholder="Add a tool"
+            />
+            <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+              <ChevronUpDownIcon
+                className="h-5 w-5 text-gray-400"
+                aria-hidden="true"
+              />
+            </Combobox.Button>
+            <Transition
+              as={Fragment}
+              leave="transition ease-in duration-100"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                {filteredTools.length === 0 && query !== "" ? (
+                  <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                    Nothing found.
+                  </div>
+                ) : (
+                  filteredTools.map((tool) => (
+                    <Combobox.Option
+                      key={tool.id}
+                      value={tool}
+                      className={({ active }) =>
+                        `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? "bg-indigo-100 text-indigo-900" : "text-gray-900"}`
+                      }
+                    >
+                      {({ selected, active }) => (
+                        <>
+                          <span
+                            className={`block truncate ${selected ? "font-medium" : "font-normal"}`}
+                          >
+                            {tool.name}
+                          </span>
+                          {selected ? (
+                            <span
+                              className={`absolute inset-y-0 left-0 flex items-center pl-3 ${active ? "text-indigo-600" : "text-indigo-600"}`}
+                            >
+                              <CheckIcon
+                                className="h-5 w-5"
+                                aria-hidden="true"
+                              />
+                            </span>
+                          ) : null}
+                        </>
+                      )}
+                    </Combobox.Option>
+                  ))
+                )}
+              </Combobox.Options>
+            </Transition>
+          </div>
+        </Combobox>
+      </div>
+      {renderConfigDialog()}
+      {props.selectedTools.map(renderSelectedTool)}
     </div>
   );
 }
