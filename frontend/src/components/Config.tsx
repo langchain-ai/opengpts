@@ -11,7 +11,12 @@ import { Combobox, Dialog, Switch, Transition } from "@headlessui/react";
 import { DROPZONE_CONFIG, TYPES } from "../constants";
 import { Tool, ToolConfig } from "../utils/formTypes.ts";
 import { useToolsSchemas } from "../hooks/useToolsSchemas.ts";
-import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
+import {
+  ChevronUpDownIcon,
+  Cog6ToothIcon,
+  CogIcon,
+  TrashIcon,
+} from "@heroicons/react/20/solid";
 
 function Types(props: {
   field: SchemaField;
@@ -190,21 +195,80 @@ function ToolSelectionField(props: {
   };
 
   // Render function for the selected tool's configuration dialog
-  const renderConfigDialog = () => (
-    <Transition appear show={isDialogOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-10" onClose={handleDialogClose}>
-        {/* Dialog and Transition.Child components as shown in your example */}
-        {/* This is where you'd implement the form based on the selectedTool's config schema */}
+  const renderConfigDialog = () => {
+    console.log(selectedTool)
+    return <Transition appear show={isDialogOpen} as={Fragment}>
+      <Dialog className="relative z-50" onClose={handleDialogClose}>
+        {/* The backdrop, rendered as a fixed sibling to the panel container */}
+        <div className="fixed inset-0 bg-black/30" aria-hidden="true"/>
+
+        {/* Full-screen container to center the panel */}
+        <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
+          <Dialog.Panel className="mx-auto max-w-sm rounded bg-white p-4 font-light">
+            <Dialog.Title className="font-semibold">{selectedTool?.name}</Dialog.Title>
+            <Dialog.Description>
+              {selectedTool?.description}
+            </Dialog.Description>
+
+            {/* Dynamically generate input fields for the selected tool's config */}
+            {selectedTool?.config && Object.entries(selectedTool.config).map(([key, value]) => (
+                <div key={key}>
+                  <label htmlFor={key}>{key}</label>
+                  <input
+                      id={key}
+                      value={value || ''}
+                      onChange={(e) => null}
+                      className="input-styles"
+                  />
+                </div>
+            ))}
+
+            <div className="flex pt-3 justify-between">
+            <button
+                className="relative inline-flex items-center gap-x-1.5 rounded-md px-3 py-2 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 bg-white"
+                onClick={() => setIsDialogOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+                className="relative inline-flex items-center gap-x-1.5 rounded-md px-3 py-2 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 bg-white"
+                onClick={() => {
+                  // Store changes
+                  //props.onUpdateToolConfig(selectedTool.id, toolConfig); // Pass the updated config to the parent component's handler
+                  setIsDialogOpen(false);
+                }}
+            >
+              Save
+            </button>
+            </div>
+          </Dialog.Panel>
+        </div>
       </Dialog>
     </Transition>
-  );
+  };
 
   // Render function to display each selected tool and its config, with edit and remove options
   const renderSelectedTool = (tool: Tool, index: number) => (
-    <div key={"tool-" + index}>
-      <span>{tool.name}</span>
-      {/* You might also want to have a button here to open the configuration dialog for editing */}
-      <button onClick={() => props.onRemoveTool(tool.id)}>Remove</button>
+    <div
+      key={"tool-" + index}
+      className="flex max-w-2xl items-center justify-between p-2 border-b border-gray-200 transition duration-150 ease-in-out"
+    >
+      <span className="flex-grow text-gray-800">{tool.name}</span>
+      <button
+        onClick={() => {
+          setSelectedTool(tool);
+          setIsDialogOpen(true);
+        }}
+        className="text-gray-400 hover:text-indigo-600 mr-4"
+      >
+        <Cog6ToothIcon className="h-4 w-4" aria-hidden="true" />
+      </button>
+      <button
+        onClick={() => props.onRemoveTool(tool.id)}
+        className="text-gray-400 hover:text-red-600"
+      >
+        <TrashIcon className="h-5 w-5" aria-hidden="true" />
+      </button>
     </div>
   );
 
@@ -215,13 +279,14 @@ function ToolSelectionField(props: {
   return (
     <div>
       <Label title="Tools" />
-      <div className="w-full max-w-xs">
+      {props.selectedTools.map(renderSelectedTool)}
+      <div className="w-full max-w-2xl">
         <Combobox value={selectedTool} onChange={handleSelectTool}>
           <div className="relative mt-1">
             <Combobox.Input
               className="w-full border border-gray-300 bg-white py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
               onChange={(event) => setQuery(event.target.value)}
-              displayValue={(tool: Tool) => tool?.name ?? ""}
+              displayValue={() => ""}
               placeholder="Add a tool"
             />
             <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
@@ -247,28 +312,14 @@ function ToolSelectionField(props: {
                       key={tool.id}
                       value={tool}
                       className={({ active }) =>
-                        `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? "bg-indigo-100 text-indigo-900" : "text-gray-900"}`
+                        `relative cursor-default select-none py-2 pl-2 pr-4 ${active ? "bg-indigo-100 text-indigo-900" : "text-gray-900"}`
                       }
                     >
-                      {({ selected, active }) => (
-                        <>
-                          <span
-                            className={`block truncate ${selected ? "font-medium" : "font-normal"}`}
-                          >
-                            {tool.name}
-                          </span>
-                          {selected ? (
-                            <span
-                              className={`absolute inset-y-0 left-0 flex items-center pl-3 ${active ? "text-indigo-600" : "text-indigo-600"}`}
-                            >
-                              <CheckIcon
-                                className="h-5 w-5"
-                                aria-hidden="true"
-                              />
-                            </span>
-                          ) : null}
-                        </>
-                      )}
+                      <span
+                        className={`block truncate font-normal`}
+                      >
+                        {tool.name}
+                      </span>
                     </Combobox.Option>
                   ))
                 )}
@@ -278,7 +329,6 @@ function ToolSelectionField(props: {
         </Combobox>
       </div>
       {renderConfigDialog()}
-      {props.selectedTools.map(renderSelectedTool)}
     </div>
   );
 }
