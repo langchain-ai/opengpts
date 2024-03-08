@@ -8,7 +8,7 @@ export interface Tool {
   type: string;
   name: string;
   description: string;
-  config: ToolConfig;
+  config?: ToolConfig;
 }
 
 export interface ToolConfig {
