@@ -61,6 +61,7 @@ class Tool(BaseModel):
     id: str
     type: AvailableTools
     name: Optional[str]
+    description: Optional[str]
     config: Optional[ToolConfig]
 
 
@@ -89,66 +90,117 @@ class TavilyAnswerConfig(ToolConfig):
 class ActionServer(Tool):
     type: AvailableTools = Field(AvailableTools.ACTION_SERVER, const=True)
     name: str = Field("Action Server by Robocorp", const=True)
+    description: str = Field(
+        (
+            "Run AI actions with "
+            "[Robocorp Action Server](https://github.com/robocorp/robocorp)."
+        ),
+        const=True,
+    )
     config: ActionServerConfig
 
 
 class Connery(Tool):
     type: AvailableTools = Field(AvailableTools.CONNERY, const=True)
     name: str = Field("AI Action Runner by Connery", const=True)
+    description: str = Field(
+        (
+            "Connect OpenGPTs to the real world with "
+            "[Connery](https://github.com/connery-io/connery)."
+        ),
+        const=True,
+    )
     config: ConneryConfig
 
 
 class DDGSearch(Tool):
     type: AvailableTools = Field(AvailableTools.DDG_SEARCH, const=True)
     name: str = Field("DuckDuckGo Search", const=True)
+    description: str = Field(
+        "Search the web with [DuckDuckGo](https://pypi.org/project/duckduckgo-search/).",
+        const=True,
+    )
 
 
 class Arxiv(Tool):
     type: AvailableTools = Field(AvailableTools.ARXIV, const=True)
     name: str = Field("Arxiv", const=True)
+    description: str = Field("Searches [Arxiv](https://arxiv.org/).", const=True)
 
 
 class YouSearch(Tool):
     type: AvailableTools = Field(AvailableTools.YOU_SEARCH, const=True)
     name: str = Field("You.com Search", const=True)
+    description: str = Field(
+        "Uses [You.com](https://you.com/) search, optimized responses for LLMs.",
+        const=True,
+    )
     config: YouSearchConfig
 
 
 class SecFilings(Tool):
     type: AvailableTools = Field(AvailableTools.SEC_FILINGS, const=True)
     name: str = Field("SEC Filings (Kay.ai)", const=True)
+    description: str = Field(
+        "Searches through SEC filings using [Kay.ai](https://www.kay.ai/).", const=True
+    )
 
 
 class PressReleases(Tool):
     type: AvailableTools = Field(AvailableTools.PRESS_RELEASES, const=True)
     name: str = Field("Press Releases (Kay.ai)", const=True)
+    description: str = Field(
+        "Searches through press releases using [Kay.ai](https://www.kay.ai/).",
+        const=True,
+    )
 
 
 class PubMed(Tool):
     type: AvailableTools = Field(AvailableTools.PUBMED, const=True)
     name: str = Field("PubMed", const=True)
+    description: str = Field(
+        "Searches [PubMed](https://pubmed.ncbi.nlm.nih.gov/).", const=True
+    )
 
 
 class Wikipedia(Tool):
     type: AvailableTools = Field(AvailableTools.WIKIPEDIA, const=True)
     name: str = Field("Wikipedia", const=True)
+    description: str = Field(
+        "Searches [Wikipedia](https://pypi.org/project/wikipedia/).", const=True
+    )
 
 
 class Tavily(Tool):
     type: AvailableTools = Field(AvailableTools.TAVILY, const=True)
     name: str = Field("Search (Tavily)", const=True)
+    description: str = Field(
+        (
+            "Uses the [Tavily](https://app.tavily.com/) search engine. "
+            "Includes sources in the response."
+        ),
+        const=True,
+    )
     config: TavilyConfig
 
 
 class TavilyAnswer(Tool):
     type: AvailableTools = Field(AvailableTools.TAVILY_ANSWER, const=True)
     name: str = Field("Search (short answer, Tavily)", const=True)
+    description: str = Field(
+        (
+            "Uses the [Tavily](https://app.tavily.com/) search engine. "
+            "This returns only the answer, no supporting evidence."
+        ),
+        const=True,
+    )
     config: TavilyAnswerConfig
 
 
 class Retrieval(Tool):
     type: AvailableTools = Field(AvailableTools.RETRIEVAL, const=True)
     name: str = Field("Retrieval", const=True)
+    description: str = Field("Look up information in uploaded files.", const=True)
 
 
 RETRIEVAL_DESCRIPTION = """Can be used to look up information that was uploaded to this assistant.
