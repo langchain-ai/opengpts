@@ -8,11 +8,30 @@ export interface Tool {
   type: string;
   name: string;
   description: string;
-  config?: ToolConfig;
+  config: {
+    [key: string]: string;
+  };
 }
 
-export interface ToolConfig {
-  // TODO: Example properties, replace with actual config properties of your tools
-  url?: string;
-  apiKey?: string;
+export interface ToolSchema {
+  id: string;
+  type: string;
+  name: string;
+  description: string;
+  config: ToolConfigSchema;
+}
+
+interface PropertySchema {
+  type: string;
+  title?: string;
+  default?: string; // Assuming default values are strings
+}
+
+interface ToolConfigSchema {
+  title: string;
+  type: string;
+  required: string[];
+  properties: {
+    [key: string]: PropertySchema;
+  };
 }

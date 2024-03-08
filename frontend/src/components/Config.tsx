@@ -9,14 +9,14 @@ import { cn } from "../utils/cn";
 import { FileUploadDropzone } from "./FileUpload";
 import { Combobox, Dialog, Switch, Transition } from "@headlessui/react";
 import { DROPZONE_CONFIG, TYPES } from "../constants";
-import { Tool, ToolConfig } from "../utils/formTypes.ts";
+import { Tool, ToolConfig, ToolSchema } from "../utils/formTypes.ts";
 import { useToolsSchemas } from "../hooks/useToolsSchemas.ts";
 import {
   ChevronUpDownIcon,
   Cog6ToothIcon,
   TrashIcon,
 } from "@heroicons/react/20/solid";
-import {marked} from "marked";
+import { marked } from "marked";
 
 function Types(props: {
   field: SchemaField;
@@ -169,10 +169,29 @@ function ToolSelectionField(props: {
   const [query, setQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleSelectTool = (tool: Tool) => {
-    if (!props.selectedTools.some(t => t.id === tool.id)) {
+  const handleSelectTool = (toolSchema: ToolSchema) => {
+    // Initialize config object based on ToolSchema
+    const config: { [key: string]: string } = {};
+    Object.keys(toolSchema.config.properties).forEach((key) => {
+      const property = toolSchema.config.properties[key];
+      // Use the default value if specified, otherwise initialize to an empty string
+      config[key] = property.default || "";
+    });
+
+    // Create a new tool object with initialized config
+    const tool: Tool = {
+      id: toolSchema.id,
+      type: toolSchema.type,
+      name: toolSchema.name,
+      description: toolSchema.description,
+      config: config,
+    };
+
+    // Check if the tool is already selected, if not, add it
+    if (!props.selectedTools.some((t) => t.id === tool.id)) {
       props.onAddTool(tool);
     }
+
     setSelectedTool(tool);
     setQuery(""); // Clear the query
   };
@@ -190,63 +209,85 @@ function ToolSelectionField(props: {
 
   const handleDialogClose = () => {
     setIsDialogOpen(false);
+    setSelectedTool(null);
+  };
+
+  const saveAndClose = () => {
+    setIsDialogOpen(false);
     if (selectedTool) {
-      props.onAddTool(selectedTool); // Add the tool to the selected tools list
-      setSelectedTool(null); // Reset selection
+      props.onAddTool(selectedTool);
     }
+    setSelectedTool(null);
   };
 
   // Render function for the selected tool's configuration dialog
   const renderConfigDialog = () => {
-    console.log(selectedTool)
-    return <Transition appear show={isDialogOpen} as={Fragment}>
-      <Dialog className="relative z-50" onClose={handleDialogClose}>
-        {/* The backdrop, rendered as a fixed sibling to the panel container */}
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true"/>
+    return (
+      <Transition appear show={isDialogOpen} as={Fragment}>
+        <Dialog className="relative z-50" onClose={handleDialogClose}>
+          {/* The backdrop, rendered as a fixed sibling to the panel container */}
+          <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
 
-        {/* Full-screen container to center the panel */}
-        <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
-          <Dialog.Panel className="mx-auto max-w-sm rounded bg-white p-4 font-light">
-            <Dialog.Title className="font-semibold">{selectedTool?.name}</Dialog.Title>
-            <Dialog.Description>
-              {selectedTool?.description}
-            </Dialog.Description>
+          {/* Full-screen container to center the panel */}
+          <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
+            <Dialog.Panel className="mx-auto max-w-sm rounded bg-white p-4 font-light">
+              <Dialog.Title className="font-semibold">
+                {selectedTool?.name}
+              </Dialog.Title>
+              {selectedTool?.description && (
+                <Dialog.Description
+                  className="text-gray-500 prose prose-sm prose-a:text-gray-500"
+                  dangerouslySetInnerHTML={{
+                    __html: marked(selectedTool?.description ?? ""),
+                  }}
+                />
+              )}
 
-            {/* Dynamically generate input fields for the selected tool's config */}
-            {selectedTool?.config && Object.entries(selectedTool.config).map(([key, value]) => (
-                <div key={key}>
-                  <label htmlFor={key}>{key}</label>
-                  <input
+              {/* Dynamically generate input fields for the selected tool's config */}
+              {selectedTool?.config &&
+                Object.entries(selectedTool.config).map(([key, value]) => (
+                  <div
+                    className="flex flex-col justify-between pt-2 pb-2"
+                    key={key}
+                  >
+                    <label htmlFor={key}>{key}</label>
+                    <input
                       id={key}
-                      value={value || ''}
-                      onChange={(e) => null}
-                      className="input-styles"
-                  />
-                </div>
-            ))}
+                      value={value || ""}
+                      onChange={(e) => {
+                        setSelectedTool({
+                          ...selectedTool,
+                          config: {
+                            ...selectedTool?.config,
+                            [key]: e.target.value,
+                          },
+                        });
+                      }}
+                      className="input-styles rounded-md"
+                      autoComplete="off"
+                    />
+                  </div>
+                ))}
 
-            <div className="flex pt-3 justify-between">
-            <button
-                className="relative inline-flex items-center gap-x-1.5 rounded-md px-3 py-2 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 bg-white"
-                onClick={() => setIsDialogOpen(false)}
-            >
-              Cancel
-            </button>
-            <button
-                className="relative inline-flex items-center gap-x-1.5 rounded-md px-3 py-2 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 bg-white"
-                onClick={() => {
-                  // Store changes
-                  //props.onUpdateToolConfig(selectedTool.id, toolConfig); // Pass the updated config to the parent component's handler
-                  setIsDialogOpen(false);
-                }}
-            >
-              Save
-            </button>
-            </div>
-          </Dialog.Panel>
-        </div>
-      </Dialog>
-    </Transition>
+              <div className="flex pt-3 justify-between">
+                <button
+                  className="relative inline-flex items-center gap-x-1.5 rounded-md px-3 py-2 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 bg-white"
+                  onClick={handleDialogClose}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="relative inline-flex items-center gap-x-1.5 rounded-md px-3 py-2 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 bg-white"
+                  onClick={saveAndClose}
+                >
+                  Save
+                </button>
+              </div>
+            </Dialog.Panel>
+          </div>
+        </Dialog>
+      </Transition>
+    );
   };
 
   // Render function to display each selected tool and its config, with edit and remove options
@@ -293,7 +334,7 @@ function ToolSelectionField(props: {
       <Label title="Tools" />
       {props.selectedTools.map(renderSelectedTool)}
       <div className="w-full max-w-2xl">
-        <Combobox value={selectedTool} onChange={handleSelectTool}>
+        <Combobox value={null} onChange={handleSelectTool}>
           <div className="relative mt-1">
             <Combobox.Input
               className="w-full border border-gray-300 bg-white py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
@@ -328,9 +369,7 @@ function ToolSelectionField(props: {
                         `relative cursor-default select-none py-2 pl-2 pr-4 ${active ? "bg-indigo-100 text-indigo-900" : "text-gray-900"}`
                       }
                     >
-                      <span
-                        className={`block truncate font-normal`}
-                      >
+                      <span className={`block truncate font-normal`}>
                         {tool.name}
                       </span>
                     </Combobox.Option>

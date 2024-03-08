@@ -1,9 +1,18 @@
 import { useEffect, useState } from "react";
-import { Tool } from "../utils/formTypes.ts";
+import { Tool, ToolSchema } from "../utils/formTypes.ts";
 import { v4 as uuidv4 } from "uuid";
 
+const resolveRef = (schema: object, ref: string) => {
+  const paths = ref.substring(2).split("/");
+  let result = schema;
+  for (const path of paths) {
+    result = result[path];
+  }
+  return result;
+};
+
 export function useToolsSchemas() {
-  const [tools, setTools] = useState<Tool[]>([]);
+  const [tools, setTools] = useState<ToolSchema[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -16,12 +25,16 @@ export function useToolsSchemas() {
         return response.json();
       })
       .then((data) => {
-        const processedTools = data.map((schema): Tool => {
+        const processedTools = data.map((schema: object): Tool => {
           // Assuming config is always an object with properties
           // You'll need a more sophisticated approach if configs can be more complex or vary significantly between tools
-          const configTemplate = schema.properties.config?.$ref
-            ? {}
-            : undefined;
+          let configTemplate;
+          if (schema.properties.config?.$ref) {
+            // Use the resolveRef function to get the actual config from the $ref
+            configTemplate = resolveRef(schema, schema.properties.config.$ref);
+          } else {
+            configTemplate = undefined;
+          }
           return {
             id: schema.properties.id.const || uuidv4(),
             name: schema.properties.name.const,
