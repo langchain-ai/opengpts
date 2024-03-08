@@ -10,6 +10,7 @@ import { FileUploadDropzone } from "./FileUpload";
 import { Switch } from "@headlessui/react";
 import { DROPZONE_CONFIG, TYPES } from "../constants";
 import { Tool, ToolConfig } from "../utils/formTypes.ts";
+import {useToolsSchemas} from "../hooks/useToolsSchemas.ts";
 
 function Types(props: {
   field: SchemaField;
@@ -151,39 +152,18 @@ export default function SingleOptionField(props: {
   );
 }
 
-const TOOL_DESCRIPTIONS = {
-  Retrieval: "Look up information in uploaded files.",
-  "Action Server by Robocorp":
-    "Run AI actions with [Robocorp Action Server](https://github.com/robocorp/robocorp).",
-  '"AI Action Runner" by Connery':
-    "Connect OpenGPTs to the real world with [Connery](https://github.com/connery-io/connery).",
-  "DDG Search":
-    "Search the web with [DuckDuckGo](https://pypi.org/project/duckduckgo-search/).",
-  "Search (Tavily)":
-    "Uses the [Tavily](https://app.tavily.com/) search engine. Includes sources in the response.",
-  "Search (short answer, Tavily)":
-    "Uses the [Tavily](https://app.tavily.com/) search engine. This returns only the answer, no supporting evidence.",
-  "You.com Search":
-    "Uses [You.com](https://you.com/) search, optimized responses for LLMs.",
-  "SEC Filings (Kay.ai)":
-    "Searches through SEC filings using [Kay.ai](https://www.kay.ai/).",
-  "Press Releases (Kay.ai)":
-    "Searches through press releases using [Kay.ai](https://www.kay.ai/).",
-  Arxiv: "Searches [Arxiv](https://arxiv.org/).",
-  PubMed: "Searches [PubMed](https://pubmed.ncbi.nlm.nih.gov/).",
-  Wikipedia: "Searches [Wikipedia](https://pypi.org/project/wikipedia/).",
-};
-
 function ToolSelectionField(props: {
   selectedTools: Tool[];
-  availableTools: Tool[];
   onAddTool: (tool: Tool) => void;
   onRemoveTool: (toolId: string) => void;
   onUpdateToolConfig: (toolId: string, config: ToolConfig) => void;
 }) {
+
+    const {tools: availableTools} = useToolsSchemas();
+
   // Handle adding a new tool. For simplicity, this example directly adds a tool. In practice, you may want to use a modal or another form to set initial config.
   const handleAddTool = (toolId: string) => {
-    const tool = props.availableTools.find((t) => t.id === toolId);
+    const tool = availableTools.find((t) => t.id === toolId);
     if (tool) props.onAddTool({ ...tool });
   };
 
@@ -205,7 +185,7 @@ function ToolSelectionField(props: {
       <div>{props.selectedTools.map(renderSelectedTool)}</div>
       <select onChange={(e) => handleAddTool(e.target.value)} value="">
         <option value="">Add a tool</option>
-        {props.availableTools.map((tool) => (
+        {availableTools.map((tool) => (
           <option key={tool.id} value={tool.id}>
             {tool.name}
           </option>
@@ -523,7 +503,6 @@ export function Config(props: {
               <ToolSelectionField
                 key={key}
                 selectedTools={selectedTools}
-                availableTools={[]}
                 onAddTool={handleAddTool}
                 onRemoveTool={handleRemoveTool}
                 onUpdateToolConfig={handleUpdateToolConfig}
