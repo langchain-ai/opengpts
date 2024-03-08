@@ -170,8 +170,10 @@ function ToolSelectionField(props: {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleSelectTool = (tool: Tool) => {
-    props.onAddTool(tool);
-    setSelectedTool(null); // Reset the selection
+    if (!props.selectedTools.some(t => t.id === tool.id)) {
+      props.onAddTool(tool);
+    }
+    setSelectedTool(tool);
     setQuery(""); // Clear the query
   };
 
@@ -288,6 +290,7 @@ function ToolSelectionField(props: {
               onChange={(event) => setQuery(event.target.value)}
               displayValue={() => ""}
               placeholder="Add a tool"
+              autoComplete="off"
             />
             <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
               <ChevronUpDownIcon
