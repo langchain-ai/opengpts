@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from "react";
-import { CheckIcon, ShareIcon } from "@heroicons/react/24/outline";
+import { ShareIcon } from "@heroicons/react/24/outline";
 import { useDropzone } from "react-dropzone";
 import { orderBy, last } from "lodash";
 
@@ -14,9 +14,9 @@ import { useToolsSchemas } from "../hooks/useToolsSchemas.ts";
 import {
   ChevronUpDownIcon,
   Cog6ToothIcon,
-  CogIcon,
   TrashIcon,
 } from "@heroicons/react/20/solid";
+import {marked} from "marked";
 
 function Types(props: {
   field: SchemaField;
@@ -255,7 +255,17 @@ function ToolSelectionField(props: {
       key={"tool-" + index}
       className="flex max-w-2xl items-center justify-between p-2 border-b border-gray-200 transition duration-150 ease-in-out"
     >
-      <span className="flex-grow text-gray-800">{tool.name}</span>
+      <div className="text-sm leading-6 flex-grow">
+        <label>{tool.name}</label>
+        {tool.description && (
+          <div
+            className="text-gray-500 prose prose-sm prose-a:text-gray-500"
+            dangerouslySetInnerHTML={{
+              __html: marked(tool.description),
+            }}
+          ></div>
+        )}
+      </div>
       <button
         onClick={() => {
           setSelectedTool(tool);
