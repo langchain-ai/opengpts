@@ -39,16 +39,19 @@ If the user is referencing particular files, that is often a good hint that info
 If the user asks a vague question, they are likely meaning to look up info from this retriever, and you should call it!"""
 
 
-def get_retriever(assistant_id: str):
+def get_retriever(assistant_id: str, thread_id: str):
     return vstore.as_retriever(
-        search_kwargs={"filter": RedisFilter.tag("namespace") == assistant_id}
+        search_kwargs={
+            "filter": (RedisFilter.tag("namespace") == assistant_id)
+            | (RedisFilter.tag("namespace") == thread_id)
+        }
     )
 
 
 @lru_cache(maxsize=5)
-def get_retrieval_tool(assistant_id: str, description: str):
+def get_retrieval_tool(assistant_id: str, thread_id: str, description: str):
     return create_retriever_tool(
-        get_retriever(assistant_id),
+        get_retriever(assistant_id, thread_id),
         "Retriever",
         description,
     )

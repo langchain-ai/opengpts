@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Chat } from "./components/Chat";
 import { ChatList } from "./components/ChatList";
@@ -9,6 +9,8 @@ import { useSchemas } from "./hooks/useSchemas";
 import { useStreamState } from "./hooks/useStreamState";
 import { useConfigList } from "./hooks/useConfigList";
 import { Config } from "./components/Config";
+import { MessageWithFiles } from "./utils/formTypes.ts";
+import { TYPE_NAME } from "./constants.ts";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -16,19 +18,60 @@ function App() {
   const { chats, currentChat, createChat, enterChat } = useChatList();
   const { configs, currentConfig, saveConfig, enterConfig } = useConfigList();
   const { startStream, stopStream, stream } = useStreamState();
+  const [isDocumentRetrievalActive, setIsDocumentRetrievalActive] =
+    useState(false);
+
+  useEffect(() => {
+    let configurable = null;
+    if (currentConfig) {
+      configurable = currentConfig?.config?.configurable;
+    }
+    if (currentChat && configs) {
+      const conf = configs.find(
+        (c) => c.assistant_id === currentChat.assistant_id,
+      );
+      configurable = conf?.config?.configurable;
+    }
+    const agent_type = configurable?.["type"] as TYPE_NAME | null;
+    if (agent_type === null || agent_type === "chatbot") {
+      setIsDocumentRetrievalActive(false);
+      return;
+    }
+    if (agent_type === "chat_retrieval") {
+      setIsDocumentRetrievalActive(true);
+      return;
+    }
+    const tools = (configurable?.["type==agent/tools"] as string[]) ?? [];
+    setIsDocumentRetrievalActive(tools.includes("Retrieval"));
+  }, [currentConfig, currentChat, configs]);
 
   const startTurn = useCallback(
-    async (message?: string, chat: ChatType | null = currentChat) => {
+    async (message?: MessageWithFiles, chat: ChatType | null = currentChat) => {
       if (!chat) return;
       const config = configs?.find(
-        (c) => c.assistant_id === chat.assistant_id
+        (c) => c.assistant_id === chat.assistant_id,
       )?.config;
       if (!config) return;
+      const files = message?.files || [];
+      if (files.length > 0) {
+        const formData = files.reduce((formData, file) => {
+          formData.append("files", file);
+          return formData;
+        }, new FormData());
+        formData.append(
+          "config",
+          JSON.stringify({ configurable: { thread_id: chat.thread_id } }),
+        );
+        await fetch(`/ingest`, {
+          method: "POST",
+          body: formData,
+        });
+      }
       await startStream(
         message
           ? [
               {
-                content: message,
+                content: message.message,
                 additional_kwargs: {},
                 type: "human",
                 example: false,
@@ -36,19 +79,22 @@ function App() {
             ]
           : null,
         chat.assistant_id,
-        chat.thread_id
+        chat.thread_id,
       );
     },
-    [currentChat, startStream, configs]
+    [currentChat, startStream, configs],
   );
 
   const startChat = useCallback(
-    async (message: string) => {
+    async (message: MessageWithFiles) => {
       if (!currentConfig) return;
-      const chat = await createChat(message, currentConfig.assistant_id);
+      const chat = await createChat(
+        message.message,
+        currentConfig.assistant_id,
+      );
       return startTurn(message, chat);
     },
-    [createChat, startTurn, currentConfig]
+    [createChat, startTurn, currentConfig],
   );
 
   const selectChat = useCallback(
@@ -65,7 +111,7 @@ function App() {
         setSidebarOpen(false);
       }
     },
-    [enterChat, stopStream, sidebarOpen, currentChat, enterConfig, configs]
+    [enterChat, stopStream, sidebarOpen, currentChat, enterConfig, configs],
   );
 
   const selectConfig = useCallback(
@@ -73,7 +119,7 @@ function App() {
       enterConfig(id);
       enterChat(null);
     },
-    [enterConfig, enterChat]
+    [enterConfig, enterChat],
   );
 
   const content = currentChat ? (
@@ -82,6 +128,7 @@ function App() {
       startStream={startTurn}
       stopStream={stopStream}
       stream={stream}
+      isDocumentRetrievalActive={isDocumentRetrievalActive}
     />
   ) : currentConfig ? (
     <NewChat
@@ -92,6 +139,7 @@ function App() {
       currentConfig={currentConfig}
       saveConfig={saveConfig}
       enterConfig={selectConfig}
+      isDocumentRetrievalActive={isDocumentRetrievalActive}
     />
   ) : (
     <Config
@@ -104,7 +152,7 @@ function App() {
   );
 
   const currentChatConfig = configs?.find(
-    (c) => c.assistant_id === currentChat?.assistant_id
+    (c) => c.assistant_id === currentChat?.assistant_id,
   );
 
   return (
@@ -129,7 +177,7 @@ function App() {
           chats={useMemo(() => {
             if (configs === null || chats === null) return null;
             return chats.filter((c) =>
-              configs.some((config) => config.assistant_id === c.assistant_id)
+              configs.some((config) => config.assistant_id === c.assistant_id),
             );
           }, [chats, configs])}
           currentChat={currentChat}

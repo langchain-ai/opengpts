@@ -12,7 +12,6 @@ export interface SchemaField {
 }
 
 export interface Schemas {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   configSchema: null | {
     properties: {
       configurable: {

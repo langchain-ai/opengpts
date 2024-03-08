@@ -38,7 +38,7 @@ const cloneJSON = (source: any): any => {
  */
 const merge = (
   target: Record<string, unknown>,
-  source: Record<string, unknown>
+  source: Record<string, unknown>,
 ) => {
   target = cloneJSON(target);
 
@@ -67,7 +67,7 @@ const merge = (
  */
 const getLocalRef = function (
   inputPath: string,
-  definitions: Record<string, unknown>
+  definitions: Record<string, unknown>,
 ) {
   const path = inputPath.replace(/^#\/definitions\//, "").split("/");
 
@@ -162,7 +162,7 @@ const defaults = (schema: any, definitions: Record<string, any>): unknown => {
     // tuple-typed arrays
     if (schema.items.constructor === Array) {
       const values = schema.items.map((item: unknown) =>
-        defaults(item, definitions)
+        defaults(item, definitions),
       );
 
       // remove undefined items at the end (unless required by minItems)
@@ -208,7 +208,7 @@ const defaults = (schema: any, definitions: Record<string, any>): unknown => {
  */
 export function getDefaults(
   schema: any,
-  definitions?: Record<string, unknown> | undefined
+  definitions?: Record<string, unknown> | undefined,
 ) {
   if (typeof definitions === "undefined") {
     definitions = (schema.definitions as Record<string, unknown>) || {};

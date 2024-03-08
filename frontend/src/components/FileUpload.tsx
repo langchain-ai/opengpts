@@ -70,8 +70,8 @@ export function FileUploadDropzone(props: {
         ...(props.state.isFocused ? focusedStyle : {}),
         ...(props.state.isDragAccept ? acceptStyle : {}),
         ...(props.state.isDragReject ? rejectStyle : {}),
-      } as React.CSSProperties),
-    [props.state.isFocused, props.state.isDragAccept, props.state.isDragReject]
+      }) as React.CSSProperties,
+    [props.state.isFocused, props.state.isDragAccept, props.state.isDragReject],
   );
 
   return (
