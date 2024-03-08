@@ -191,7 +191,11 @@ function ToolSelectionField(props: {
       config: config,
     };
 
-    setSelectedTool(tool);
+    if (Object.keys(config).length === 0) {
+      props.onAddTool(tool);
+    } else {
+      setSelectedTool(tool);
+    }
     setQuery(""); // Clear the query
   };
 
@@ -307,6 +311,7 @@ function ToolSelectionField(props: {
           ></div>
         )}
       </div>
+      {Object.keys(tool.config).length > 0 && (
       <button
         onClick={() => {
           setSelectedTool(tool);
@@ -314,7 +319,7 @@ function ToolSelectionField(props: {
         className="text-gray-400 hover:text-indigo-600 mr-4"
       >
         <Cog6ToothIcon className="h-4 w-4" aria-hidden="true" />
-      </button>
+      </button>)}
       <button
         onClick={() => props.onRemoveTool(tool.id)}
         className="text-gray-400 hover:text-red-600"
