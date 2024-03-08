@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { marked } from "marked";
 import { ShareIcon } from "@heroicons/react/24/outline";
 import { useDropzone } from "react-dropzone";
 import { orderBy, last } from "lodash";
@@ -10,6 +9,7 @@ import { cn } from "../utils/cn";
 import { FileUploadDropzone } from "./FileUpload";
 import { Switch } from "@headlessui/react";
 import { DROPZONE_CONFIG, TYPES } from "../constants";
+import { Tool, ToolConfig } from "../utils/formTypes.ts";
 
 function Types(props: {
   field: SchemaField;
@@ -174,63 +174,41 @@ const TOOL_DESCRIPTIONS = {
   Wikipedia: "Searches [Wikipedia](https://pypi.org/project/wikipedia/).",
 };
 
-function MultiOptionField(props: {
-  id: string;
-  field: SchemaField;
-  value: string[];
-  title: string;
-  readonly: boolean;
-  setValue: (value: string[]) => void;
-  descriptions?: Record<string, string>;
+function ToolSelectionField(props: {
+  selectedTools: Tool[];
+  availableTools: Tool[];
+  onAddTool: (tool: Tool) => void;
+  onRemoveTool: (toolId: string) => void;
+  onUpdateToolConfig: (toolId: string, config: ToolConfig) => void;
 }) {
+  // Handle adding a new tool. For simplicity, this example directly adds a tool. In practice, you may want to use a modal or another form to set initial config.
+  const handleAddTool = (toolId: string) => {
+    const tool = props.availableTools.find((t) => t.id === toolId);
+    if (tool) props.onAddTool({ ...tool });
+  };
+
+  // Render function to display each selected tool and its config, with edit and remove options
+  const renderSelectedTool = (tool: Tool, index: number) => (
+    <div key={index}>
+      <span>{tool.name}</span>
+      {/* Implement a UI for editing tool config here */}
+      <button onClick={() => props.onRemoveTool(tool.id)}>Remove</button>
+    </div>
+  );
+
   return (
-    <fieldset>
-      <Label
-        id={props.id}
-        title={props.title ?? props.field.items?.title}
-        description={props.field.description}
-      />
-      <div className="space-y-2">
-        {orderBy(props.field.items?.enum)?.map((option) => (
-          <div className="relative flex items-start" key={option}>
-            <div className="flex h-6 items-center">
-              <input
-                id={`${props.id}-${option}`}
-                aria-describedby="comments-description"
-                name={`${props.id}-${option}`}
-                type="checkbox"
-                checked={props.value.includes(option)}
-                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                disabled={props.readonly}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    props.setValue([...props.value, option]);
-                  } else {
-                    props.setValue(props.value.filter((v) => v !== option));
-                  }
-                }}
-              />
-            </div>
-            <div className="ml-3 text-sm leading-6">
-              <label
-                htmlFor={`${props.id}-${option}`}
-                className="text-gray-900"
-              >
-                {option}
-              </label>
-              {props.descriptions?.[option] && (
-                <div
-                  className="text-gray-500 prose prose-sm prose-a:text-gray-500"
-                  dangerouslySetInnerHTML={{
-                    __html: marked(props.descriptions[option]),
-                  }}
-                ></div>
-              )}
-            </div>
-          </div>
+    <div>
+      <h1>TOOLS</h1>
+      <div>{props.selectedTools.map(renderSelectedTool)}</div>
+      <select onChange={(e) => handleAddTool(e.target.value)} value="">
+        <option value="">Add a tool</option>
+        {props.availableTools.map((tool) => (
+          <option key={tool.id} value={tool.id}>
+            {tool.name}
+          </option>
         ))}
-      </div>
-    </fieldset>
+      </select>
+    </div>
   );
 }
 
@@ -320,6 +298,7 @@ export function Config(props: {
   const [values, setValues] = useState(
     props.config?.config ?? props.configDefaults,
   );
+  const [selectedTools, setSelectedTools] = useState<Tool[]>([]);
   const typeKey = "type";
   const typeField =
     props.configSchema?.properties.configurable.properties[typeKey];
@@ -328,6 +307,26 @@ export function Config(props: {
   const [files, setFiles] = useState<File[]>([]);
   const dropzone = useDropzone(DROPZONE_CONFIG);
   const [isPublic, setPublic] = useState(props.config?.public ?? false);
+
+  useEffect(() => {
+    console.log(typeValue);
+  }, [typeValue]);
+
+  const handleAddTool = (tool: Tool) => {
+    setSelectedTools([...selectedTools, tool]);
+  };
+
+  const handleRemoveTool = (toolId: string) => {
+    setSelectedTools(selectedTools.filter((tool) => tool.id !== toolId));
+  };
+
+  const handleUpdateToolConfig = (toolId: string, config: ToolConfig) => {
+    const updatedTools = selectedTools.map((tool) =>
+      tool.id === toolId ? { ...tool, config } : tool,
+    );
+    setSelectedTools(updatedTools);
+  };
+
   useEffect(() => {
     setValues(props.config?.config ?? props.configDefaults);
   }, [props.config, props.configDefaults]);
@@ -342,7 +341,7 @@ export function Config(props: {
               ...((values?.configurable?.[toolsKey] ?? []) as string[]).filter(
                 (tool) => tool !== "Retrieval",
               ),
-              {"id": "retrieval"}
+              { id: "retrieval" },
             ],
           },
         }));
@@ -352,7 +351,7 @@ export function Config(props: {
         ...files.filter((f) => !acceptedFileIds.includes(fileId(f))),
         ...dropzone.acceptedFiles,
       ]);
-      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dropzone.acceptedFiles]);
   const [inflight, setInflight] = useState(false);
@@ -398,11 +397,9 @@ export function Config(props: {
         const key = form.key.value;
         if (!key) return;
         setInflight(true);
-        values.configurable["type==agent/tools"].push({"id": "action_server_by_robocorp", "config": {"url": "https://ninety-five-yellow-pigs.robocorp.link", "api_key": "XsKXJ5ZeENNeMbIB7y8HJVwk_NJcPMxVCSvalhwRoB0"}})
-        // values.configurable["type==agent/tools"].push({"id": "ddg_search"})
-        // values.configurable["type==agent/tools"].push({"id": "you_search", "config": {"ydc_api_key": ""}})
-        // values.configurable["type==agent/tools"].push({"id": "search_tavily", "config": {"tavily_api_key": ""}})
-        // values.configurable["type==agent/tools"].push({"id": "search_tavily_answer", "config": {"tavily_api_key": ""}})
+        if (values?.configurable) {
+          values.configurable["type==agent/tools"] = [...selectedTools];
+        }
         await props.saveConfig(key, values!, files, isPublic);
         setInflight(false);
       }}
@@ -522,26 +519,15 @@ export function Config(props: {
                 readonly={readonly}
               />
             );
-          } else if (
-            value.type === "array" &&
-            value.items?.type === "string" &&
-            value.items?.enum
-          ) {
+          } else if (key === "type==agent/tools") {
             return (
-              <MultiOptionField
+              <ToolSelectionField
                 key={key}
-                id={key}
-                field={value}
-                title={title}
-                value={values?.configurable?.[key] as string[]}
-                setValue={(value: string[]) =>
-                  setValues({
-                    ...values,
-                    configurable: { ...values!.configurable, [key]: value },
-                  })
-                }
-                readonly={readonly}
-                descriptions={TOOL_DESCRIPTIONS}
+                selectedTools={selectedTools}
+                availableTools={[]}
+                onAddTool={handleAddTool}
+                onRemoveTool={handleRemoveTool}
+                onUpdateToolConfig={handleUpdateToolConfig}
               />
             );
           }
