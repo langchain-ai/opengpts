@@ -169,7 +169,7 @@ function ToolSelectionField(props: {
 
   // Render function to display each selected tool and its config, with edit and remove options
   const renderSelectedTool = (tool: Tool, index: number) => (
-    <div key={index}>
+    <div key={'tool-'+index}>
       <span>{tool.name}</span>
       {/* Implement a UI for editing tool config here */}
       <button onClick={() => props.onRemoveTool(tool.id)}>Remove</button>

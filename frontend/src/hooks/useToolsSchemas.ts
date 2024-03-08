@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
 import {Tool} from "../utils/formTypes.ts";
+import { v4 as uuidv4 } from 'uuid';
 
 export function useToolsSchemas() {
   const [tools, setTools] = useState<Tool[]>([]);
@@ -15,8 +16,18 @@ export function useToolsSchemas() {
         return response.json();
       })
       .then((data) => {
-          console.log(data)
-        setTools(data); // Assuming the response is the array of tools
+        const processedTools = data.map((schema): Tool => {
+                    // Assuming config is always an object with properties
+                    // You'll need a more sophisticated approach if configs can be more complex or vary significantly between tools
+                    const configTemplate = schema.properties.config?.$ref ? {} : undefined;
+                    return {
+                        id: schema.properties.id.const || uuidv4(),
+                        name: schema.properties.name.const,
+                        description: schema.properties.description.const,
+                        config: configTemplate,
+                    };
+                });
+        setTools(processedTools);
         setLoading(false);
       })
       .catch((error) => {
