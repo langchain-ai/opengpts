@@ -198,7 +198,10 @@ function ToolSelectionField(props: {
 
   return (
     <div>
-      <h1>TOOLS</h1>
+      <Label
+        title="Tools"
+        description="Select tools for use"
+      />
       <div>{props.selectedTools.map(renderSelectedTool)}</div>
       <select onChange={(e) => handleAddTool(e.target.value)} value="">
         <option value="">Add a tool</option>
