@@ -9,7 +9,7 @@ import { cn } from "../utils/cn";
 import { FileUploadDropzone } from "./FileUpload";
 import { Combobox, Dialog, Switch, Transition } from "@headlessui/react";
 import { DROPZONE_CONFIG, TYPES } from "../constants";
-import { Tool, ToolConfig, ToolSchema } from "../utils/formTypes.ts";
+import { Tool, ToolSchema } from "../utils/formTypes.ts";
 import { useToolsSchemas } from "../hooks/useToolsSchemas.ts";
 import {
   ChevronUpDownIcon,
@@ -162,12 +162,16 @@ function ToolSelectionField(props: {
   selectedTools: Tool[];
   onAddTool: (tool: Tool) => void;
   onRemoveTool: (toolId: string) => void;
-  onUpdateToolConfig: (toolId: string, config: ToolConfig) => void;
+  onUpdateToolConfig: (
+    toolId: string,
+    config: {
+      [key: string]: string;
+    },
+  ) => void;
 }) {
   const { tools: availableTools, loading } = useToolsSchemas();
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [query, setQuery] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleSelectTool = (toolSchema: ToolSchema) => {
     // Initialize config object based on ToolSchema
@@ -187,11 +191,6 @@ function ToolSelectionField(props: {
       config: config,
     };
 
-    // Check if the tool is already selected, if not, add it
-    if (!props.selectedTools.some((t) => t.id === tool.id)) {
-      props.onAddTool(tool);
-    }
-
     setSelectedTool(tool);
     setQuery(""); // Clear the query
   };
@@ -208,13 +207,14 @@ function ToolSelectionField(props: {
         );
 
   const handleDialogClose = () => {
-    setIsDialogOpen(false);
     setSelectedTool(null);
   };
 
   const saveAndClose = () => {
-    setIsDialogOpen(false);
-    if (selectedTool) {
+    if (
+      selectedTool &&
+      !props.selectedTools.some((t) => t.id === selectedTool.id)
+    ) {
       props.onAddTool(selectedTool);
     }
     setSelectedTool(null);
@@ -223,14 +223,14 @@ function ToolSelectionField(props: {
   // Render function for the selected tool's configuration dialog
   const renderConfigDialog = () => {
     return (
-      <Transition appear show={isDialogOpen} as={Fragment}>
+      <Transition appear show={!!selectedTool} as={Fragment}>
         <Dialog className="relative z-50" onClose={handleDialogClose}>
           {/* The backdrop, rendered as a fixed sibling to the panel container */}
           <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
 
           {/* Full-screen container to center the panel */}
           <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
-            <Dialog.Panel className="mx-auto max-w-sm rounded bg-white p-4 font-light">
+            <Dialog.Panel className="mx-auto max-w-sm rounded bg-gray-100 p-4 font-light">
               <Dialog.Title className="font-semibold">
                 {selectedTool?.name}
               </Dialog.Title>
@@ -310,7 +310,6 @@ function ToolSelectionField(props: {
       <button
         onClick={() => {
           setSelectedTool(tool);
-          setIsDialogOpen(true);
         }}
         className="text-gray-400 hover:text-indigo-600 mr-4"
       >
