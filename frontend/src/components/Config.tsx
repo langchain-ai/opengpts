@@ -311,10 +311,6 @@ export function Config(props: {
   const dropzone = useDropzone(DROPZONE_CONFIG);
   const [isPublic, setPublic] = useState(props.config?.public ?? false);
 
-  useEffect(() => {
-    console.log(typeValue);
-  }, [typeValue]);
-
   const handleAddTool = (tool: Tool) => {
     setSelectedTools([...selectedTools, tool]);
   };
