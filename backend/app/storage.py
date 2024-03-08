@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import List, Sequence
+from uuid import uuid4
 
 import orjson
 from langchain.schema.messages import AnyMessage
@@ -85,6 +86,12 @@ def list_public_assistants(
     return [load(assistant_hash_keys, values) for values in assistants]
 
 
+def add_ids_to_tools(config: dict) -> None:
+    """Mutation in place that generates and adds IDs to tools in the config."""
+    for tool in config["configurable"]["type==agent/tools"]:
+        tool["id"] = str(uuid4())
+
+
 def put_assistant(
     user_id: str, assistant_id: str, *, name: str, config: dict, public: bool = False
 ) -> Assistant:
@@ -100,6 +107,7 @@ def put_assistant(
     Returns:
         return the assistant model if no exception is raised.
     """
+    add_ids_to_tools(config)
     saved: Assistant = {
         "user_id": user_id,  # TODO(Nuno): Could we remove this?
         "assistant_id": assistant_id,  # TODO(Nuno): remove this?

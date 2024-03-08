@@ -111,7 +111,7 @@ class ConfigurableAgent(RunnableBinding):
         others.pop("bound", None)
         _tools = []
         for _tool in tools:
-            if _tool["id"] == AvailableTools.RETRIEVAL:
+            if _tool["type"] == AvailableTools.RETRIEVAL:
                 if assistant_id is None or thread_id is None:
                     raise ValueError(
                         "Both assistant_id and thread_id must be provided if Retrieval tool is used"
@@ -121,7 +121,7 @@ class ConfigurableAgent(RunnableBinding):
                 )
             else:
                 tool_config = _tool.get("config", {})
-                _returned_tools = TOOLS[_tool["id"]](**tool_config)
+                _returned_tools = TOOLS[_tool["type"]](**tool_config)
                 if isinstance(_returned_tools, list):
                     _tools.extend(_returned_tools)
                 else:

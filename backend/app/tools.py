@@ -59,6 +59,7 @@ class ToolConfig(TypedDict):
 
 class Tool(BaseModel):
     id: str
+    type: AvailableTools
     name: Optional[str]
     config: Optional[ToolConfig]
 
@@ -86,67 +87,67 @@ class TavilyAnswerConfig(ToolConfig):
 
 
 class ActionServer(Tool):
-    id: str = Field(AvailableTools.ACTION_SERVER, const=True)
+    type: AvailableTools = Field(AvailableTools.ACTION_SERVER, const=True)
     name: str = Field("Action Server by Robocorp", const=True)
     config: ActionServerConfig
 
 
 class Connery(Tool):
-    id: str = Field(AvailableTools.CONNERY, const=True)
+    type: AvailableTools = Field(AvailableTools.CONNERY, const=True)
     name: str = Field("AI Action Runner by Connery", const=True)
     config: ConneryConfig
 
 
 class DDGSearch(Tool):
-    id: str = Field(AvailableTools.DDG_SEARCH, const=True)
+    type: AvailableTools = Field(AvailableTools.DDG_SEARCH, const=True)
     name: str = Field("DuckDuckGo Search", const=True)
 
 
 class Arxiv(Tool):
-    id: str = Field(AvailableTools.ARXIV, const=True)
+    type: AvailableTools = Field(AvailableTools.ARXIV, const=True)
     name: str = Field("Arxiv", const=True)
 
 
 class YouSearch(Tool):
-    id: str = Field(AvailableTools.YOU_SEARCH, const=True)
+    type: AvailableTools = Field(AvailableTools.YOU_SEARCH, const=True)
     name: str = Field("You.com Search", const=True)
     config: YouSearchConfig
 
 
 class SecFilings(Tool):
-    id: str = Field(AvailableTools.SEC_FILINGS, const=True)
+    type: AvailableTools = Field(AvailableTools.SEC_FILINGS, const=True)
     name: str = Field("SEC Filings (Kay.ai)", const=True)
 
 
 class PressReleases(Tool):
-    id: str = Field(AvailableTools.PRESS_RELEASES, const=True)
+    type: AvailableTools = Field(AvailableTools.PRESS_RELEASES, const=True)
     name: str = Field("Press Releases (Kay.ai)", const=True)
 
 
 class PubMed(Tool):
-    id: str = Field(AvailableTools.PUBMED, const=True)
+    type: AvailableTools = Field(AvailableTools.PUBMED, const=True)
     name: str = Field("PubMed", const=True)
 
 
 class Wikipedia(Tool):
-    id: str = Field(AvailableTools.WIKIPEDIA, const=True)
+    type: AvailableTools = Field(AvailableTools.WIKIPEDIA, const=True)
     name: str = Field("Wikipedia", const=True)
 
 
 class Tavily(Tool):
-    id: str = Field(AvailableTools.TAVILY, const=True)
+    type: AvailableTools = Field(AvailableTools.TAVILY, const=True)
     name: str = Field("Search (Tavily)", const=True)
     config: TavilyConfig
 
 
 class TavilyAnswer(Tool):
-    id: str = Field(AvailableTools.TAVILY_ANSWER, const=True)
+    type: AvailableTools = Field(AvailableTools.TAVILY_ANSWER, const=True)
     name: str = Field("Search (short answer, Tavily)", const=True)
     config: TavilyAnswerConfig
 
 
 class Retrieval(Tool):
-    id: str = Field(AvailableTools.RETRIEVAL, const=True)
+    type: AvailableTools = Field(AvailableTools.RETRIEVAL, const=True)
     name: str = Field("Retrieval", const=True)
 
 
