@@ -5,6 +5,7 @@ export type MessageWithFiles = {
 
 export interface Tool {
   id: string;
+  type: string;
   name: string;
   description: string;
   config: ToolConfig;

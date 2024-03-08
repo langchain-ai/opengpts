@@ -23,6 +23,7 @@ export function useToolsSchemas() {
                     return {
                         id: schema.properties.id.const || uuidv4(),
                         name: schema.properties.name.const,
+                        type: schema.properties.type.default,
                         description: schema.properties.description.const,
                         config: configTemplate,
                     };
