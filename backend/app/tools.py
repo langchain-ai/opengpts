@@ -63,6 +63,7 @@ class Tool(BaseModel):
     name: Optional[str]
     description: Optional[str]
     config: Optional[ToolConfig]
+    multi_use: Optional[bool] = False
 
 
 class ActionServerConfig(ToolConfig):
@@ -98,6 +99,7 @@ class ActionServer(Tool):
         const=True,
     )
     config: ActionServerConfig
+    multi_use: bool = Field(True, const=True)
 
 
 class Connery(Tool):
