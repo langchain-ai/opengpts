@@ -42,7 +42,7 @@ function PageDocument(props: { document: PageDocument; className?: string }) {
       <button
         className={cn(
           "flex items-start min-w-0 max-w-full gap-4 overflow-hidden px-4 transition-colors hover:bg-gray-50/50 active:bg-gray-50",
-          props.className
+          props.className,
         )}
         onClick={() => setOpen(true)}
       >
@@ -58,7 +58,7 @@ function PageDocument(props: { document: PageDocument; className?: string }) {
     <button
       className={cn(
         "flex items-start gap-4 px-4 text-left transition-colors hover:bg-gray-50/50 active:bg-gray-50",
-        props.className
+        props.className,
       )}
       onClick={() => setOpen(false)}
     >

@@ -4,7 +4,7 @@ const PREFIX = "langgizmo-";
 
 export function useStatePersist<T>(
   defaultValue: T,
-  key: string
+  key: string,
 ): [T, React.Dispatch<React.SetStateAction<T>>] {
   const [state, setState] = useState<T>(() => {
     const storageValue = localStorage.getItem(PREFIX + key);

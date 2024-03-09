@@ -4,13 +4,21 @@ FROM python:3.11
 # Install system dependencies
 RUN apt-get update && apt-get install -y libmagic1 && rm -rf /var/lib/apt/lists/*
 
+# Install Poetry
+RUN pip install poetry
+
 # Set the working directory
 WORKDIR /backend
 
+# Copy only dependencies
+COPY pyproject.toml poetry.lock* ./
+
+# Install dependencies
+# --no-dev: Skip installing packages listed in the [tool.poetry.dev-dependencies] section
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi --no-dev
+
+# Copy the rest of application code
 COPY . .
-
-RUN rm poetry.lock
-
-RUN pip install .
 
 ENTRYPOINT [ "uvicorn", "app.server:app", "--host", "0.0.0.0" ]
