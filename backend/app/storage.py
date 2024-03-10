@@ -61,7 +61,7 @@ def get_assistant(user_id: str, assistant_id: str) -> Assistant | None:
 
 
 def list_public_assistants(
-    assistant_ids: Sequence[str]
+    assistant_ids: Sequence[str],
 ) -> List[AssistantWithoutUserId]:
     """List all the public assistants."""
     if not assistant_ids:
