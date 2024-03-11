@@ -17,6 +17,7 @@ import {
   TrashIcon,
   PlusIcon,
   MinusIcon,
+  RocketLaunchIcon,
 } from "@heroicons/react/20/solid";
 import { marked } from "marked";
 
@@ -187,7 +188,9 @@ const ToolDisplay = (props: {
                 )}
               </Disclosure.Button>
             ) : (
-              <div className="w-5 mr-2" />
+              <div className="text-sm leading-6 flex justify-between items-center mr-2">
+                <RocketLaunchIcon className="w-5 h-5 text-gray-500 hover:text-indigo-600" />
+              </div>
             )}
             <div className="flex flex-col flex-auto">
               <label>{tool.name}</label>
