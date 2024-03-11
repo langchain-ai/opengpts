@@ -189,7 +189,7 @@ const ToolDisplay = (props: {
               </Disclosure.Button>
             ) : (
               <div className="text-sm leading-6 flex justify-between items-center mr-2">
-                <RocketLaunchIcon className="w-5 h-5 text-gray-500 hover:text-indigo-600" />
+                <RocketLaunchIcon className="w-5 h-5 text-gray-500" />
               </div>
             )}
             <div className="flex flex-col flex-auto">
@@ -260,6 +260,7 @@ function ToolSelectionField(props: {
   const { onAddTool, onRemoveTool, retrievalOn, selectedTools } = props;
   const { tools: availableTools, loading } = useToolsSchemas();
   const [query, setQuery] = useState("");
+  const [filteredTools, setFilteredTools] = useState<ToolSchema[]>([]);
 
   const handleSelectTool = useCallback(
     (toolSchema: ToolSchema) => {
@@ -304,16 +305,26 @@ function ToolSelectionField(props: {
     selectedTools,
   ]);
 
-  const filteredTools = (
-    query === ""
-      ? availableTools
-      : availableTools.filter((tool) =>
-          tool.name
-            .toLowerCase()
-            .replace(/\s+/g, "")
-            .includes(query.toLowerCase().replace(/\s+/g, "")),
-        )
-  ).filter((tool) => tool.name !== "Retrieval");
+  useEffect(() => {
+    let toolSchemas = availableTools.filter(
+      (tool) => tool.name !== "Retrieval",
+    );
+    if (query !== "") {
+      toolSchemas = toolSchemas.filter((tool) =>
+        tool.name
+          .toLowerCase()
+          .replace(/\s+/g, "")
+          .includes(query.toLowerCase().replace(/\s+/g, "")),
+      );
+    }
+    toolSchemas = toolSchemas.filter(
+      (tool) =>
+        !selectedTools.some(
+          (t) => t.name === tool.name && Object.keys(t.config).length === 0,
+        ),
+    );
+    setFilteredTools(toolSchemas);
+  }, [query, availableTools, selectedTools]);
 
   if (loading) {
     return <div>Loading...</div>;
