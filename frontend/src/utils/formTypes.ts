@@ -8,9 +8,11 @@ export interface Tool {
   type: string;
   name: string;
   description: string;
-  config: {
-    [key: string]: string;
-  };
+  config: ToolConfig;
+}
+
+export interface ToolConfig {
+  [key: string]: string;
 }
 
 export interface ToolSchema {
@@ -27,7 +29,7 @@ interface PropertySchema {
   default?: string; // Assuming default values are strings
 }
 
-interface ToolConfigSchema {
+export interface ToolConfigSchema {
   title: string;
   type: string;
   required: string[];

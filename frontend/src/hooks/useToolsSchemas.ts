@@ -1,14 +1,32 @@
 import { useEffect, useState } from "react";
-import { Tool, ToolSchema } from "../utils/formTypes.ts";
-import { v4 as uuidv4 } from "uuid";
+import { Tool, ToolConfig, ToolSchema } from "../utils/formTypes.ts";
 
-const resolveRef = (schema: object, ref: string) => {
+interface SchemaProperty {
+  const?: string;
+  default?: string;
+  $ref?: string;
+}
+
+interface ToolsSchema {
+  properties: {
+    id: SchemaProperty;
+    name: SchemaProperty;
+    type: SchemaProperty;
+    description: SchemaProperty;
+    config: SchemaProperty;
+  };
+}
+
+const resolveRef = (schema: ToolsSchema, ref: string): ToolConfig => {
   const paths = ref.substring(2).split("/");
-  let result = schema;
+  let result: Record<string, object> = schema as object as Record<
+    string,
+    object
+  >;
   for (const path of paths) {
-    result = result[path];
+    result = result[path] as Record<string, object>;
   }
-  return result;
+  return result as object as ToolConfig;
 };
 
 export function useToolsSchemas() {
@@ -25,21 +43,19 @@ export function useToolsSchemas() {
         return response.json();
       })
       .then((data) => {
-        const processedTools = data.map((schema: object): Tool => {
+        const processedTools = data.map((schema: ToolsSchema): Tool => {
           // Assuming config is always an object with properties
           // You'll need a more sophisticated approach if configs can be more complex or vary significantly between tools
-          let configTemplate;
+          let configTemplate: ToolConfig = {};
           if (schema.properties.config?.$ref) {
             // Use the resolveRef function to get the actual config from the $ref
             configTemplate = resolveRef(schema, schema.properties.config.$ref);
-          } else {
-            configTemplate = undefined;
           }
           return {
-            id: schema.properties.id.const || uuidv4(),
-            name: schema.properties.name.const,
-            type: schema.properties.type.default,
-            description: schema.properties.description.const,
+            id: schema.properties.id.const || "",
+            name: schema.properties.name.const || "",
+            type: schema.properties.type.default || "",
+            description: schema.properties.description.const || "",
             config: configTemplate,
           };
         });

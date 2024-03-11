@@ -1,20 +1,22 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { ShareIcon } from "@heroicons/react/24/outline";
 import { useDropzone } from "react-dropzone";
 import { orderBy, last } from "lodash";
+import { v4 as uuidv4 } from "uuid";
 
 import { ConfigListProps } from "../hooks/useConfigList";
 import { SchemaField, Schemas } from "../hooks/useSchemas";
 import { cn } from "../utils/cn";
 import { FileUploadDropzone } from "./FileUpload";
-import { Combobox, Dialog, Switch, Transition } from "@headlessui/react";
+import { Combobox, Disclosure, Switch, Transition } from "@headlessui/react";
 import { DROPZONE_CONFIG, TYPES } from "../constants";
-import { Tool, ToolSchema } from "../utils/formTypes.ts";
+import { Tool, ToolConfig, ToolSchema } from "../utils/formTypes.ts";
 import { useToolsSchemas } from "../hooks/useToolsSchemas.ts";
 import {
   ChevronUpDownIcon,
-  Cog6ToothIcon,
   TrashIcon,
+  PlusIcon,
+  MinusIcon,
 } from "@heroicons/react/20/solid";
 import { marked } from "marked";
 
@@ -158,7 +160,90 @@ export default function SingleOptionField(props: {
   );
 }
 
+const ToolDisplay = (props: {
+  tool: Tool;
+  onRemoveTool: () => void;
+  onUpdateToolConfig: (conf: ToolConfig) => void;
+  readonly: boolean;
+}) => {
+  const { tool, onRemoveTool, onUpdateToolConfig, readonly } = props;
+  const confs = Object.entries(tool.config);
+  return (
+    <Disclosure
+      as="div"
+      key={"tool-" + tool.id}
+      className="flex flex-col max-w-2xl p-2 mt-2 mb-2 border rounded-md border-gray-200"
+      defaultOpen={!readonly}
+    >
+      {({ open }) => (
+        <>
+          <div className="flex">
+            {Object.keys(tool.config).length > 0 ? (
+              <Disclosure.Button className="text-sm leading-6 flex justify-between items-center mr-2">
+                {open ? (
+                  <MinusIcon className="w-5 h-5 text-gray-500 hover:text-indigo-600" />
+                ) : (
+                  <PlusIcon className="w-5 h-5 text-gray-500 hover:text-indigo-600" />
+                )}
+              </Disclosure.Button>
+            ) : (
+              <div className="w-5 mr-2" />
+            )}
+            <div className="flex flex-col flex-auto">
+              <label>{tool.name}</label>
+              {tool.description && (
+                <div
+                  className="text-gray-500 prose prose-sm prose-a:text-gray-500"
+                  dangerouslySetInnerHTML={{
+                    __html: marked(tool.description),
+                  }}
+                ></div>
+              )}
+            </div>
+            {!readonly && (
+              <button
+                onClick={onRemoveTool}
+                className={
+                  "text-gray-400" + (readonly ? "" : " hover:text-red-600")
+                }
+              >
+                <TrashIcon className="h-5 w-5" aria-hidden="true" />
+              </button>
+            )}
+          </div>
+          {confs.length > 0 && (
+            <Disclosure.Panel className="pt-4 flex flex-col mb-2 pl-5 pr-5">
+              {confs.map(([key, value]) => (
+                <div className="flex flex-col pt-2" key={key}>
+                  <label
+                    htmlFor={`${tool.id}-${key}`}
+                    className="pl-2 prose-sm"
+                  >
+                    {key}
+                  </label>
+                  <input
+                    id={`${tool.id}-${key}`}
+                    value={value}
+                    onChange={(e) =>
+                      onUpdateToolConfig({ [key]: e.target.value })
+                    }
+                    className="rounded-md border-gray-300 shadow-sm prose-sm "
+                    autoComplete="off"
+                    readOnly={readonly}
+                  />
+                </div>
+              ))}
+            </Disclosure.Panel>
+          )}
+        </>
+      )}
+    </Disclosure>
+  );
+};
+
 function ToolSelectionField(props: {
+  readonly: boolean;
+  retrievalOn: boolean;
   selectedTools: Tool[];
   onAddTool: (tool: Tool) => void;
   onRemoveTool: (toolId: string) => void;
@@ -169,38 +254,54 @@ function ToolSelectionField(props: {
     },
   ) => void;
 }) {
+  const { onAddTool, onRemoveTool, retrievalOn, selectedTools } = props;
   const { tools: availableTools, loading } = useToolsSchemas();
-  const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [query, setQuery] = useState("");
 
-  const handleSelectTool = (toolSchema: ToolSchema) => {
-    // Initialize config object based on ToolSchema
-    const config: { [key: string]: string } = {};
-    Object.keys(toolSchema.config.properties).forEach((key) => {
-      const property = toolSchema.config.properties[key];
-      // Use the default value if specified, otherwise initialize to an empty string
-      config[key] = property.default || "";
-    });
+  const handleSelectTool = useCallback(
+    (toolSchema: ToolSchema) => {
+      // Initialize config object based on ToolSchema
+      const config: { [key: string]: string } = {};
+      Object.keys(toolSchema.config.properties).forEach((key) => {
+        const property = toolSchema.config.properties[key];
+        // Use the default value if specified, otherwise initialize to an empty string
+        config[key] = property.default || "";
+      });
 
-    // Create a new tool object with initialized config
-    const tool: Tool = {
-      id: toolSchema.id,
-      type: toolSchema.type,
-      name: toolSchema.name,
-      description: toolSchema.description,
-      config: config,
-    };
+      // Create a new tool object with initialized config
+      const tool: Tool = {
+        id: toolSchema.name === "Retrieval" ? "retrieval" : uuidv4(),
+        type: toolSchema.type,
+        name: toolSchema.name,
+        description: toolSchema.description,
+        config: config,
+      };
 
-    if (Object.keys(config).length === 0) {
-      props.onAddTool(tool);
-    } else {
-      setSelectedTool(tool);
+      onAddTool(tool);
+      setQuery(""); // Clear the query
+    },
+    [onAddTool],
+  );
+
+  useEffect(() => {
+    const retrieval = availableTools.find((t) => t.name === "Retrieval");
+    if (!retrieval) return;
+    const retrievalSelected = selectedTools.some((t) => t.name === "Retrieval");
+    if (retrievalOn && !retrievalSelected) {
+      handleSelectTool(retrieval);
     }
-    setQuery(""); // Clear the query
-  };
+    if (!retrievalOn && retrievalSelected) {
+      onRemoveTool("retrieval");
+    }
+  }, [
+    retrievalOn,
+    onRemoveTool,
+    availableTools,
+    handleSelectTool,
+    selectedTools,
+  ]);
 
-  // Filter tools based on the query
-  const filteredTools =
+  const filteredTools = (
     query === ""
       ? availableTools
       : availableTools.filter((tool) =>
@@ -208,126 +309,8 @@ function ToolSelectionField(props: {
             .toLowerCase()
             .replace(/\s+/g, "")
             .includes(query.toLowerCase().replace(/\s+/g, "")),
-        );
-
-  const handleDialogClose = () => {
-    setSelectedTool(null);
-  };
-
-  const saveAndClose = () => {
-    if (
-      selectedTool &&
-      !props.selectedTools.some((t) => t.id === selectedTool.id)
-    ) {
-      props.onAddTool(selectedTool);
-    }
-    setSelectedTool(null);
-  };
-
-  // Render function for the selected tool's configuration dialog
-  const renderConfigDialog = () => {
-    return (
-      <Transition appear show={!!selectedTool} as={Fragment}>
-        <Dialog className="relative z-50" onClose={handleDialogClose}>
-          {/* The backdrop, rendered as a fixed sibling to the panel container */}
-          <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-
-          {/* Full-screen container to center the panel */}
-          <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
-            <Dialog.Panel className="mx-auto max-w-sm rounded bg-gray-100 p-4 font-light">
-              <Dialog.Title className="font-semibold">
-                {selectedTool?.name}
-              </Dialog.Title>
-              {selectedTool?.description && (
-                <Dialog.Description
-                  className="text-gray-500 prose prose-sm prose-a:text-gray-500"
-                  dangerouslySetInnerHTML={{
-                    __html: marked(selectedTool?.description ?? ""),
-                  }}
-                />
-              )}
-
-              {/* Dynamically generate input fields for the selected tool's config */}
-              {selectedTool?.config &&
-                Object.entries(selectedTool.config).map(([key, value]) => (
-                  <div
-                    className="flex flex-col justify-between pt-2 pb-2"
-                    key={key}
-                  >
-                    <label htmlFor={key}>{key}</label>
-                    <input
-                      id={key}
-                      value={value || ""}
-                      onChange={(e) => {
-                        setSelectedTool({
-                          ...selectedTool,
-                          config: {
-                            ...selectedTool?.config,
-                            [key]: e.target.value,
-                          },
-                        });
-                      }}
-                      className="input-styles rounded-md"
-                      autoComplete="off"
-                    />
-                  </div>
-                ))}
-
-              <div className="flex pt-3 justify-between">
-                <button
-                  className="relative inline-flex items-center gap-x-1.5 rounded-md px-3 py-2 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 bg-white"
-                  onClick={handleDialogClose}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="relative inline-flex items-center gap-x-1.5 rounded-md px-3 py-2 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 bg-white"
-                  onClick={saveAndClose}
-                >
-                  Save
-                </button>
-              </div>
-            </Dialog.Panel>
-          </div>
-        </Dialog>
-      </Transition>
-    );
-  };
-
-  // Render function to display each selected tool and its config, with edit and remove options
-  const renderSelectedTool = (tool: Tool, index: number) => (
-    <div
-      key={"tool-" + index}
-      className="flex max-w-2xl items-center justify-between p-2 border-b border-gray-200 transition duration-150 ease-in-out"
-    >
-      <div className="text-sm leading-6 flex-grow">
-        <label>{tool.name}</label>
-        {tool.description && (
-          <div
-            className="text-gray-500 prose prose-sm prose-a:text-gray-500"
-            dangerouslySetInnerHTML={{
-              __html: marked(tool.description),
-            }}
-          ></div>
-        )}
-      </div>
-      {Object.keys(tool.config).length > 0 && (
-      <button
-        onClick={() => {
-          setSelectedTool(tool);
-        }}
-        className="text-gray-400 hover:text-indigo-600 mr-4"
-      >
-        <Cog6ToothIcon className="h-4 w-4" aria-hidden="true" />
-      </button>)}
-      <button
-        onClick={() => props.onRemoveTool(tool.id)}
-        className="text-gray-400 hover:text-red-600"
-      >
-        <TrashIcon className="h-5 w-5" aria-hidden="true" />
-      </button>
-    </div>
-  );
+        )
+  ).filter((tool) => tool.name !== "Retrieval");
 
   if (loading) {
     return <div>Loading...</div>;
@@ -336,7 +319,14 @@ function ToolSelectionField(props: {
   return (
     <div>
       <Label title="Tools" />
-      {props.selectedTools.map(renderSelectedTool)}
+      {props.selectedTools.map((t) => (
+        <ToolDisplay
+          tool={t}
+          onRemoveTool={() => props.onRemoveTool(t.id)}
+          onUpdateToolConfig={(conf) => props.onUpdateToolConfig(t.id, conf)}
+          readonly={props.readonly || t.name === "Retrieval"}
+        />
+      ))}
       <div className="w-full max-w-2xl">
         <Combobox value={null} onChange={handleSelectTool}>
           <div className="relative mt-1">
@@ -346,6 +336,7 @@ function ToolSelectionField(props: {
               displayValue={() => ""}
               placeholder="Add a tool"
               autoComplete="off"
+              readOnly={props.readonly}
             />
             <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
               <ChevronUpDownIcon
@@ -384,7 +375,6 @@ function ToolSelectionField(props: {
           </div>
         </Combobox>
       </div>
-      {renderConfigDialog()}
     </div>
   );
 }
@@ -485,6 +475,13 @@ export function Config(props: {
   const dropzone = useDropzone(DROPZONE_CONFIG);
   const [isPublic, setPublic] = useState(props.config?.public ?? false);
 
+  useEffect(() => {
+    if (!values) return;
+    if (!values.configurable) return;
+    const tools = (values.configurable["type==agent/tools"] as Tool[]) ?? [];
+    setSelectedTools((oldTools) => [...oldTools, ...tools]);
+  }, [values]);
+
   const handleAddTool = (tool: Tool) => {
     setSelectedTools([...selectedTools, tool]);
   };
@@ -495,7 +492,9 @@ export function Config(props: {
 
   const handleUpdateToolConfig = (toolId: string, config: ToolConfig) => {
     const updatedTools = selectedTools.map((tool) =>
-      tool.id === toolId ? { ...tool, config } : tool,
+      tool.id === toolId
+        ? { ...tool, config: { ...tool.config, ...config } }
+        : tool,
     );
     setSelectedTools(updatedTools);
   };
@@ -505,28 +504,13 @@ export function Config(props: {
   }, [props.config, props.configDefaults]);
   useEffect(() => {
     if (dropzone.acceptedFiles.length > 0) {
-      if (typeValue === "agent") {
-        const toolsKey = "type==agent/tools";
-        setValues((values) => ({
-          configurable: {
-            ...values?.configurable,
-            [toolsKey]: [
-              ...((values?.configurable?.[toolsKey] ?? []) as string[]).filter(
-                (tool) => tool !== "Retrieval",
-              ),
-              { id: "retrieval" },
-            ],
-          },
-        }));
-      }
       const acceptedFileIds = dropzone.acceptedFiles.map(fileId);
       setFiles((files) => [
         ...files.filter((f) => !acceptedFileIds.includes(fileId(f))),
         ...dropzone.acceptedFiles,
       ]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dropzone.acceptedFiles]);
+  }, [dropzone.acceptedFiles, setFiles]);
   const [inflight, setInflight] = useState(false);
   const readonly = !!props.config && !inflight;
 
@@ -570,10 +554,13 @@ export function Config(props: {
         const key = form.key.value;
         if (!key) return;
         setInflight(true);
-        if (values?.configurable) {
-          values.configurable["type==agent/tools"] = [...selectedTools];
+        const vals = { ...values };
+        if (vals?.configurable) {
+          vals.configurable = { ...vals.configurable };
+          vals.configurable["type==agent/tools"] = [...selectedTools];
+          setSelectedTools([]);
         }
-        await props.saveConfig(key, values!, files, isPublic);
+        await props.saveConfig(key, vals!, files, isPublic);
         setInflight(false);
       }}
     >
@@ -700,6 +687,8 @@ export function Config(props: {
                 onAddTool={handleAddTool}
                 onRemoveTool={handleRemoveTool}
                 onUpdateToolConfig={handleUpdateToolConfig}
+                readonly={readonly}
+                retrievalOn={files.length > 0}
               />
             );
           }
