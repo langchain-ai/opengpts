@@ -58,7 +58,6 @@ class ToolConfig(TypedDict):
 
 
 class BaseTool(BaseModel):
-    id: str
     type: AvailableTools
     name: Optional[str]
     description: Optional[str]
