@@ -16,10 +16,10 @@ export interface ToolConfig {
 }
 
 export interface ToolSchema {
-  id: string;
   type: string;
   name: string;
   description: string;
+  multiUse: boolean;
   config: ToolConfigSchema;
 }
 

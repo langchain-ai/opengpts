@@ -1,73 +1,65 @@
 import { useEffect, useState } from "react";
-import { Tool, ToolConfig, ToolSchema } from "../utils/formTypes.ts";
+import { ToolConfigSchema, ToolSchema } from "../utils/formTypes.ts";
+import { useSchemas } from "./useSchemas.ts";
 
-interface SchemaProperty {
-  const?: string;
-  default?: string;
-  $ref?: string;
-}
-
-interface ToolsSchema {
+interface SchemaItem {
   properties: {
-    id: SchemaProperty;
-    name: SchemaProperty;
-    type: SchemaProperty;
-    description: SchemaProperty;
-    config: SchemaProperty;
+    name: { const: string };
+    type: { default: string };
+    description: { const: string };
+    config: ToolConfigSchema;
+    multi_use: { const: boolean };
   };
 }
 
-const resolveRef = (schema: ToolsSchema, ref: string): ToolConfig => {
-  const paths = ref.substring(2).split("/");
-  let result: Record<string, object> = schema as object as Record<
-    string,
-    object
-  >;
-  for (const path of paths) {
-    result = result[path] as Record<string, object>;
-  }
-  return result as object as ToolConfig;
-};
+interface ConfigSchema {
+  properties: {
+    configurable: {
+      properties: {
+        "type==agent/tools": {
+          items: {
+            anyOf: SchemaItem[];
+          };
+        };
+      };
+    };
+  };
+}
 
 export function useToolsSchemas() {
+  const schemas = useSchemas();
+
   const [tools, setTools] = useState<ToolSchema[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    fetch("/runs/tool_schemas")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        const processedTools = data.map((schema: ToolsSchema): Tool => {
-          // Assuming config is always an object with properties
-          // You'll need a more sophisticated approach if configs can be more complex or vary significantly between tools
-          let configTemplate: ToolConfig = {};
-          if (schema.properties.config?.$ref) {
-            // Use the resolveRef function to get the actual config from the $ref
-            configTemplate = resolveRef(schema, schema.properties.config.$ref);
-          }
-          return {
-            id: schema.properties.id.const || "",
-            name: schema.properties.name.const || "",
-            type: schema.properties.type.default || "",
-            description: schema.properties.description.const || "",
-            config: configTemplate,
-          };
-        });
-        setTools(processedTools);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching tools:", error);
-        setError(error);
-        setLoading(false);
-      });
-  }, []); // Empty dependency array means this effect runs once after the initial render
+    const configSchema = schemas?.configSchema as ConfigSchema | null;
+    if (!configSchema) {
+      setLoading(true);
+      return;
+    }
 
-  return { tools, loading, error };
+    const toolSchemas = configSchema.properties.configurable.properties[
+      "type==agent/tools"
+    ]?.items.anyOf as SchemaItem[] | undefined;
+    if (!toolSchemas) {
+      setLoading(true);
+      return;
+    }
+    const processedTools = toolSchemas.map((schema): ToolSchema => {
+      // Assuming config is always an object with properties
+      // You'll need a more sophisticated approach if configs can be more complex or vary significantly between tools
+      return {
+        name: schema.properties.name.const || "",
+        type: schema.properties.type.default || "",
+        description: schema.properties.description.const || "",
+        config: schema.properties.config || {},
+        multiUse: schema.properties.multi_use.const || false,
+      };
+    });
+    setLoading(false);
+    setTools(processedTools);
+  }, [schemas]);
+
+  return { tools, loading };
 }

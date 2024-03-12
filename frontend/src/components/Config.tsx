@@ -319,9 +319,7 @@ function ToolSelectionField(props: {
     }
     toolSchemas = toolSchemas.filter(
       (tool) =>
-        !selectedTools.some(
-          (t) => t.name === tool.name && Object.keys(t.config).length === 0,
-        ),
+        !selectedTools.some((t) => t.name === tool.name && !tool.multiUse),
     );
     setFilteredTools(toolSchemas);
   }, [query, availableTools, selectedTools]);
@@ -372,7 +370,7 @@ function ToolSelectionField(props: {
                 ) : (
                   filteredTools.map((tool) => (
                     <Combobox.Option
-                      key={tool.id}
+                      key={"tool-schema-" + tool.name}
                       value={tool}
                       className={({ active }) =>
                         `relative cursor-default select-none py-2 pl-2 pr-4 ${active ? "bg-indigo-100 text-indigo-900" : "text-gray-900"}`
