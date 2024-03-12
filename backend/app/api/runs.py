@@ -15,7 +15,6 @@ from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
 
 from app.agent import agent
-from app.tools import TOOL_SCHEMAS
 from app.schema import OpengptsUserId
 from app.storage import get_assistant, public_user_id
 from app.stream import astream_messages, to_sse
@@ -109,11 +108,6 @@ async def output_schema() -> dict:
 async def config_schema() -> dict:
     """Return the config schema of the runnable."""
     return agent.config_schema().schema()
-
-
-@router.get("/tool_schemas")
-async def tool_schemas() -> list:
-    return TOOL_SCHEMAS
 
 
 if tracing_is_enabled():

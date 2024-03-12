@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Mapping, Optional, Sequence
+from typing import Any, Mapping, Optional, Sequence, Union
 
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import (
@@ -26,8 +26,34 @@ from app.tools import (
     AvailableTools,
     get_retrieval_tool,
     get_retriever,
-    Tool,
+    ActionServer,
+    Connery,
+    DDGSearch,
+    Arxiv,
+    YouSearch,
+    SecFilings,
+    PressReleases,
+    PubMed,
+    Wikipedia,
+    Tavily,
+    TavilyAnswer,
+    Retrieval,
 )
+
+Tool = Union[
+    ActionServer,
+    Connery,
+    DDGSearch,
+    Arxiv,
+    YouSearch,
+    SecFilings,
+    PressReleases,
+    PubMed,
+    Wikipedia,
+    Tavily,
+    TavilyAnswer,
+    Retrieval,
+]
 
 
 class AgentType(str, Enum):

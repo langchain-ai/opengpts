@@ -57,7 +57,7 @@ class ToolConfig(TypedDict):
     ...
 
 
-class Tool(BaseModel):
+class BaseTool(BaseModel):
     id: str
     type: AvailableTools
     name: Optional[str]
@@ -88,7 +88,7 @@ class TavilyAnswerConfig(ToolConfig):
     tavily_api_key: str
 
 
-class ActionServer(Tool):
+class ActionServer(BaseTool):
     type: AvailableTools = Field(AvailableTools.ACTION_SERVER, const=True)
     name: str = Field("Action Server by Robocorp", const=True)
     description: str = Field(
@@ -102,7 +102,7 @@ class ActionServer(Tool):
     multi_use: bool = Field(True, const=True)
 
 
-class Connery(Tool):
+class Connery(BaseTool):
     type: AvailableTools = Field(AvailableTools.CONNERY, const=True)
     name: str = Field("AI Action Runner by Connery", const=True)
     description: str = Field(
@@ -115,7 +115,7 @@ class Connery(Tool):
     config: ConneryConfig
 
 
-class DDGSearch(Tool):
+class DDGSearch(BaseTool):
     type: AvailableTools = Field(AvailableTools.DDG_SEARCH, const=True)
     name: str = Field("DuckDuckGo Search", const=True)
     description: str = Field(
@@ -124,13 +124,13 @@ class DDGSearch(Tool):
     )
 
 
-class Arxiv(Tool):
+class Arxiv(BaseTool):
     type: AvailableTools = Field(AvailableTools.ARXIV, const=True)
     name: str = Field("Arxiv", const=True)
     description: str = Field("Searches [Arxiv](https://arxiv.org/).", const=True)
 
 
-class YouSearch(Tool):
+class YouSearch(BaseTool):
     type: AvailableTools = Field(AvailableTools.YOU_SEARCH, const=True)
     name: str = Field("You.com Search", const=True)
     description: str = Field(
@@ -140,7 +140,7 @@ class YouSearch(Tool):
     config: YouSearchConfig
 
 
-class SecFilings(Tool):
+class SecFilings(BaseTool):
     type: AvailableTools = Field(AvailableTools.SEC_FILINGS, const=True)
     name: str = Field("SEC Filings (Kay.ai)", const=True)
     description: str = Field(
@@ -148,7 +148,7 @@ class SecFilings(Tool):
     )
 
 
-class PressReleases(Tool):
+class PressReleases(BaseTool):
     type: AvailableTools = Field(AvailableTools.PRESS_RELEASES, const=True)
     name: str = Field("Press Releases (Kay.ai)", const=True)
     description: str = Field(
@@ -157,7 +157,7 @@ class PressReleases(Tool):
     )
 
 
-class PubMed(Tool):
+class PubMed(BaseTool):
     type: AvailableTools = Field(AvailableTools.PUBMED, const=True)
     name: str = Field("PubMed", const=True)
     description: str = Field(
@@ -165,7 +165,7 @@ class PubMed(Tool):
     )
 
 
-class Wikipedia(Tool):
+class Wikipedia(BaseTool):
     type: AvailableTools = Field(AvailableTools.WIKIPEDIA, const=True)
     name: str = Field("Wikipedia", const=True)
     description: str = Field(
@@ -173,7 +173,7 @@ class Wikipedia(Tool):
     )
 
 
-class Tavily(Tool):
+class Tavily(BaseTool):
     type: AvailableTools = Field(AvailableTools.TAVILY, const=True)
     name: str = Field("Search (Tavily)", const=True)
     description: str = Field(
@@ -186,7 +186,7 @@ class Tavily(Tool):
     config: TavilyConfig
 
 
-class TavilyAnswer(Tool):
+class TavilyAnswer(BaseTool):
     type: AvailableTools = Field(AvailableTools.TAVILY_ANSWER, const=True)
     name: str = Field("Search (short answer, Tavily)", const=True)
     description: str = Field(
@@ -199,7 +199,7 @@ class TavilyAnswer(Tool):
     config: TavilyAnswerConfig
 
 
-class Retrieval(Tool):
+class Retrieval(BaseTool):
     type: AvailableTools = Field(AvailableTools.RETRIEVAL, const=True)
     name: str = Field("Retrieval", const=True)
     description: str = Field("Look up information in uploaded files.", const=True)
@@ -326,18 +326,3 @@ TOOLS = {
     AvailableTools.WIKIPEDIA: _get_wikipedia,
     AvailableTools.TAVILY_ANSWER: _get_tavily_answer,
 }
-
-TOOL_SCHEMAS = [
-    ActionServer.schema(),
-    Connery.schema(),
-    DDGSearch.schema(),
-    Arxiv.schema(),
-    YouSearch.schema(),
-    SecFilings.schema(),
-    PressReleases.schema(),
-    PubMed.schema(),
-    Wikipedia.schema(),
-    Tavily.schema(),
-    TavilyAnswer.schema(),
-    Retrieval.schema(),
-]
