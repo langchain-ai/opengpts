@@ -1,7 +1,6 @@
 from enum import Enum
 from functools import lru_cache
 from typing import Optional
-from typing_extensions import TypedDict
 
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools.retriever import create_retriever_tool
@@ -15,13 +14,16 @@ from langchain_community.retrievers.you import YouRetriever
 from langchain_community.tools import ArxivQueryRun, DuckDuckGoSearchRun
 from langchain_community.tools.connery import ConneryService
 from langchain_community.tools.tavily_search import (
-    TavilySearchResults,
     TavilyAnswer as _TavilyAnswer,
+)
+from langchain_community.tools.tavily_search import (
+    TavilySearchResults,
 )
 from langchain_community.utilities.arxiv import ArxivAPIWrapper
 from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
 from langchain_community.vectorstores.redis import RedisFilter
 from langchain_robocorp import ActionServerToolkit
+from typing_extensions import TypedDict
 
 from app.upload import vstore
 
@@ -70,23 +72,6 @@ class ActionServerConfig(ToolConfig):
     api_key: str
 
 
-class ConneryConfig(ToolConfig):
-    runner_url: str
-    api_key: str
-
-
-class YouSearchConfig(ToolConfig):
-    ydc_api_key: str
-
-
-class TavilyConfig(ToolConfig):
-    tavily_api_key: str
-
-
-class TavilyAnswerConfig(ToolConfig):
-    tavily_api_key: str
-
-
 class ActionServer(BaseTool):
     type: AvailableTools = Field(AvailableTools.ACTION_SERVER, const=True)
     name: str = Field("Action Server by Robocorp", const=True)
@@ -111,7 +96,6 @@ class Connery(BaseTool):
         ),
         const=True,
     )
-    config: ConneryConfig
 
 
 class DDGSearch(BaseTool):
@@ -136,7 +120,6 @@ class YouSearch(BaseTool):
         "Uses [You.com](https://you.com/) search, optimized responses for LLMs.",
         const=True,
     )
-    config: YouSearchConfig
 
 
 class SecFilings(BaseTool):
@@ -182,7 +165,6 @@ class Tavily(BaseTool):
         ),
         const=True,
     )
-    config: TavilyConfig
 
 
 class TavilyAnswer(BaseTool):
@@ -195,7 +177,6 @@ class TavilyAnswer(BaseTool):
         ),
         const=True,
     )
-    config: TavilyAnswerConfig
 
 
 class Retrieval(BaseTool):
@@ -238,9 +219,9 @@ def _get_arxiv():
 
 
 @lru_cache(maxsize=1)
-def _get_you_search(**kwargs: YouSearchConfig):
+def _get_you_search():
     return create_retriever_tool(
-        YouRetriever(ydc_api_key=kwargs["ydc_api_key"], n_hits=3, n_snippets_per_hit=3),
+        YouRetriever(n_hits=3, n_snippets_per_hit=3),
         "you_search",
         "Searches for documents using You.com",
     )
@@ -283,14 +264,14 @@ def _get_wikipedia():
 
 
 @lru_cache(maxsize=1)
-def _get_tavily(**kwargs: TavilyConfig):
-    tavily_search = TavilySearchAPIWrapper(tavily_api_key=kwargs["tavily_api_key"])
+def _get_tavily():
+    tavily_search = TavilySearchAPIWrapper()
     return TavilySearchResults(api_wrapper=tavily_search)
 
 
 @lru_cache(maxsize=1)
-def _get_tavily_answer(**kwargs: TavilyAnswerConfig):
-    tavily_search = TavilySearchAPIWrapper(tavily_api_key=kwargs["tavily_api_key"])
+def _get_tavily_answer():
+    tavily_search = TavilySearchAPIWrapper()
     return _TavilyAnswer(api_wrapper=tavily_search)
 
 
@@ -302,11 +283,8 @@ def _get_action_server(**kwargs: ActionServerConfig):
 
 
 @lru_cache(maxsize=1)
-def _get_connery_actions(**kwargs: ConneryConfig):
-    connery_service = ConneryService(
-        runner_url=kwargs["runner_url"],
-        api_key=kwargs["api_key"],
-    )
+def _get_connery_actions():
+    connery_service = ConneryService()
     connery_toolkit = ConneryToolkit.create_instance(connery_service)
     tools = connery_toolkit.get_tools()
     return tools
