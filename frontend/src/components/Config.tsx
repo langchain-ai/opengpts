@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { ShareIcon } from "@heroicons/react/24/outline";
 import { useDropzone } from "react-dropzone";
 import { orderBy, last } from "lodash";
@@ -261,6 +261,7 @@ function ToolSelectionField(props: {
   const { tools: availableTools, loading } = useToolsSchemas();
   const [query, setQuery] = useState("");
   const [filteredTools, setFilteredTools] = useState<ToolSchema[]>([]);
+  const comboButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleSelectTool = useCallback(
     (toolSchema: ToolSchema) => {
@@ -349,8 +350,12 @@ function ToolSelectionField(props: {
               placeholder="Add a tool"
               autoComplete="off"
               readOnly={props.readonly}
+              onFocus={() => comboButtonRef.current?.click()}
             />
-            <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+            <Combobox.Button
+              ref={comboButtonRef}
+              className="absolute inset-y-0 right-0 flex items-center pr-2"
+            >
               <ChevronUpDownIcon
                 className="h-5 w-5 text-gray-400"
                 aria-hidden="true"
