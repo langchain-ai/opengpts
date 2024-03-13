@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { ShareIcon } from "@heroicons/react/24/outline";
 import { useDropzone } from "react-dropzone";
 import { orderBy, last } from "lodash";
@@ -261,7 +261,6 @@ function ToolSelectionField(props: {
   const { tools: availableTools, loading } = useToolsSchemas();
   const [query, setQuery] = useState("");
   const [filteredTools, setFilteredTools] = useState<ToolSchema[]>([]);
-  const comboButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleSelectTool = useCallback(
     (toolSchema: ToolSchema) => {
@@ -334,6 +333,7 @@ function ToolSelectionField(props: {
       <Label title="Tools" />
       {props.selectedTools.map((t) => (
         <ToolDisplay
+          key={`tool-display-${t.id}`}
           tool={t}
           onRemoveTool={() => props.onRemoveTool(t.id)}
           onUpdateToolConfig={(conf) => props.onUpdateToolConfig(t.id, conf)}
@@ -343,24 +343,26 @@ function ToolSelectionField(props: {
       <div className="w-full max-w-2xl">
         <Combobox value={null} onChange={handleSelectTool}>
           <div className="relative mt-1">
-            <Combobox.Input
-              className="w-full border border-gray-300 bg-white py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
-              onChange={(event) => setQuery(event.target.value)}
-              displayValue={() => ""}
-              placeholder="Add a tool"
-              autoComplete="off"
-              readOnly={props.readonly}
-              onFocus={() => comboButtonRef.current?.click()}
-            />
-            <Combobox.Button
-              ref={comboButtonRef}
-              className="absolute inset-y-0 right-0 flex items-center pr-2"
-            >
-              <ChevronUpDownIcon
-                className="h-5 w-5 text-gray-400"
-                aria-hidden="true"
-              />
-            </Combobox.Button>
+            <div className="relative mt-1">
+              <div className="w-full h-10 border border-gray-300 bg-white py-2 text-sm leading-5 text-gray-900 rounded-md flex items-center">
+                <Combobox.Button as="div" className="relative flex-grow">
+                  <Combobox.Input
+                    className="w-full h-full rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 border-0 bg-transparent text-gray-900 placeholder-gray-400 text-sm"
+                    onChange={(event) => setQuery(event.target.value)}
+                    displayValue={() => query}
+                    placeholder="Add a tool"
+                    autoComplete="off"
+                    readOnly={props.readonly}
+                  />
+                  <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                    <ChevronUpDownIcon
+                      className="h-5 w-5 text-gray-400"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </Combobox.Button>
+              </div>
+            </div>
             <Transition
               as={Fragment}
               leave="transition ease-in duration-100"
