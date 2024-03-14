@@ -55,6 +55,12 @@ In order to you use this, you need to a `REDIS_URL` variable.
 export REDIS_URL=...
 ```
 
+For postgres you need to set `POSTGRES_HOST` among other variables.
+
+```shell
+export POSTGRES_HOST=...
+```
+
 **Set up vector database**
 
 The backend by default also uses Redis as a vector database,

@@ -9,9 +9,7 @@ services:
     volumes:
       - ./redis-volume:/data
   postgres:
-    container_name: opengpts-postgres
-    build:
-      context: postgres
+    image: pgvector/pgvector:pg16
     ports:
       - "5432:5432"
     env_file:
@@ -33,6 +31,7 @@ services:
       - ./backend:/backend
     environment:
       REDIS_URL: "redis://opengpts-redis:6379"
+      POSTGRES_HOST: "postgres"
     command:
       - --reload
   frontend:
