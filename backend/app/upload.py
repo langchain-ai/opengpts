@@ -10,10 +10,12 @@ from __future__ import annotations
 
 import os
 from typing import Any, BinaryIO, List, Optional
+from functools import lru_cache
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter, TextSplitter
 from langchain_community.document_loaders.blob_loaders import Blob
 from langchain_community.vectorstores.redis import Redis
+from langchain_community.vectorstores.pgvector import PGVector
 from langchain_core.runnables import (
     ConfigurableField,
     RunnableConfig,
@@ -111,7 +113,7 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
 index_schema = {
     "tag": [{"name": "namespace"}],
 }
-vstore = Redis(
+redis_store = Redis(
     redis_url=os.environ["REDIS_URL"],
     index_name="opengpts",
     embedding=OpenAIEmbeddings(),
@@ -119,9 +121,34 @@ vstore = Redis(
 )
 
 
+PG_CONNECTION_STRING = PGVector.connection_string_from_db_params(
+    driver="psycopg2",
+    host=os.environ.get("POSTGRES_HOST", "localhost"),
+    port=int(os.environ.get("POSTGRES_PORT", "5432")),
+    database=os.environ.get("POSTGRES_DB", "postgres"),
+    user=os.environ.get("POSTGRES_USER", "postgres"),
+    password=os.environ.get("POSTGRES_PASSWORD", "postgres"),
+)
+postgres_store = PGVector(
+    connection_string=PG_CONNECTION_STRING,
+    embedding_function=OpenAIEmbeddings(),
+)
+
+
+@lru_cache(maxsize=1)
+def get_vectorstore() -> VectorStore:
+    """Get the vectorstore."""
+    vstore_type = os.getenv("VSTORE_TYPE")
+    if vstore_type == "redis":
+        return redis_store
+    elif vstore_type == "postgres":
+        return postgres_store
+    raise ValueError(f"Unknown vector store type (VSTORE_TYPE): {vstore_type}.")
+
+
 ingest_runnable = IngestRunnable(
     text_splitter=RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200),
-    vectorstore=vstore,
+    vectorstore=get_vectorstore(),
 ).configurable_fields(
     assistant_id=ConfigurableField(
         id="assistant_id",
