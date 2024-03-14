@@ -8,6 +8,15 @@ services:
       - "6379:6379"
     volumes:
       - ./redis-volume:/data
+  postgres:
+    image: pgvector/pgvector:pg16
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - ./postgres-volume:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
   backend:
     container_name: opengpts-backend
     image: docker.io/langchain/open-gpts:latest
@@ -19,3 +28,4 @@ services:
       - .env
     environment:
       REDIS_URL: "redis://opengpts-redis:6379"
+      POSTGRES_HOST: "postgres"
