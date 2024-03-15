@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import List, Sequence
 
-import orjson
 from langchain.schema.messages import AnyMessage
 from langgraph.channels.base import ChannelsManager
 from langgraph.checkpoint.base import empty_checkpoint
@@ -12,35 +11,6 @@ from app.agent import AgentType, get_agent_executor
 from app.schema import Assistant, Thread
 from app.stream import map_chunk_to_msg
 from app.lifespan import get_pg_pool
-
-
-def assistants_list_key(user_id: str) -> str:
-    return f"opengpts:{user_id}:assistants"
-
-
-def assistant_key(user_id: str, assistant_id: str) -> str:
-    return f"opengpts:{user_id}:assistant:{assistant_id}"
-
-
-def threads_list_key(user_id: str) -> str:
-    return f"opengpts:{user_id}:threads"
-
-
-def thread_key(user_id: str, thread_id: str) -> str:
-    return f"opengpts:{user_id}:thread:{thread_id}"
-
-
-assistant_hash_keys = ["assistant_id", "name", "config", "updated_at", "public"]
-thread_hash_keys = ["assistant_id", "thread_id", "name", "updated_at"]
-public_user_id = "eef39817-c173-4eb6-8be4-f77cf37054fb"
-
-
-def _dump(map: dict) -> dict:
-    return {k: orjson.dumps(v) if v is not None else None for k, v in map.items()}
-
-
-def load(keys: list[str], values: list[bytes]) -> dict:
-    return {k: orjson.loads(v) if v is not None else None for k, v in zip(keys, values)}
 
 
 async def list_assistants(user_id: str) -> List[Assistant]:
