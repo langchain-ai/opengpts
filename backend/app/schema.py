@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Optional
+from uuid import UUID
 
 from fastapi import Cookie
 from typing_extensions import TypedDict
@@ -8,7 +9,7 @@ from typing_extensions import TypedDict
 class AssistantWithoutUserId(TypedDict):
     """Assistant model."""
 
-    assistant_id: str
+    assistant_id: UUID
     """The ID of the assistant."""
     name: str
     """The name of the assistant."""
@@ -28,9 +29,9 @@ class Assistant(AssistantWithoutUserId):
 
 
 class ThreadWithoutUserId(TypedDict):
-    thread_id: str
+    thread_id: UUID
     """The ID of the thread."""
-    assistant_id: str
+    assistant_id: Optional[UUID]
     """The assistant that was used in conjunction with this thread."""
     name: str
     """The name of the thread."""

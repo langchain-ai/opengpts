@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 import app.storage as storage
 from app.schema import Assistant, AssistantWithoutUserId, OpengptsUserId
 
+
 router = APIRouter()
 
 FEATURED_PUBLIC_ASSISTANTS = []
@@ -24,9 +25,9 @@ AssistantID = Annotated[str, Path(description="The ID of the assistant.")]
 
 
 @router.get("/")
-def list_assistants(opengpts_user_id: OpengptsUserId) -> List[AssistantWithoutUserId]:
+async def list_assistants(opengpts_user_id: OpengptsUserId) -> List[Assistant]:
     """List all assistants for the current user."""
-    return storage.list_assistants(opengpts_user_id)
+    return await storage.list_assistants(opengpts_user_id)
 
 
 @router.get("/public/")
@@ -42,24 +43,24 @@ def list_public_assistants(
 
 
 @router.get("/{aid}")
-def get_asistant(
+async def get_assistant(
     opengpts_user_id: OpengptsUserId,
     aid: AssistantID,
 ) -> Assistant:
     """Get an assistant by ID."""
-    assistant = storage.get_assistant(opengpts_user_id, aid)
+    assistant = await storage.get_assistant(opengpts_user_id, aid)
     if not assistant:
         raise HTTPException(status_code=404, detail="Assistant not found")
     return assistant
 
 
 @router.post("")
-def create_assistant(
+async def create_assistant(
     opengpts_user_id: OpengptsUserId,
     payload: AssistantPayload,
 ) -> Assistant:
     """Create an assistant."""
-    return storage.put_assistant(
+    return await storage.put_assistant(
         opengpts_user_id,
         str(uuid4()),
         name=payload.name,
@@ -69,13 +70,13 @@ def create_assistant(
 
 
 @router.put("/{aid}")
-def upsert_assistant(
+async def upsert_assistant(
     opengpts_user_id: OpengptsUserId,
     aid: AssistantID,
     payload: AssistantPayload,
 ) -> Assistant:
     """Create or update an assistant."""
-    return storage.put_assistant(
+    return await storage.put_assistant(
         opengpts_user_id,
         aid,
         name=payload.name,

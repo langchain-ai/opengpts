@@ -43,6 +43,10 @@ async def _run_input_and_config(request: Request, opengpts_user_id: OpengptsUser
             None, get_assistant, public_user_id, body["assistant_id"]
         ),
     )
+    assistant, public_assistant = await asyncio.gather(
+        get_assistant(opengpts_user_id, body["assistant_id"]),
+        get_assistant(public_user_id, body["assistant_id"]),
+    )
     assistant = assistant or public_assistant
     if not assistant:
         raise HTTPException(status_code=404, detail="Assistant not found")
