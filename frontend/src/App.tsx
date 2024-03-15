@@ -41,8 +41,9 @@ function App() {
       setIsDocumentRetrievalActive(true);
       return;
     }
-    const tools = (configurable?.["type==agent/tools"] as string[]) ?? [];
-    setIsDocumentRetrievalActive(tools.includes("Retrieval"));
+    const tools =
+      (configurable?.["type==agent/tools"] as { name: string }[]) ?? [];
+    setIsDocumentRetrievalActive(tools.some((t) => t.name === "Retrieval"));
   }, [currentConfig, currentChat, configs]);
 
   const startTurn = useCallback(
