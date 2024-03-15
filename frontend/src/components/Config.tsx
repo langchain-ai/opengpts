@@ -1,15 +1,25 @@
-import { useEffect, useState } from "react";
-import { marked } from "marked";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { ShareIcon } from "@heroicons/react/24/outline";
 import { useDropzone } from "react-dropzone";
 import { orderBy, last } from "lodash";
+import { v4 as uuidv4 } from "uuid";
 
 import { ConfigListProps } from "../hooks/useConfigList";
 import { SchemaField, Schemas } from "../hooks/useSchemas";
 import { cn } from "../utils/cn";
 import { FileUploadDropzone } from "./FileUpload";
-import { Switch } from "@headlessui/react";
+import { Combobox, Disclosure, Switch, Transition } from "@headlessui/react";
 import { DROPZONE_CONFIG, TYPES } from "../constants";
+import { Tool, ToolConfig, ToolSchema } from "../utils/formTypes.ts";
+import { useToolsSchemas } from "../hooks/useToolsSchemas.ts";
+import {
+  ChevronUpDownIcon,
+  TrashIcon,
+  PlusIcon,
+  MinusIcon,
+  RocketLaunchIcon,
+} from "@heroicons/react/20/solid";
+import { marked } from "marked";
 
 function Types(props: {
   field: SchemaField;
@@ -151,86 +161,240 @@ export default function SingleOptionField(props: {
   );
 }
 
-const TOOL_DESCRIPTIONS = {
-  Retrieval: "Look up information in uploaded files.",
-  "Action Server by Robocorp":
-    "Run AI actions with [Robocorp Action Server](https://github.com/robocorp/robocorp).",
-  '"AI Action Runner" by Connery':
-    "Connect OpenGPTs to the real world with [Connery](https://github.com/connery-io/connery).",
-  "DDG Search":
-    "Search the web with [DuckDuckGo](https://pypi.org/project/duckduckgo-search/).",
-  "Search (Tavily)":
-    "Uses the [Tavily](https://app.tavily.com/) search engine. Includes sources in the response.",
-  "Search (short answer, Tavily)":
-    "Uses the [Tavily](https://app.tavily.com/) search engine. This returns only the answer, no supporting evidence.",
-  "You.com Search":
-    "Uses [You.com](https://you.com/) search, optimized responses for LLMs.",
-  "SEC Filings (Kay.ai)":
-    "Searches through SEC filings using [Kay.ai](https://www.kay.ai/).",
-  "Press Releases (Kay.ai)":
-    "Searches through press releases using [Kay.ai](https://www.kay.ai/).",
-  Arxiv: "Searches [Arxiv](https://arxiv.org/).",
-  PubMed: "Searches [PubMed](https://pubmed.ncbi.nlm.nih.gov/).",
-  Wikipedia: "Searches [Wikipedia](https://pypi.org/project/wikipedia/).",
-};
-
-function MultiOptionField(props: {
-  id: string;
-  field: SchemaField;
-  value: string[];
-  title: string;
+const ToolDisplay = (props: {
+  tool: Tool;
+  onRemoveTool: () => void;
+  onUpdateToolConfig: (conf: ToolConfig) => void;
   readonly: boolean;
-  setValue: (value: string[]) => void;
-  descriptions?: Record<string, string>;
-}) {
+}) => {
+  const { tool, onRemoveTool, onUpdateToolConfig, readonly } = props;
+  const confs = Object.entries(tool.config);
   return (
-    <fieldset>
-      <Label
-        id={props.id}
-        title={props.title ?? props.field.items?.title}
-        description={props.field.description}
-      />
-      <div className="space-y-2">
-        {orderBy(props.field.items?.enum)?.map((option) => (
-          <div className="relative flex items-start" key={option}>
-            <div className="flex h-6 items-center">
-              <input
-                id={`${props.id}-${option}`}
-                aria-describedby="comments-description"
-                name={`${props.id}-${option}`}
-                type="checkbox"
-                checked={props.value.includes(option)}
-                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                disabled={props.readonly}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    props.setValue([...props.value, option]);
-                  } else {
-                    props.setValue(props.value.filter((v) => v !== option));
-                  }
-                }}
-              />
-            </div>
-            <div className="ml-3 text-sm leading-6">
-              <label
-                htmlFor={`${props.id}-${option}`}
-                className="text-gray-900"
-              >
-                {option}
-              </label>
-              {props.descriptions?.[option] && (
+    <Disclosure
+      as="div"
+      key={"tool-" + tool.id}
+      className="flex flex-col max-w-2xl p-2 mt-2 mb-2 border rounded-md border-gray-200"
+      defaultOpen={!readonly}
+    >
+      {({ open }) => (
+        <>
+          <div className="flex">
+            {Object.keys(tool.config).length > 0 ? (
+              <Disclosure.Button className="text-sm leading-6 flex justify-between items-center mr-2">
+                {open ? (
+                  <MinusIcon className="w-5 h-5 text-gray-500 hover:text-indigo-600" />
+                ) : (
+                  <PlusIcon className="w-5 h-5 text-gray-500 hover:text-indigo-600" />
+                )}
+              </Disclosure.Button>
+            ) : (
+              <div className="text-sm leading-6 flex justify-between items-center mr-2">
+                <RocketLaunchIcon className="w-5 h-5 text-gray-500" />
+              </div>
+            )}
+            <div className="flex flex-col flex-auto">
+              <label>{tool.name}</label>
+              {tool.description && (
                 <div
                   className="text-gray-500 prose prose-sm prose-a:text-gray-500"
                   dangerouslySetInnerHTML={{
-                    __html: marked(props.descriptions[option]),
+                    __html: marked(tool.description),
                   }}
                 ></div>
               )}
             </div>
+            {!readonly && (
+              <button
+                onClick={onRemoveTool}
+                className={
+                  "text-gray-400" + (readonly ? "" : " hover:text-red-600")
+                }
+              >
+                <TrashIcon className="h-5 w-5" aria-hidden="true" />
+              </button>
+            )}
           </div>
-        ))}
+          {confs.length > 0 && (
+            <Disclosure.Panel className="pt-4 flex flex-col mb-2 pl-5 pr-5">
+              {confs.map(([key, value]) => (
+                <div className="flex flex-col pt-2" key={key}>
+                  <label
+                    htmlFor={`${tool.id}-${key}`}
+                    className="pl-2 prose-sm"
+                  >
+                    {key}
+                  </label>
+                  <input
+                    id={`${tool.id}-${key}`}
+                    value={value}
+                    onChange={(e) =>
+                      onUpdateToolConfig({ [key]: e.target.value })
+                    }
+                    className="rounded-md border-gray-300 shadow-sm prose-sm "
+                    autoComplete="off"
+                    readOnly={readonly}
+                  />
+                </div>
+              ))}
+            </Disclosure.Panel>
+          )}
+        </>
+      )}
+    </Disclosure>
+  );
+};
+
+function ToolSelectionField(props: {
+  readonly: boolean;
+  retrievalOn: boolean;
+  selectedTools: Tool[];
+  onAddTool: (tool: Tool) => void;
+  onRemoveTool: (toolId: string) => void;
+  onUpdateToolConfig: (
+    toolId: string,
+    config: {
+      [key: string]: string;
+    },
+  ) => void;
+}) {
+  const { onAddTool, onRemoveTool, retrievalOn, selectedTools } = props;
+  const { tools: availableTools, loading } = useToolsSchemas();
+  const [query, setQuery] = useState("");
+  const [filteredTools, setFilteredTools] = useState<ToolSchema[]>([]);
+
+  const handleSelectTool = useCallback(
+    (toolSchema: ToolSchema) => {
+      // Initialize config object based on ToolSchema
+      const config: { [key: string]: string } = {};
+      Object.keys(toolSchema.config.properties).forEach((key) => {
+        const property = toolSchema.config.properties[key];
+        // Use the default value if specified, otherwise initialize to an empty string
+        config[key] = property.default || "";
+      });
+
+      // Create a new tool object with initialized config
+      const tool: Tool = {
+        id: toolSchema.name === "Retrieval" ? "retrieval" : uuidv4(),
+        type: toolSchema.type,
+        name: toolSchema.name,
+        description: toolSchema.description,
+        config: config,
+      };
+
+      onAddTool(tool);
+      setQuery(""); // Clear the query
+    },
+    [onAddTool],
+  );
+
+  useEffect(() => {
+    const retrieval = availableTools.find((t) => t.name === "Retrieval");
+    if (!retrieval) return;
+    const retrievalSelected = selectedTools.some((t) => t.name === "Retrieval");
+    if (retrievalOn && !retrievalSelected) {
+      handleSelectTool(retrieval);
+    }
+    if (!retrievalOn && retrievalSelected) {
+      onRemoveTool("retrieval");
+    }
+  }, [
+    retrievalOn,
+    onRemoveTool,
+    availableTools,
+    handleSelectTool,
+    selectedTools,
+  ]);
+
+  useEffect(() => {
+    let toolSchemas = availableTools.filter(
+      (tool) => tool.name !== "Retrieval",
+    );
+    if (query !== "") {
+      toolSchemas = toolSchemas.filter((tool) =>
+        tool.name
+          .toLowerCase()
+          .replace(/\s+/g, "")
+          .includes(query.toLowerCase().replace(/\s+/g, "")),
+      );
+    }
+    toolSchemas = toolSchemas.filter(
+      (tool) =>
+        !selectedTools.some((t) => t.name === tool.name && !tool.multiUse),
+    );
+    setFilteredTools(toolSchemas);
+  }, [query, availableTools, selectedTools]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div>
+      <Label title="Tools" />
+      {props.selectedTools.map((t) => (
+        <ToolDisplay
+          key={`tool-display-${t.id}`}
+          tool={t}
+          onRemoveTool={() => props.onRemoveTool(t.id)}
+          onUpdateToolConfig={(conf) => props.onUpdateToolConfig(t.id, conf)}
+          readonly={props.readonly || t.name === "Retrieval"}
+        />
+      ))}
+      <div className="w-full max-w-2xl">
+        <Combobox value={null} onChange={handleSelectTool}>
+          <div className="relative mt-1">
+            <div className="relative mt-1">
+              <div className="w-full h-10 border border-gray-300 bg-white py-2 text-sm leading-5 text-gray-900 rounded-md flex items-center">
+                <Combobox.Button as="div" className="relative flex-grow">
+                  <Combobox.Input
+                    className="w-full h-full rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 border-0 bg-transparent text-gray-900 placeholder-gray-400 text-sm"
+                    onChange={(event) => setQuery(event.target.value)}
+                    displayValue={() => query}
+                    placeholder="Add a tool"
+                    autoComplete="off"
+                    readOnly={props.readonly}
+                  />
+                  <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                    <ChevronUpDownIcon
+                      className="h-5 w-5 text-gray-400"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </Combobox.Button>
+              </div>
+            </div>
+            <Transition
+              as={Fragment}
+              leave="transition ease-in duration-100"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                {filteredTools.length === 0 && query !== "" ? (
+                  <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                    Nothing found.
+                  </div>
+                ) : (
+                  filteredTools.map((tool) => (
+                    <Combobox.Option
+                      key={"tool-schema-" + tool.name}
+                      value={tool}
+                      className={({ active }) =>
+                        `relative cursor-default select-none py-2 pl-2 pr-4 ${active ? "bg-indigo-100 text-indigo-900" : "text-gray-900"}`
+                      }
+                    >
+                      <span className={`block truncate font-normal`}>
+                        {tool.name}
+                      </span>
+                    </Combobox.Option>
+                  ))
+                )}
+              </Combobox.Options>
+            </Transition>
+          </div>
+        </Combobox>
       </div>
-    </fieldset>
+    </div>
   );
 }
 
@@ -320,6 +484,7 @@ export function Config(props: {
   const [values, setValues] = useState(
     props.config?.config ?? props.configDefaults,
   );
+  const [selectedTools, setSelectedTools] = useState<Tool[]>([]);
   const typeKey = "type";
   const typeField =
     props.configSchema?.properties.configurable.properties[typeKey];
@@ -328,33 +493,43 @@ export function Config(props: {
   const [files, setFiles] = useState<File[]>([]);
   const dropzone = useDropzone(DROPZONE_CONFIG);
   const [isPublic, setPublic] = useState(props.config?.public ?? false);
+
+  useEffect(() => {
+    if (!values) return;
+    if (!values.configurable) return;
+    const tools = (values.configurable["type==agent/tools"] as Tool[]) ?? [];
+    setSelectedTools((oldTools) => [...oldTools, ...tools]);
+  }, [values]);
+
+  const handleAddTool = (tool: Tool) => {
+    setSelectedTools([...selectedTools, tool]);
+  };
+
+  const handleRemoveTool = (toolId: string) => {
+    setSelectedTools(selectedTools.filter((tool) => tool.id !== toolId));
+  };
+
+  const handleUpdateToolConfig = (toolId: string, config: ToolConfig) => {
+    const updatedTools = selectedTools.map((tool) =>
+      tool.id === toolId
+        ? { ...tool, config: { ...tool.config, ...config } }
+        : tool,
+    );
+    setSelectedTools(updatedTools);
+  };
+
   useEffect(() => {
     setValues(props.config?.config ?? props.configDefaults);
   }, [props.config, props.configDefaults]);
   useEffect(() => {
     if (dropzone.acceptedFiles.length > 0) {
-      if (typeValue === "agent") {
-        const toolsKey = "type==agent/tools";
-        setValues((values) => ({
-          configurable: {
-            ...values?.configurable,
-            [toolsKey]: [
-              ...((values?.configurable?.[toolsKey] ?? []) as string[]).filter(
-                (tool) => tool !== "Retrieval",
-              ),
-              "Retrieval",
-            ],
-          },
-        }));
-      }
       const acceptedFileIds = dropzone.acceptedFiles.map(fileId);
       setFiles((files) => [
         ...files.filter((f) => !acceptedFileIds.includes(fileId(f))),
         ...dropzone.acceptedFiles,
       ]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dropzone.acceptedFiles]);
+  }, [dropzone.acceptedFiles, setFiles]);
   const [inflight, setInflight] = useState(false);
   const readonly = !!props.config && !inflight;
 
@@ -398,7 +573,13 @@ export function Config(props: {
         const key = form.key.value;
         if (!key) return;
         setInflight(true);
-        await props.saveConfig(key, values!, files, isPublic);
+        const vals = { ...values };
+        if (vals?.configurable) {
+          vals.configurable = { ...vals.configurable };
+          vals.configurable["type==agent/tools"] = [...selectedTools];
+          setSelectedTools([]);
+        }
+        await props.saveConfig(key, vals!, files, isPublic);
         setInflight(false);
       }}
     >
@@ -517,26 +698,16 @@ export function Config(props: {
                 readonly={readonly}
               />
             );
-          } else if (
-            value.type === "array" &&
-            value.items?.type === "string" &&
-            value.items?.enum
-          ) {
+          } else if (key === "type==agent/tools") {
             return (
-              <MultiOptionField
+              <ToolSelectionField
                 key={key}
-                id={key}
-                field={value}
-                title={title}
-                value={values?.configurable?.[key] as string[]}
-                setValue={(value: string[]) =>
-                  setValues({
-                    ...values,
-                    configurable: { ...values!.configurable, [key]: value },
-                  })
-                }
+                selectedTools={selectedTools}
+                onAddTool={handleAddTool}
+                onRemoveTool={handleRemoveTool}
+                onUpdateToolConfig={handleUpdateToolConfig}
                 readonly={readonly}
-                descriptions={TOOL_DESCRIPTIONS}
+                retrievalOn={files.length > 0}
               />
             );
           }
