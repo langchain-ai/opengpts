@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Path, Query
 from pydantic import BaseModel, Field
 
 import app.storage as storage
-from app.schema import Assistant, AssistantWithoutUserId, OpengptsUserId
+from app.schema import Assistant, OpengptsUserId
 
 
 router = APIRouter()
@@ -31,13 +31,13 @@ async def list_assistants(opengpts_user_id: OpengptsUserId) -> List[Assistant]:
 
 
 @router.get("/public/")
-def list_public_assistants(
+async def list_public_assistants(
     shared_id: Annotated[
         Optional[str], Query(description="ID of a publicly shared assistant.")
     ] = None,
-) -> List[AssistantWithoutUserId]:
+) -> List[Assistant]:
     """List all public assistants."""
-    return storage.list_public_assistants(
+    return await storage.list_public_assistants(
         FEATURED_PUBLIC_ASSISTANTS + ([shared_id] if shared_id else [])
     )
 

@@ -9,8 +9,7 @@ from langgraph.pregel import _prepare_next_tasks
 
 
 from app.agent import AgentType, get_agent_executor
-from app.redis import get_redis_client
-from app.schema import Assistant, AssistantWithoutUserId, Thread
+from app.schema import Assistant, Thread
 from app.stream import map_chunk_to_msg
 from app.lifespan import get_pg_pool
 
@@ -62,30 +61,27 @@ async def get_assistant(user_id: str, assistant_id: str) -> Assistant | None:
         )
 
 
-# TODO How should we represent public assistants?
-def list_public_assistants(
-    assistant_ids: Sequence[str]
-) -> List[AssistantWithoutUserId]:
-    """List all the public assistants."""
-    if not assistant_ids:
-        return []
-    client = get_redis_client()
-    ids = [
-        id
-        for id, is_public in zip(
-            assistant_ids,
-            client.smismember(
-                assistants_list_key(public_user_id),
-                [orjson.dumps(id) for id in assistant_ids],
-            ),
+async def get_public_assistant(assistant_id: str) -> Assistant | None:
+    """Get a public assistant by ID."""
+
+    async with get_pg_pool().acquire() as conn:
+        return await conn.fetchrow(
+            "SELECT * FROM assistant WHERE assistant_id = $1 AND public = true",
+            assistant_id,
         )
-        if is_public
-    ]
-    with client.pipeline() as pipe:
-        for id in ids:
-            pipe.hmget(assistant_key(public_user_id, id), *assistant_hash_keys)
-        assistants = pipe.execute()
-    return [load(assistant_hash_keys, values) for values in assistants]
+
+
+async def list_public_assistants(assistant_ids: Sequence[str]) -> List[Assistant]:
+    """List all the public assistants."""
+    async with get_pg_pool().acquire() as conn:
+        return await conn.fetch(
+            (
+                "SELECT * FROM assistant "
+                "WHERE assistant_id = ANY($1::uuid[]) "
+                "AND public = true;"
+            ),
+            assistant_ids,
+        )
 
 
 async def put_assistant(
