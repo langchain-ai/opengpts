@@ -36,14 +36,6 @@ async def _run_input_and_config(request: Request, opengpts_user_id: OpengptsUser
     except json.JSONDecodeError:
         raise RequestValidationError(errors=["Invalid JSON body"])
     assistant, public_assistant = await asyncio.gather(
-        asyncio.get_running_loop().run_in_executor(
-            None, get_assistant, opengpts_user_id, body["assistant_id"]
-        ),
-        asyncio.get_running_loop().run_in_executor(
-            None, get_assistant, public_user_id, body["assistant_id"]
-        ),
-    )
-    assistant, public_assistant = await asyncio.gather(
         get_assistant(opengpts_user_id, body["assistant_id"]),
         get_assistant(public_user_id, body["assistant_id"]),
     )
