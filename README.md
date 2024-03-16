@@ -97,7 +97,7 @@ export LANGCHAIN_API_KEY=...
 Start the backend server
 
 ```shell
-poetry run uvicorn app.server:app --port 8100
+make start
 ```
 
 **2. Start the frontend**
