@@ -32,7 +32,7 @@ Because this is open source, if you do not like those architectures or want to m
 - [GPTs: a simple hosted version](https://opengpts-example-vz4y4ooboq-uc.a.run.app/)
 - [Assistants API: a getting started guide](API.md)
 
-## Quickstart
+## Quickstart without Docker
 
 ### Start the backend
 
@@ -97,10 +97,10 @@ export LANGCHAIN_API_KEY=...
 Start the backend server
 
 ```shell
-langchain serve --port=8100
+make start
 ```
 
-**2. Start the frontend**
+### Start the frontend
 
 ```shell
 cd frontend
@@ -139,7 +139,7 @@ This project supports a Docker-based setup, streamlining installation and execut
 4. **Rebuilding After Changes:**  
    If you make changes to either the frontend or backend, rebuild the Docker images to reflect these changes. Run:
    ```
-   docker-compose up --build
+   docker compose up --build
    ```
    This command rebuilds the images with your latest changes and restarts the services.
 
