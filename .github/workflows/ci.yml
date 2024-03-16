@@ -77,8 +77,9 @@ jobs:
         - name: Setup Node.js (LTS)
           uses: actions/setup-node@v3
           with:
-            node-version: '20' # Current LTS version
+            node-version: '20'
             cache: 'yarn'
+            cache-dependency-path: frontend/yarn.lock
         - name: Install frontend dependencies
           run: yarn install
           working-directory: ./frontend
