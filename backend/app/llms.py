@@ -5,7 +5,12 @@ from urllib.parse import urlparse
 
 import boto3
 import httpx
-from langchain_community.chat_models import BedrockChat, ChatAnthropic, ChatFireworks, GigaChat
+from langchain_community.chat_models import (
+    BedrockChat,
+    ChatAnthropic,
+    ChatFireworks,
+    GigaChat,
+)
 from langchain_google_vertexai import ChatVertexAI
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
