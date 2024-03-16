@@ -85,7 +85,7 @@ export default function TypingBox(props: {
         </div>
         <span className="text-sm text-gray-600">{readableSize}</span>
         <span
-          className="justify-center not-prose ml-2  inline-flex items-center rounded-full text-xs font-medium cursor-pointer bg-gray-50 text-gray-600 relative top-[1px]"
+          className="justify-center not-prose ml-2 inline-flex items-center rounded-full text-xs font-medium cursor-pointer bg-gray-50 text-gray-600 relative top-[1px]"
           onClick={() => setFiles((files) => files.filter((f) => f !== file))}
         >
           <XCircleIcon className="h-4 w-4" />
@@ -99,7 +99,9 @@ export default function TypingBox(props: {
       {files.length > 0 ? (
         <div
           className={cn(
-            "self-end w-fit grid grid-cols-[auto,1fr,auto] gap-2 p-2 bg-white rounded-md text-sm text-gray-900 shadow-sm border border-gray-300",
+            "self-end w-fit grid grid-cols-[auto,1fr,auto]" +
+              " gap-2 p-2 bg-white rounded-md text-sm text-gray-900" +
+              " shadow-sm border border-gray-300",
             isInflight && "opacity-50 cursor-not-allowed",
           )}
         >
@@ -166,7 +168,8 @@ export default function TypingBox(props: {
               : undefined
           }
           className={cn(
-            "relative -ml-px inline-flex items-center gap-x-1.5 rounded-r-md px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 bg-white",
+            "relative -ml-px inline-flex items-center gap-x-1.5 rounded-r-md px-3 " +
+              "py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 bg-white",
             isInflight && !props.onInterrupt && "opacity-50 cursor-not-allowed",
           )}
         >

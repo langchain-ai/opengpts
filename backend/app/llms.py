@@ -2,8 +2,9 @@ import logging
 import os
 from functools import lru_cache
 from urllib.parse import urlparse
-import httpx
+
 import boto3
+import httpx
 from langchain_community.chat_models import BedrockChat, ChatAnthropic, ChatFireworks
 from langchain_google_vertexai import ChatVertexAI
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
