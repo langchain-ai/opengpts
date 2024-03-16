@@ -183,17 +183,16 @@ import random
 
 def _format_example(e):
     return f"""<input>
-{e.inputs['input']}
+{e.inputs['input'][0]['content']}
 </input>
 <output>
-{e.outputs['output']}
+{e.outputs['output']['content']}
 </output>"""
 
 def few_shot_examples(assistant_id: str):
-    dataset_name=f"opengpts-{assistant_id}"
-    if LANGSMITH_CLIENT.has_dataset(dataset_name=dataset_name):
+    if LANGSMITH_CLIENT.has_dataset(dataset_name=assistant_id):
         # TODO: Update to randomize
-        examples = list(LANGSMITH_CLIENT.list_examples(dataset_name=dataset_name))
+        examples = list(LANGSMITH_CLIENT.list_examples(dataset_name=assistant_id))
         if not examples:
             return ""
         examples = random.sample(examples, min(len(examples), 10))
@@ -201,10 +200,9 @@ def few_shot_examples(assistant_id: str):
 
         return f"""
 
-Here are some examples:
+Here are some examples of good inputs and outputs. Use these to guide and shape the style of what your new response should look like:
 {e_str}
 """
-    return ""
 
 
 def get_chatbot(
@@ -228,7 +226,11 @@ def get_chatbot(
         llm = get_mixtral_fireworks()
     else:
         raise ValueError("Unexpected llm type")
-    few_shot_example_string = few_shot_examples(assistant_id)
+    print(assistant_id)
+    if assistant_id is not None:
+        few_shot_example_string = few_shot_examples(assistant_id)
+    else:
+        few_shot_example_string = ""
     message = system_message + few_shot_example_string + " 1"
     return get_chatbot_executor(llm, message, CHECKPOINTER)
 

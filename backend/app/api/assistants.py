@@ -61,7 +61,6 @@ def create_assistant(
     payload: AssistantPayload,
 ) -> Assistant:
     """Create an assistant."""
-    LANGSMITHCLIENT.create_dataset(f"{payload.name} - {str(uuid4())}")
     return storage.put_assistant(
         opengpts_user_id,
         str(uuid4()),
@@ -78,6 +77,22 @@ def upsert_assistant(
     payload: AssistantPayload,
 ) -> Assistant:
     """Create or update an assistant."""
+    LANGSMITHCLIENT.create_dataset(aid)
+    LANGSMITHCLIENT.request_with_retries(
+      "POST",
+      LANGSMITHCLIENT.api_url + "/runs/rules",
+      {
+        "json": {
+          "display_name": "queries",
+          "session_id": "942208fa-21ee-4ed8-ab5d-6ed5a9090cdf",
+          "sampling_rate": 1,
+          "filter": 'eq(name, "chatbot")',
+          "trace_filter": f'and(and(eq(feedback_key, "user_score"), eq(feedback_score, 1)), and(eq(metadata_key, "assistant_id"), eq(metadata_value, "{aid}")))',
+          "add_to_dataset_id": aid
+        },
+        "headers": LANGSMITHCLIENT._headers
+      }
+    )
     return storage.put_assistant(
         opengpts_user_id,
         aid,
