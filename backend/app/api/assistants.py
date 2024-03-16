@@ -84,7 +84,7 @@ def upsert_assistant(
       {
         "json": {
           "display_name": "queries",
-          "session_id": "942208fa-21ee-4ed8-ab5d-6ed5a9090cdf",
+          "session_id": "0b38e703-921c-4348-ab8a-dd5eb758e038",
           "sampling_rate": 1,
           "filter": 'eq(name, "chatbot")',
           "trace_filter": f'and(and(eq(feedback_key, "user_score"), eq(feedback_score, 1)), and(eq(metadata_key, "assistant_id"), eq(metadata_value, "{aid}")))',
