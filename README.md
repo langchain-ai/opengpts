@@ -94,10 +94,10 @@ export LANGCHAIN_TRACING_V2="true"
 export LANGCHAIN_API_KEY=...
 ```
 
-Start the backend server
+Start the backend server. `poetry run <command>` executes the given command inside project's virtualenv.
 
 ```shell
-langchain serve --port=8100
+poetry run langchain serve --port=8100
 ```
 
 **2. Start the frontend**
