@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path, Query
 from pydantic import BaseModel, Field
+from langsmith import Client as LangSmithClient
 
 import app.storage as storage
 from app.schema import Assistant, AssistantWithoutUserId, OpengptsUserId
@@ -10,6 +11,7 @@ from app.schema import Assistant, AssistantWithoutUserId, OpengptsUserId
 router = APIRouter()
 
 FEATURED_PUBLIC_ASSISTANTS = []
+LANGSMITHCLIENT = LangSmithClient()
 
 
 class AssistantPayload(BaseModel):
@@ -59,6 +61,7 @@ def create_assistant(
     payload: AssistantPayload,
 ) -> Assistant:
     """Create an assistant."""
+    LANGSMITHCLIENT.create_dataset(f"{payload.name} - {str(uuid4())}")
     return storage.put_assistant(
         opengpts_user_id,
         str(uuid4()),

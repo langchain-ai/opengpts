@@ -7,6 +7,7 @@ from langchain_core.runnables import (
     RunnableBinding,
 )
 from langgraph.checkpoint import CheckpointAt
+from langsmith import Client as LangSmithClient
 
 from app.agent_types.google_agent import get_google_agent_executor
 from app.agent_types.openai_agent import get_openai_agent_executor
@@ -68,6 +69,7 @@ class AgentType(str, Enum):
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
 CHECKPOINTER = RedisCheckpoint(at=CheckpointAt.END_OF_STEP)
+LANGSMITH_CLIENT = LangSmithClient()
 
 
 def get_agent_executor(
@@ -177,9 +179,38 @@ class LLMType(str, Enum):
     MIXTRAL = "Mixtral"
 
 
+import random
+
+def _format_example(e):
+    return f"""<input>
+{e.inputs['input']}
+</input>
+<output>
+{e.outputs['output']}
+</output>"""
+
+def few_shot_examples(assistant_id: str):
+    dataset_name=f"opengpts-{assistant_id}"
+    if LANGSMITH_CLIENT.has_dataset(dataset_name=dataset_name):
+        # TODO: Update to randomize
+        examples = list(LANGSMITH_CLIENT.list_examples(dataset_name=dataset_name))
+        if not examples:
+            return ""
+        examples = random.sample(examples, min(len(examples), 10))
+        e_str = "\n".join([_format_example(e) for e in examples])
+
+        return f"""
+
+Here are some examples:
+{e_str}
+"""
+    return ""
+
+
 def get_chatbot(
     llm_type: LLMType,
     system_message: str,
+    assistant_id: Optional[str] = None,
 ):
     if llm_type == LLMType.GPT_35_TURBO:
         llm = get_openai_llm()
@@ -197,26 +228,30 @@ def get_chatbot(
         llm = get_mixtral_fireworks()
     else:
         raise ValueError("Unexpected llm type")
-    return get_chatbot_executor(llm, system_message, CHECKPOINTER)
+    few_shot_example_string = few_shot_examples(assistant_id)
+    message = system_message + few_shot_example_string + " 1"
+    return get_chatbot_executor(llm, message, CHECKPOINTER)
 
 
 class ConfigurableChatBot(RunnableBinding):
     llm: LLMType
     system_message: str = DEFAULT_SYSTEM_MESSAGE
     user_id: Optional[str] = None
+    assistant_id: Optional[str] = None
 
     def __init__(
         self,
         *,
         llm: LLMType = LLMType.GPT_35_TURBO,
         system_message: str = DEFAULT_SYSTEM_MESSAGE,
+        assistant_id: Optional[str] = None,
         kwargs: Optional[Mapping[str, Any]] = None,
         config: Optional[Mapping[str, Any]] = None,
         **others: Any,
     ) -> None:
         others.pop("bound", None)
 
-        chatbot = get_chatbot(llm, system_message)
+        chatbot = get_chatbot(llm, system_message, assistant_id)
         super().__init__(
             llm=llm,
             system_message=system_message,
@@ -231,6 +266,9 @@ chatbot = (
     .configurable_fields(
         llm=ConfigurableField(id="llm_type", name="LLM Type"),
         system_message=ConfigurableField(id="system_message", name="Instructions"),
+        assistant_id=ConfigurableField(
+            id="assistant_id", name="Assistant ID", is_shared=True
+        ),
     )
     .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
 )
