@@ -2,3 +2,59 @@
 .env.gcp.yaml
 redis-volume/
 backend/ui
+
+# Operating System generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+
+# Node.js / frontend artifacts
+node_modules/
+/dist
+/dist-ssr
+.npm
+.npmrc
+.yarn-cache
+.yarn-integrity
+.yarn.lock
+package-lock.json
+.pnpm-lock.yaml
+
+# IDEs and editors
+.vscode/*
+!.vscode/extensions.json  # Include recommended extensions for VS Code users
+.idea/
+*.sublime-*
+*.sublime-workspace
+*.atom/
+*.iml
+
+# Microsoft Visual Studio
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Swap and Temporary Files
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+*.temp
+
+# Log files
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
