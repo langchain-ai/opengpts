@@ -11,7 +11,7 @@ import { useConfigList } from "./hooks/useConfigList";
 import { Config } from "./components/Config";
 import { MessageWithFiles } from "./utils/formTypes.ts";
 import { TYPE_NAME } from "./constants.ts";
-import { Route, Routes, useNavigate, useParams } from "react-router-dom";
+import { Route, Routes, useNavigate } from "react-router-dom";
 
 function NotFound() {
   return <div>Page not found.</div>;
@@ -27,10 +27,12 @@ function App() {
   const [isDocumentRetrievalActive, setIsDocumentRetrievalActive] =
     useState(false);
 
-  const { assistantId, chatId } = useParams();
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const [currentConfigId, setCurrentConfigId] = useState<string | null>(null);
   const currentConfig =
-    configs?.find((config) => config.assistant_id === assistantId) ?? null;
-  const currentChat = chats?.find((chat) => chat.thread_id === chatId) ?? null;
+    configs?.find((config) => config.assistant_id === currentConfigId) ?? null;
+  const currentChat =
+    chats?.find((chat) => chat.thread_id === currentChatId) ?? null;
 
   useEffect(() => {
     let configurable = null;
@@ -130,6 +132,7 @@ function App() {
   );
 
   const selectConfig = useCallback((id: string | null) => {
+    setCurrentChatId(null);
     navigate(id ? `/assistant/${id}` : "");
   }, []);
 
@@ -139,11 +142,11 @@ function App() {
         path="/thread/:chatId"
         element={
           <Chat
-            chat={currentChat!}
             startStream={startTurn}
             stopStream={stopStream}
             stream={stream}
             isDocumentRetrievalActive={isDocumentRetrievalActive}
+            setCurrentChatId={setCurrentChatId}
           />
         }
       />
@@ -163,11 +166,11 @@ function App() {
         }
       />
       <Route
-        path="/assistant/new"
+        path="/assistant/:assistantId"
         element={
           <Config
-            className="mb-6"
             config={currentConfig}
+            className="mb-6"
             configSchema={configSchema}
             configDefaults={configDefaults}
             saveConfig={saveConfig}
@@ -176,11 +179,11 @@ function App() {
         }
       />
       <Route
-        path="/assistant/:assistantId"
+        path="/"
         element={
           <Config
-            config={currentConfig}
             className="mb-6"
+            config={null}
             configSchema={configSchema}
             configDefaults={configDefaults}
             saveConfig={saveConfig}

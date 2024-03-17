@@ -1,16 +1,16 @@
 import { useEffect, useRef } from "react";
-import { Chat as ChatType } from "../hooks/useChatList";
 import { StreamStateProps } from "../hooks/useStreamState";
 import { useChatMessages } from "../hooks/useChatMessages";
 import TypingBox from "./TypingBox";
 import { Message } from "./Message";
 import { ArrowDownCircleIcon } from "@heroicons/react/24/outline";
 import { MessageWithFiles } from "../utils/formTypes.ts";
+import { useParams } from "react-router-dom";
 
 interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
-  chat: ChatType;
   startStream: (message?: MessageWithFiles) => Promise<void>;
   isDocumentRetrievalActive: boolean;
+  setCurrentChatId: (id: string | null) => void;
 }
 
 function usePrevious<T>(value: T): T | undefined {
@@ -22,11 +22,15 @@ function usePrevious<T>(value: T): T | undefined {
 }
 
 export function Chat(props: ChatProps) {
+  const { chatId } = useParams();
   const { messages, resumeable } = useChatMessages(
-    props.chat.thread_id,
+    chatId ?? null,
     props.stream,
     props.stopStream,
   );
+  useEffect(() => {
+    props.setCurrentChatId(chatId ?? null);
+  }, [chatId, props]);
   const prevMessages = usePrevious(messages);
   useEffect(() => {
     scrollTo({
