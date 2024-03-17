@@ -100,12 +100,8 @@ function App() {
   );
 
   const startChat = useCallback(
-    async (message: MessageWithFiles) => {
-      if (!currentConfig) return;
-      const chat = await createChat(
-        message.message,
-        currentConfig.assistant_id,
-      );
+    async (assistantId: string, message: MessageWithFiles) => {
+      const chat = await createChat(message.message, assistantId);
       navigate(`/thread/${chat.thread_id}`);
       return startTurn(message, chat);
     },
@@ -118,8 +114,7 @@ function App() {
         stopStream?.(true);
       }
       if (!id) {
-        const firstAssistant = configs?.[0]?.assistant_id ?? null;
-        navigate(firstAssistant ? `/assistant/${firstAssistant}` : "");
+        navigate("/thread/new");
         window.scrollTo({ top: 0 });
       } else {
         navigate(`/thread/${id}`);
@@ -128,13 +123,17 @@ function App() {
         setSidebarOpen(false);
       }
     },
-    [stopStream, sidebarOpen, currentChat, configs],
+    [currentChat, sidebarOpen, stopStream, navigate],
   );
 
-  const selectConfig = useCallback((id: string | null) => {
-    setCurrentChatId(null);
-    navigate(id ? `/assistant/${id}` : "");
-  }, []);
+  const selectConfig = useCallback(
+    (id: string | null) => {
+      setCurrentChatId(null);
+      setCurrentConfigId(id);
+      navigate(id ? `/assistant/${id}` : "");
+    },
+    [navigate],
+  );
 
   const content = (
     <Routes>
@@ -158,7 +157,6 @@ function App() {
             configSchema={configSchema}
             configDefaults={configDefaults}
             configs={configs}
-            currentConfig={currentConfig}
             saveConfig={saveConfig}
             enterConfig={selectConfig}
             isDocumentRetrievalActive={isDocumentRetrievalActive}
@@ -168,13 +166,14 @@ function App() {
       <Route
         path="/assistant/:assistantId"
         element={
-          <Config
-            config={currentConfig}
-            className="mb-6"
+          <NewChat
+            startChat={startChat}
             configSchema={configSchema}
             configDefaults={configDefaults}
+            configs={configs}
             saveConfig={saveConfig}
             enterConfig={selectConfig}
+            isDocumentRetrievalActive={isDocumentRetrievalActive}
           />
         }
       />
