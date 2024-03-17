@@ -2,13 +2,18 @@ import { ConfigList } from "./ConfigList";
 import { Schemas } from "../hooks/useSchemas";
 import TypingBox from "./TypingBox";
 import { Config } from "./Config";
-import { ConfigListProps } from "../hooks/useConfigList";
+import {
+  ConfigListProps,
+  Config as ConfigInterface,
+} from "../hooks/useConfigList";
 import { cn } from "../utils/cn";
 import { MessageWithFiles } from "../utils/formTypes.ts";
 
 interface NewChatProps extends ConfigListProps {
   configSchema: Schemas["configSchema"];
   configDefaults: Schemas["configDefaults"];
+  currentConfig: ConfigInterface | null;
+  enterConfig: (id: string | null) => void;
   startChat: (message: MessageWithFiles) => Promise<void>;
   isDocumentRetrievalActive: boolean;
 }
@@ -38,6 +43,7 @@ export function NewChat(props: NewChatProps) {
               configSchema={props.configSchema}
               configDefaults={props.configDefaults}
               saveConfig={props.saveConfig}
+              enterConfig={props.enterConfig}
             />
           </div>
         </main>

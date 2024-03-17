@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 import orderBy from "lodash/orderBy";
 import { v4 as uuidv4 } from "uuid";
 
@@ -18,14 +18,12 @@ export interface Config {
 
 export interface ConfigListProps {
   configs: Config[] | null;
-  currentConfig: Config | null;
   saveConfig: (
     key: string,
     config: Config["config"],
     files: File[],
     isPublic: boolean,
-  ) => Promise<void>;
-  enterConfig: (id: string | null) => void;
+  ) => Promise<string>;
 }
 
 function configsReducer(
@@ -45,7 +43,6 @@ function configsReducer(
 
 export function useConfigList(): ConfigListProps {
   const [configs, setConfigs] = useReducer(configsReducer, null);
-  const [current, setCurrent] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchConfigs() {
@@ -69,17 +66,9 @@ export function useConfigList(): ConfigListProps {
         ).then((r) => r.json()),
       ]);
       setConfigs(myConfigs.concat(publicConfigs));
-      if (publicConfigs.find((a: Config) => a.assistant_id === shared_id)) {
-        setCurrent(shared_id);
-      }
     }
 
     fetchConfigs();
-  }, []);
-
-  const enterConfig = useCallback((key: string | null) => {
-    setCurrent(key);
-    window.scrollTo({ top: 0 });
   }, []);
 
   const saveConfig = useCallback(
@@ -89,7 +78,7 @@ export function useConfigList(): ConfigListProps {
       files: File[],
       isPublic: boolean,
       assistant_id: string = uuidv4(),
-    ) => {
+    ): Promise<string> => {
       const formData = files.reduce((formData, file) => {
         formData.append("files", file);
         return formData;
@@ -115,15 +104,13 @@ export function useConfigList(): ConfigListProps {
           : Promise.resolve(),
       ]);
       setConfigs({ ...saved, mine: true });
-      enterConfig(saved.assistant_id);
+      return saved.assistant_id;
     },
-    [enterConfig],
+    [],
   );
 
   return {
     configs,
-    currentConfig: configs?.find((c) => c.assistant_id === current) || null,
     saveConfig,
-    enterConfig,
   };
 }

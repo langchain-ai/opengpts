@@ -11,15 +11,26 @@ import { useConfigList } from "./hooks/useConfigList";
 import { Config } from "./components/Config";
 import { MessageWithFiles } from "./utils/formTypes.ts";
 import { TYPE_NAME } from "./constants.ts";
+import { Route, Routes, useNavigate, useParams } from "react-router-dom";
+
+function NotFound() {
+  return <div>Page not found.</div>;
+}
 
 function App() {
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { configSchema, configDefaults } = useSchemas();
-  const { chats, currentChat, createChat, enterChat } = useChatList();
-  const { configs, currentConfig, saveConfig, enterConfig } = useConfigList();
+  const { chats, createChat } = useChatList();
+  const { configs, saveConfig } = useConfigList();
   const { startStream, stopStream, stream } = useStreamState();
   const [isDocumentRetrievalActive, setIsDocumentRetrievalActive] =
     useState(false);
+
+  const { assistantId, chatId } = useParams();
+  const currentConfig =
+    configs?.find((config) => config.assistant_id === assistantId) ?? null;
+  const currentChat = chats?.find((chat) => chat.thread_id === chatId) ?? null;
 
   useEffect(() => {
     let configurable = null;
@@ -93,6 +104,7 @@ function App() {
         message.message,
         currentConfig.assistant_id,
       );
+      navigate(`/thread/${chat.thread_id}`);
       return startTurn(message, chat);
     },
     [createChat, startTurn, currentConfig],
@@ -103,53 +115,81 @@ function App() {
       if (currentChat) {
         stopStream?.(true);
       }
-      enterChat(id);
       if (!id) {
-        enterConfig(configs?.[0]?.assistant_id ?? null);
+        const firstAssistant = configs?.[0]?.assistant_id ?? null;
+        navigate(firstAssistant ? `/assistant/${firstAssistant}` : "");
         window.scrollTo({ top: 0 });
+      } else {
+        navigate(`/thread/${id}`);
       }
       if (sidebarOpen) {
         setSidebarOpen(false);
       }
     },
-    [enterChat, stopStream, sidebarOpen, currentChat, enterConfig, configs],
+    [stopStream, sidebarOpen, currentChat, configs],
   );
 
-  const selectConfig = useCallback(
-    (id: string | null) => {
-      enterConfig(id);
-      enterChat(null);
-    },
-    [enterConfig, enterChat],
-  );
+  const selectConfig = useCallback((id: string | null) => {
+    navigate(id ? `/assistant/${id}` : "");
+  }, []);
 
-  const content = currentChat ? (
-    <Chat
-      chat={currentChat}
-      startStream={startTurn}
-      stopStream={stopStream}
-      stream={stream}
-      isDocumentRetrievalActive={isDocumentRetrievalActive}
-    />
-  ) : currentConfig ? (
-    <NewChat
-      startChat={startChat}
-      configSchema={configSchema}
-      configDefaults={configDefaults}
-      configs={configs}
-      currentConfig={currentConfig}
-      saveConfig={saveConfig}
-      enterConfig={selectConfig}
-      isDocumentRetrievalActive={isDocumentRetrievalActive}
-    />
-  ) : (
-    <Config
-      className="mb-6"
-      config={currentConfig}
-      configSchema={configSchema}
-      configDefaults={configDefaults}
-      saveConfig={saveConfig}
-    />
+  const content = (
+    <Routes>
+      <Route
+        path="/thread/:chatId"
+        element={
+          <Chat
+            chat={currentChat!}
+            startStream={startTurn}
+            stopStream={stopStream}
+            stream={stream}
+            isDocumentRetrievalActive={isDocumentRetrievalActive}
+          />
+        }
+      />
+      <Route
+        path="/thread/new"
+        element={
+          <NewChat
+            startChat={startChat}
+            configSchema={configSchema}
+            configDefaults={configDefaults}
+            configs={configs}
+            currentConfig={currentConfig}
+            saveConfig={saveConfig}
+            enterConfig={selectConfig}
+            isDocumentRetrievalActive={isDocumentRetrievalActive}
+          />
+        }
+      />
+      <Route
+        path="/assistant/new"
+        element={
+          <Config
+            className="mb-6"
+            config={currentConfig}
+            configSchema={configSchema}
+            configDefaults={configDefaults}
+            saveConfig={saveConfig}
+            enterConfig={selectConfig}
+          />
+        }
+      />
+      <Route
+        path="/assistant/:assistantId"
+        element={
+          <Config
+            config={currentConfig}
+            className="mb-6"
+            configSchema={configSchema}
+            configDefaults={configDefaults}
+            saveConfig={saveConfig}
+            enterConfig={selectConfig}
+          />
+        }
+      />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 
   const currentChatConfig = configs?.find(

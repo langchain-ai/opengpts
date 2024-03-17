@@ -4,8 +4,8 @@ import { cn } from "../utils/cn";
 
 function ConfigItem(props: {
   config: Config;
-  currentConfig: ConfigListProps["currentConfig"];
-  enterConfig: ConfigListProps["enterConfig"];
+  currentConfig: Config | null;
+  enterConfig: (id: string | null) => void;
 }) {
   return (
     <li key={props.config.assistant_id}>
@@ -48,8 +48,8 @@ function ConfigItem(props: {
 
 export function ConfigList(props: {
   configs: ConfigListProps["configs"];
-  currentConfig: ConfigListProps["currentConfig"];
-  enterConfig: ConfigListProps["enterConfig"];
+  currentConfig: Config | null;
+  enterConfig: (id: string | null) => void;
 }) {
   return (
     <>

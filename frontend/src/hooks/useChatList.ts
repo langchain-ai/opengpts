@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 import orderBy from "lodash/orderBy";
 import { v4 as uuidv4 } from "uuid";
 
@@ -34,13 +34,11 @@ export interface Chat {
 
 export interface ChatListProps {
   chats: Chat[] | null;
-  currentChat: Chat | null;
   createChat: (
     name: string,
     assistant_id: string,
     thread_id?: string,
   ) => Promise<Chat>;
-  enterChat: (id: string | null) => void;
 }
 
 function chatsReducer(
@@ -60,7 +58,6 @@ function chatsReducer(
 
 export function useChatList(): ChatListProps {
   const [chats, setChats] = useReducer(chatsReducer, null);
-  const [current, setCurrent] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchChats() {
@@ -90,20 +87,13 @@ export function useChatList(): ChatListProps {
         },
       }).then((r) => r.json());
       setChats(saved);
-      setCurrent(saved.thread_id);
       return saved;
     },
     [],
   );
 
-  const enterChat = useCallback((id: string | null) => {
-    setCurrent(id);
-  }, []);
-
   return {
     chats,
-    currentChat: chats?.find((c) => c.thread_id === current) || null,
     createChat,
-    enterChat,
   };
 }

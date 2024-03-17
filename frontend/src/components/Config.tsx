@@ -4,7 +4,10 @@ import { useDropzone } from "react-dropzone";
 import { orderBy, last } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
-import { ConfigListProps } from "../hooks/useConfigList";
+import {
+  ConfigListProps,
+  Config as ConfigInterface,
+} from "../hooks/useConfigList";
 import { SchemaField, Schemas } from "../hooks/useSchemas";
 import { cn } from "../utils/cn";
 import { FileUploadDropzone } from "./FileUpload";
@@ -478,8 +481,9 @@ export function Config(props: {
   className?: string;
   configSchema: Schemas["configSchema"];
   configDefaults: Schemas["configDefaults"];
-  config: ConfigListProps["currentConfig"];
+  config: ConfigInterface | null;
   saveConfig: ConfigListProps["saveConfig"];
+  enterConfig: (id: string | null) => void;
 }) {
   const [values, setValues] = useState(
     props.config?.config ?? props.configDefaults,
@@ -579,7 +583,8 @@ export function Config(props: {
           vals.configurable["type==agent/tools"] = [...selectedTools];
           setSelectedTools([]);
         }
-        await props.saveConfig(key, vals!, files, isPublic);
+        const assistantId = await props.saveConfig(key, vals!, files, isPublic);
+        props.enterConfig(assistantId);
         setInflight(false);
       }}
     >
