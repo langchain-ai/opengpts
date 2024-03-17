@@ -1,3 +1,5 @@
+
+import os
 from enum import Enum
 from typing import Any, Mapping, Optional, Sequence, Union
 
@@ -63,7 +65,7 @@ class AgentType(str, Enum):
     CLAUDE2 = "Claude 2"
     BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
     GEMINI = "GEMINI"
-
+    FINE_TUNED_GPT_MODEL = 'Fine-Tuned GPT'
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
@@ -104,6 +106,11 @@ def get_agent_executor(
     elif agent == AgentType.GEMINI:
         llm = get_google_llm()
         return get_google_agent_executor(
+            tools, llm, system_message, interrupt_before_action, CHECKPOINTER
+        )
+    elif agent == AgentType.FINE_TUNED_GPT_MODEL:
+        llm = get_openai_llm(fine_tuned_gpt=True)
+        return get_openai_agent_executor(
             tools, llm, system_message, interrupt_before_action, CHECKPOINTER
         )
     else:
@@ -175,6 +182,7 @@ class LLMType(str, Enum):
     BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
     GEMINI = "GEMINI"
     MIXTRAL = "Mixtral"
+    FINE_TUNED_GPT = "Fine-Tuned GPT"
 
 
 def get_chatbot(
@@ -195,6 +203,8 @@ def get_chatbot(
         llm = get_google_llm()
     elif llm_type == LLMType.MIXTRAL:
         llm = get_mixtral_fireworks()
+    elif llm_type == LLMType.FINE_TUNED_GPT:
+        llm = get_openai_llm(fine_tuned_gpt=True)
     else:
         raise ValueError("Unexpected llm type")
     return get_chatbot_executor(llm, system_message, CHECKPOINTER)
