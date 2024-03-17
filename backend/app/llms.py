@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=4)
-def get_openai_llm(gpt_4: bool = False, azure: bool = False):
+def get_openai_llm(gpt_4: bool = False, azure: bool = False, fine_tuned_gpt: bool = False):
     proxy_url = os.getenv("PROXY_URL")
     http_client = None
     if proxy_url:
@@ -30,6 +30,12 @@ def get_openai_llm(gpt_4: bool = False, azure: bool = False):
                 model="gpt-4-1106-preview",
                 temperature=0,
                 streaming=True,
+            )
+        elif fine_tuned_gpt:
+            llm = ChatOpenAI(
+                model=os.environ["FINE_TUNED_GPT_MODEL"],
+                temperature=0,
+                streaming=True
             )
         else:
             llm = ChatOpenAI(
