@@ -114,7 +114,8 @@ function App() {
         stopStream?.(true);
       }
       if (!id) {
-        navigate("/thread/new");
+        const firstAssistant = configs?.[0]?.assistant_id ?? null;
+        navigate(firstAssistant ? `/assistant/${firstAssistant}` : "/");
         window.scrollTo({ top: 0 });
       } else {
         navigate(`/thread/${id}`);
@@ -130,7 +131,7 @@ function App() {
     (id: string | null) => {
       setCurrentChatId(null);
       setCurrentConfigId(id);
-      navigate(id ? `/assistant/${id}` : "");
+      navigate(id ? `/assistant/${id}` : "/");
     },
     [navigate],
   );
@@ -146,20 +147,6 @@ function App() {
             stream={stream}
             isDocumentRetrievalActive={isDocumentRetrievalActive}
             setCurrentChatId={setCurrentChatId}
-          />
-        }
-      />
-      <Route
-        path="/thread/new"
-        element={
-          <NewChat
-            startChat={startChat}
-            configSchema={configSchema}
-            configDefaults={configDefaults}
-            configs={configs}
-            saveConfig={saveConfig}
-            enterConfig={selectConfig}
-            isDocumentRetrievalActive={isDocumentRetrievalActive}
           />
         }
       />
