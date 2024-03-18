@@ -403,7 +403,7 @@ function ToolSelectionField(props: {
 
 function PublicLink(props: { assistantId: string }) {
   const currentLink = window.location.href;
-  const link = currentLink.includes("shared_id=")
+  const link = currentLink.includes(props.assistantId)
     ? currentLink
     : currentLink + "?shared_id=" + props.assistantId;
   return (
