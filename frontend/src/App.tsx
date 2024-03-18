@@ -163,9 +163,7 @@ function App() {
         <ChatList
           chats={useMemo(() => {
             if (configs === null || chats === null) return null;
-            return chats.filter((c) =>
-              configs.some((config) => config.assistant_id === c.assistant_id),
-            );
+            return chats;
           }, [chats, configs])}
           currentChat={currentChat}
           enterChat={selectChat}
