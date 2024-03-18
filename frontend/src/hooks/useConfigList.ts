@@ -46,26 +46,14 @@ export function useConfigList(): ConfigListProps {
 
   useEffect(() => {
     async function fetchConfigs() {
-      const searchParams = new URLSearchParams(window.location.search);
-      const shared_id = searchParams.get("shared_id");
-      const [myConfigs, publicConfigs] = await Promise.all([
-        fetch("/assistants/", {
-          headers: {
-            Accept: "application/json",
-          },
-        })
-          .then((r) => r.json())
-          .then((li) => li.map((c: Config) => ({ ...c, mine: true }))),
-        fetch(
-          "/assistants/public/" + (shared_id ? `?shared_id=${shared_id}` : ""),
-          {
-            headers: {
-              Accept: "application/json",
-            },
-          },
-        ).then((r) => r.json()),
-      ]);
-      setConfigs(myConfigs.concat(publicConfigs));
+      const myConfigs = await fetch("/assistants/", {
+        headers: {
+          Accept: "application/json",
+        },
+      })
+        .then((r) => r.json())
+        .then((li) => li.map((c: Config) => ({ ...c, mine: true })));
+      setConfigs(myConfigs);
     }
 
     fetchConfigs();
