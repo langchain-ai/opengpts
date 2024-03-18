@@ -18,7 +18,7 @@ Currently, there are three different architectures implemented:
 - Assistant
 - RAG
 - Chatbot
-- 
+
 See below for more details on those.
 Because this is open source, if you do not like those architectures or want to modify them, you can easily do that!
 
