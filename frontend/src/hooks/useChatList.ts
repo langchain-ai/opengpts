@@ -78,14 +78,15 @@ export function useChatList(): ChatListProps {
       assistant_id: string,
       thread_id: string = uuidv4(),
     ) => {
-      const saved = await fetch(`/threads/${thread_id}`, {
+      const response = await fetch(`/threads/${thread_id}`, {
         method: "PUT",
         body: JSON.stringify({ assistant_id, name }),
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-      }).then((r) => r.json());
+      });
+      const saved = await response.json();
       setChats(saved);
       return saved;
     },

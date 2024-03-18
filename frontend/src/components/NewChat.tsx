@@ -29,8 +29,9 @@ export function NewChat(props: NewChatProps) {
   useEffect(() => {
     if (assistantId) {
       (async () => {
-        let matchingConfig =
-          props.configs?.find((c) => c.assistant_id === assistantId) ?? null;
+        let matchingConfig = props.configs?.find(
+          (c) => c.assistant_id === assistantId,
+        );
         if (!matchingConfig) {
           const response = await fetch(
             `/assistants/public/?shared_id=${assistantId}`,
@@ -40,9 +41,11 @@ export function NewChat(props: NewChatProps) {
               },
             },
           );
-          matchingConfig = await response.json();
+          matchingConfig = ((await response.json()) as ConfigInterface[]).find(
+            (c) => c.assistant_id === assistantId,
+          );
         }
-        setSelectedConfig(matchingConfig);
+        setSelectedConfig(matchingConfig ?? null);
       })();
     }
   }, [assistantId, props.configs]);
