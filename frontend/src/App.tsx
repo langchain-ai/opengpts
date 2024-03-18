@@ -105,7 +105,7 @@ function App() {
       navigate(`/thread/${chat.thread_id}`);
       return startTurn(message, chat);
     },
-    [createChat, startTurn, currentConfig],
+    [createChat, navigate, startTurn],
   );
 
   const selectChat = useCallback(
@@ -124,7 +124,7 @@ function App() {
         setSidebarOpen(false);
       }
     },
-    [currentChat, sidebarOpen, stopStream, navigate],
+    [currentChat, sidebarOpen, stopStream, configs, navigate],
   );
 
   const selectConfig = useCallback(
