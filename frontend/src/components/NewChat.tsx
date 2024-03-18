@@ -8,8 +8,8 @@ import {
 } from "../hooks/useConfigList";
 import { cn } from "../utils/cn";
 import { MessageWithFiles } from "../utils/formTypes.ts";
-import {useEffect, useState} from "react";
-import {useNavigate, useParams} from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface NewChatProps extends ConfigListProps {
   configSchema: Schemas["configSchema"];
@@ -21,19 +21,31 @@ interface NewChatProps extends ConfigListProps {
 
 export function NewChat(props: NewChatProps) {
   const navigator = useNavigate();
-  const {assistantId} = useParams();
+  const { assistantId } = useParams();
   const [selectedConfig, setSelectedConfig] = useState<ConfigInterface | null>(
     null,
   );
 
   useEffect(() => {
     if (assistantId) {
-      setSelectedConfig(
-          props.configs?.find((c) => c.assistant_id === assistantId) ?? null,
-      )
+      (async () => {
+        let matchingConfig =
+          props.configs?.find((c) => c.assistant_id === assistantId) ?? null;
+        if (!matchingConfig) {
+          const response = await fetch(
+            `/assistants/public/?shared_id=${assistantId}`,
+            {
+              headers: {
+                Accept: "application/json",
+              },
+            },
+          );
+          matchingConfig = await response.json();
+        }
+        setSelectedConfig(matchingConfig);
+      })();
     }
   }, [assistantId, props.configs]);
-
 
   return (
     <div
@@ -47,9 +59,7 @@ export function NewChat(props: NewChatProps) {
           <ConfigList
             configs={props.configs}
             currentConfig={selectedConfig}
-            enterConfig={(id) =>
-              navigator(`/assistant/${id}`)
-            }
+            enterConfig={(id) => navigator(`/assistant/${id}`)}
           />
         </div>
 
