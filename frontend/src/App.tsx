@@ -136,51 +136,6 @@ function App() {
     [navigate],
   );
 
-  const content = (
-    <Routes>
-      <Route
-        path="/thread/:chatId"
-        element={
-          <Chat
-            startStream={startTurn}
-            stopStream={stopStream}
-            stream={stream}
-            isDocumentRetrievalActive={isDocumentRetrievalActive}
-            setCurrentChatId={setCurrentChatId}
-          />
-        }
-      />
-      <Route
-        path="/assistant/:assistantId"
-        element={
-          <NewChat
-            startChat={startChat}
-            configSchema={configSchema}
-            configDefaults={configDefaults}
-            configs={configs}
-            saveConfig={saveConfig}
-            enterConfig={selectConfig}
-            isDocumentRetrievalActive={isDocumentRetrievalActive}
-          />
-        }
-      />
-      <Route
-        path="/"
-        element={
-          <Config
-            className="mb-6"
-            config={null}
-            configSchema={configSchema}
-            configDefaults={configDefaults}
-            saveConfig={saveConfig}
-            enterConfig={selectConfig}
-          />
-        }
-      />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-
   const currentChatConfig = configs?.find(
     (c) => c.assistant_id === currentChat?.assistant_id,
   );
@@ -217,7 +172,48 @@ function App() {
         />
       }
     >
-      {configSchema ? content : null}
+      <Routes>
+        <Route
+          path="/thread/:chatId"
+          element={
+            <Chat
+              startStream={startTurn}
+              stopStream={stopStream}
+              stream={stream}
+              isDocumentRetrievalActive={isDocumentRetrievalActive}
+              setCurrentChatId={setCurrentChatId}
+            />
+          }
+        />
+        <Route
+          path="/assistant/:assistantId"
+          element={
+            <NewChat
+              startChat={startChat}
+              configSchema={configSchema}
+              configDefaults={configDefaults}
+              configs={configs}
+              saveConfig={saveConfig}
+              enterConfig={selectConfig}
+              isDocumentRetrievalActive={isDocumentRetrievalActive}
+            />
+          }
+        />
+        <Route
+          path="/"
+          element={
+            <Config
+              className="mb-6"
+              config={null}
+              configSchema={configSchema}
+              configDefaults={configDefaults}
+              saveConfig={saveConfig}
+              enterConfig={selectConfig}
+            />
+          }
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     </Layout>
   );
 }
