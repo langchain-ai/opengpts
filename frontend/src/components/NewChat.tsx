@@ -15,7 +15,10 @@ interface NewChatProps extends ConfigListProps {
   configSchema: Schemas["configSchema"];
   configDefaults: Schemas["configDefaults"];
   enterConfig: (id: string | null) => void;
-  startChat: (assistantId: string, message: MessageWithFiles) => Promise<void>;
+  startChat: (
+    config: ConfigInterface,
+    message: MessageWithFiles,
+  ) => Promise<void>;
   isDocumentRetrievalActive: boolean;
 }
 
@@ -83,7 +86,7 @@ export function NewChat(props: NewChatProps) {
         <TypingBox
           onSubmit={async (msg: MessageWithFiles) => {
             if (selectedConfig) {
-              await props.startChat(selectedConfig.assistant_id, msg);
+              await props.startChat(selectedConfig, msg);
             }
           }}
           isDocumentRetrievalActive={props.isDocumentRetrievalActive}

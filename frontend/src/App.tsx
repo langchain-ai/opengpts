@@ -4,10 +4,13 @@ import { Chat } from "./components/Chat";
 import { ChatList } from "./components/ChatList";
 import { Layout } from "./components/Layout";
 import { NewChat } from "./components/NewChat";
-import { Chat as ChatType, useChatList } from "./hooks/useChatList";
+import { useChatList } from "./hooks/useChatList";
 import { useSchemas } from "./hooks/useSchemas";
 import { useStreamState } from "./hooks/useStreamState";
-import { useConfigList } from "./hooks/useConfigList";
+import {
+  useConfigList,
+  Config as ConfigInterface,
+} from "./hooks/useConfigList";
 import { Config } from "./components/Config";
 import { MessageWithFiles } from "./utils/formTypes.ts";
 import { TYPE_NAME } from "./constants.ts";
@@ -60,12 +63,11 @@ function App() {
   }, [currentConfig, currentChat, configs]);
 
   const startTurn = useCallback(
-    async (message?: MessageWithFiles, chat: ChatType | null = currentChat) => {
-      if (!chat) return;
-      const config = configs?.find(
-        (c) => c.assistant_id === chat.assistant_id,
-      )?.config;
-      if (!config) return;
+    async (
+      message: MessageWithFiles | null,
+      thread_id: string,
+      assistant_id: string,
+    ) => {
       const files = message?.files || [];
       if (files.length > 0) {
         const formData = files.reduce((formData, file) => {
@@ -74,7 +76,7 @@ function App() {
         }, new FormData());
         formData.append(
           "config",
-          JSON.stringify({ configurable: { thread_id: chat.thread_id } }),
+          JSON.stringify({ configurable: { thread_id } }),
         );
         await fetch(`/ingest`, {
           method: "POST",
@@ -92,18 +94,18 @@ function App() {
               },
             ]
           : null,
-        chat.assistant_id,
-        chat.thread_id,
+        assistant_id,
+        thread_id,
       );
     },
-    [currentChat, startStream, configs],
+    [startStream],
   );
 
   const startChat = useCallback(
-    async (assistantId: string, message: MessageWithFiles) => {
-      const chat = await createChat(message.message, assistantId);
+    async (config: ConfigInterface, message: MessageWithFiles) => {
+      const chat = await createChat(message.message, config.assistant_id);
       navigate(`/thread/${chat.thread_id}`);
-      return startTurn(message, chat);
+      return startTurn(message, chat.thread_id, chat.assistant_id);
     },
     [createChat, navigate, startTurn],
   );
@@ -182,6 +184,7 @@ function App() {
               stream={stream}
               isDocumentRetrievalActive={isDocumentRetrievalActive}
               setCurrentChatId={setCurrentChatId}
+              assistantId={currentChat?.assistant_id ?? null}
             />
           }
         />

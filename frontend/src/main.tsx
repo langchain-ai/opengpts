@@ -6,7 +6,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { StrictMode } from "react";
 
 if (document.cookie.indexOf("user_id") === -1) {
-  document.cookie = `opengpts_user_id=${uuidv4()}`;
+  document.cookie = `opengpts_user_id=${uuidv4()}; path=/; SameSite=Lax`;
 }
 
 const router = createBrowserRouter([
