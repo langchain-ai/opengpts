@@ -21,13 +21,10 @@ from langchain_community.tools.tavily_search import (
 )
 from langchain_community.utilities.arxiv import ArxivAPIWrapper
 from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
-from langchain_community.vectorstores.redis import RedisFilter
 from langchain_robocorp import ActionServerToolkit
 from typing_extensions import TypedDict
-from langchain_community.vectorstores.redis import Redis
-from langchain_community.vectorstores.pgvector import PGVector
 
-from app.upload import get_vectorstore
+from app.upload import vstore
 
 
 class DDGInput(BaseModel):
@@ -193,19 +190,9 @@ If the user asks a vague question, they are likely meaning to look up info from 
 
 
 def get_retriever(assistant_id: str, thread_id: str):
-    vstore = get_vectorstore()
-    if isinstance(vstore, Redis):
-        return vstore.as_retriever(
-            search_kwargs={
-                "filter": (RedisFilter.tag("namespace") == assistant_id)
-                | (RedisFilter.tag("namespace") == thread_id)
-            }
-        )
-    elif isinstance(vstore, PGVector):
-        return vstore.as_retriever(
-            search_kwargs={"filter": {"namespace": {"in": [assistant_id, thread_id]}}}
-        )
-    raise Exception("Vector store not supported.")
+    return vstore.as_retriever(
+        search_kwargs={"filter": {"namespace": {"in": [assistant_id, thread_id]}}}
+    )
 
 
 @lru_cache(maxsize=5)
