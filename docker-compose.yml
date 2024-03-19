@@ -16,7 +16,6 @@ services:
       - .env
     volumes:
       - ./postgres-volume:/var/lib/postgresql/data
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
   backend:
     container_name: opengpts-backend
     build:
