@@ -72,6 +72,7 @@ DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 CHECKPOINTER = RedisCheckpoint(at=CheckpointAt.END_OF_STEP)
 LANGSMITH_CLIENT = LangSmithClient()
 
+
 def _format_example(e):
     return f"""<input>
 {e.inputs['input'][0]['content']}
@@ -80,13 +81,14 @@ def _format_example(e):
 {e.outputs['output']['content']}
 </output>"""
 
+
 def _get_learnings(examples):
     learnings = []
     for e in examples:
-        for i in e.inputs['input'][1:]:
+        for i in e.inputs["input"][1:]:
             print(i)
-            if i['type'] == "human":
-                learnings.append(i['content'])
+            if i["type"] == "human":
+                learnings.append(i["content"])
     return learnings
 
 
@@ -95,23 +97,25 @@ def _format_example_agent(e):
 {e.inputs['input'] +[ e.outputs['output']]}
 </trajectory>"""
 
+
 def _format_example_agent1(e):
     new_messages = []
-    for o in e.outputs['output'][1:][::-1]:
-        if o['type'] == "human":
+    for o in e.outputs["output"][1:][::-1]:
+        if o["type"] == "human":
             break
         new_messages.append(o)
     return f"""<trajectory>
 {[e.outputs['output'][0]] + new_messages[::-1]}
 </trajectory>"""
 
+
 def _get_agent_examples(examples):
     es = {}
     for e in examples:
-        key = e.inputs['input'][0]['content']
+        key = e.inputs["input"][0]["content"]
         if key in es:
-            curr_val = len(es[key].inputs['input'])
-            new_val = len(e.inputs['input'])
+            curr_val = len(es[key].inputs["input"])
+            new_val = len(e.inputs["input"])
             # Take the longer example
             if new_val > curr_val:
                 es[key] = e
@@ -119,7 +123,8 @@ def _get_agent_examples(examples):
             es[key] = e
     return list(es.values())
 
-def few_shot_examples(assistant_id: str, agent:bool = False):
+
+def few_shot_examples(assistant_id: str, agent: bool = False):
     if LANGSMITH_CLIENT.has_dataset(dataset_name=assistant_id):
         # TODO: Update to randomize
         examples = list(LANGSMITH_CLIENT.list_examples(dataset_name=assistant_id))
@@ -135,8 +140,9 @@ def few_shot_examples(assistant_id: str, agent:bool = False):
             examples = random.sample(examples, min(len(examples), 10))
             e_str = "\n".join([_format_example(e) for e in examples])
             learnings = _get_learnings(examples)
-            e_str += "\n\nHere are some of the comments that lead to these examples. Keep these comments in mind as you generate a new tweet!" + "\n".join(
-                learnings
+            e_str += (
+                "\n\nHere are some of the comments that lead to these examples. Keep these comments in mind as you generate a new tweet!"
+                + "\n".join(learnings)
             )
         return f"""
 
@@ -150,7 +156,7 @@ def get_agent_executor(
     agent: AgentType,
     system_message: str,
     interrupt_before_action: bool,
-    assistant_id: Optional[str] = None
+    assistant_id: Optional[str] = None,
 ):
     if assistant_id is not None:
         system_message += few_shot_examples(assistant_id, agent=True)
@@ -231,7 +237,11 @@ class ConfigurableAgent(RunnableBinding):
                 else:
                     _tools.append(_returned_tools)
         _agent = get_agent_executor(
-            _tools, agent, system_message, interrupt_before_action, assistant_id=assistant_id
+            _tools,
+            agent,
+            system_message,
+            interrupt_before_action,
+            assistant_id=assistant_id,
         )
         agent_executor = _agent.with_config({"recursion_limit": 50})
         super().__init__(
@@ -312,16 +322,14 @@ class ConfigurableChatBot(RunnableBinding):
         )
 
 
-chatbot = (
-    ConfigurableChatBot(llm=LLMType.GPT_35_TURBO, checkpoint=CHECKPOINTER)
-    .configurable_fields(
-        llm=ConfigurableField(id="llm_type", name="LLM Type"),
-        system_message=ConfigurableField(id="system_message", name="Instructions"),
-        assistant_id=ConfigurableField(
-            id="assistant_id", name="Assistant ID", is_shared=True
-        ),
-    )
-    .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
+chatbot = ConfigurableChatBot(
+    llm=LLMType.GPT_35_TURBO, checkpoint=CHECKPOINTER
+).configurable_fields(
+    llm=ConfigurableField(id="llm_type", name="LLM Type"),
+    system_message=ConfigurableField(id="system_message", name="Instructions"),
+    assistant_id=ConfigurableField(
+        id="assistant_id", name="Assistant ID", is_shared=True
+    ),
 )
 
 
@@ -371,55 +379,51 @@ class ConfigurableRetrieval(RunnableBinding):
         )
 
 
-chat_retrieval = (
-    ConfigurableRetrieval(llm_type=LLMType.GPT_35_TURBO, checkpoint=CHECKPOINTER)
-    .configurable_fields(
-        llm_type=ConfigurableField(id="llm_type", name="LLM Type"),
-        system_message=ConfigurableField(id="system_message", name="Instructions"),
-        assistant_id=ConfigurableField(
-            id="assistant_id", name="Assistant ID", is_shared=True
-        ),
-        thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
-    )
-    .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
+chat_retrieval = ConfigurableRetrieval(
+    llm_type=LLMType.GPT_35_TURBO, checkpoint=CHECKPOINTER
+).configurable_fields(
+    llm_type=ConfigurableField(id="llm_type", name="LLM Type"),
+    system_message=ConfigurableField(id="system_message", name="Instructions"),
+    assistant_id=ConfigurableField(
+        id="assistant_id", name="Assistant ID", is_shared=True
+    ),
+    thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
 )
 
 
-agent = (
-    ConfigurableAgent(
-        agent=AgentType.GPT_35_TURBO,
-        tools=[],
-        system_message=DEFAULT_SYSTEM_MESSAGE,
-        retrieval_description=RETRIEVAL_DESCRIPTION,
-        assistant_id=None,
-        thread_id=None,
-    )
-    .configurable_fields(
-        agent=ConfigurableField(id="agent_type", name="Agent Type"),
-        system_message=ConfigurableField(id="system_message", name="Instructions"),
-        interrupt_before_action=ConfigurableField(
-            id="interrupt_before_action",
-            name="Tool Confirmation",
-            description="If Yes, you'll be prompted to continue before each tool is executed.\nIf No, tools will be executed automatically by the agent.",
-        ),
-        assistant_id=ConfigurableField(
-            id="assistant_id", name="Assistant ID", is_shared=True
-        ),
-        thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
-        tools=ConfigurableField(id="tools", name="Tools"),
-        retrieval_description=ConfigurableField(
-            id="retrieval_description", name="Retrieval Description"
-        ),
-    )
-    .configurable_alternatives(
-        ConfigurableField(id="type", name="Bot Type"),
-        default_key="agent",
-        prefix_keys=True,
-        chatbot=chatbot,
-        chat_retrieval=chat_retrieval,
-    )
-    .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
+agent_w_tools = ConfigurableAgent(
+    agent=AgentType.GPT_35_TURBO,
+    tools=[],
+    system_message=DEFAULT_SYSTEM_MESSAGE,
+    retrieval_description=RETRIEVAL_DESCRIPTION,
+    assistant_id=None,
+    thread_id=None,
+).configurable_fields(
+    agent=ConfigurableField(id="agent_type", name="Agent Type"),
+    system_message=ConfigurableField(id="system_message", name="Instructions"),
+    interrupt_before_action=ConfigurableField(
+        id="interrupt_before_action",
+        name="Tool Confirmation",
+        description="If Yes, you'll be prompted to continue before each tool is executed.\nIf No, tools will be executed automatically by the agent.",
+    ),
+    assistant_id=ConfigurableField(
+        id="assistant_id", name="Assistant ID", is_shared=True
+    ),
+    thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
+    tools=ConfigurableField(id="tools", name="Tools"),
+    retrieval_description=ConfigurableField(
+        id="retrieval_description", name="Retrieval Description"
+    ),
 )
+
+
+agent = chatbot.configurable_alternatives(
+    ConfigurableField(id="type", name="Bot Type"),
+    default_key="chatbot",
+    prefix_keys=True,
+    # chatbot=chatbot,
+    # chat_retrieval=chat_retrieval,
+).with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
 
 if __name__ == "__main__":
     import asyncio
