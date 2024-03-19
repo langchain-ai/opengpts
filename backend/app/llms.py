@@ -34,7 +34,7 @@ def get_openai_llm(gpt_4: bool = False, azure: bool = False):
         else:
             llm = ChatOpenAI(
                 http_client=http_client,
-                model="gpt-3.5-turbo-1106",
+                model="gpt-3.5-turbo-0125",
                 temperature=0,
                 streaming=True,
             )

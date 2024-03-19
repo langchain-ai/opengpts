@@ -81,6 +81,13 @@ def _format_example(e):
 {e.outputs['output']['content']}
 </output>"""
 
+def _format_trajectory(e):
+    s = "<trajectory>"
+    for i in e.inputs['input']:
+        s += f"\n{i['type']}: {i['content']}\n"
+    s += f"\nFinal Answer: {e.outputs['output']['content']}\n"
+    s += "</trajectory>"
+    return s
 
 def _get_learnings(examples):
     learnings = []
@@ -141,12 +148,18 @@ def few_shot_examples(assistant_id: str, agent: bool = False):
             e_str = "\n".join([_format_example(e) for e in examples])
             learnings = _get_learnings(examples)
             e_str += (
-                "\n\nHere are some of the comments that lead to these examples. Keep these comments in mind as you generate a new tweet!"
-                + "\n".join(learnings)
+               "\n\nHere are some of the comments that lead to these examples. Keep these comments in mind as you generate a new tweet!"
+               + "\n".join(learnings)
             )
+            #e_str = "\n".join([_format_trajectory(e) for e in examples])
+#         return f"""
+#
+# Here are some examples of good inputs and outputs. Use these to guide and shape the style of what your new response should look like:
+# {e_str}
+# """
         return f"""
 
-Here are some examples of good inputs and outputs. Use these to guide and shape the style of what your new response should look like:
+Here are some previous interactions with a user trying to accomplish a similar task. You should assumed that the final result in all scenarios is the desired one, and any previous steps were wrong in some way, and the human then tried to improve upon them in specific ways. Learn from these previous interactions and do not repeat previous mistakes!
 {e_str}
 """
 
