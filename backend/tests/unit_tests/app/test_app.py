@@ -2,9 +2,9 @@
 
 from contextlib import asynccontextmanager
 from typing import Optional, Sequence
-import asyncpg
 from uuid import uuid4
 
+import asyncpg
 from httpx import AsyncClient
 from typing_extensions import AsyncGenerator
 

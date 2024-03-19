@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field
 import app.storage as storage
 from app.schema import Assistant, OpengptsUserId
 
-
 router = APIRouter()
 
 FEATURED_PUBLIC_ASSISTANTS = []

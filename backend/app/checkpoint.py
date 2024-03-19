@@ -1,12 +1,12 @@
 import pickle
 from typing import Optional
 
+import asyncpg
 from langchain.pydantic_v1 import Field
 from langchain.schema.runnable import RunnableConfig
 from langchain.schema.runnable.utils import ConfigurableFieldSpec
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.checkpoint.base import Checkpoint
-import asyncpg
 
 from app.lifespan import get_pg_pool
 

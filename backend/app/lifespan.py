@@ -5,7 +5,6 @@ import asyncpg
 import orjson
 from fastapi import FastAPI
 
-
 _pg_pool = None
 
 

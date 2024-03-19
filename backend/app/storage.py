@@ -6,11 +6,10 @@ from langgraph.channels.base import ChannelsManager
 from langgraph.checkpoint.base import empty_checkpoint
 from langgraph.pregel import _prepare_next_tasks
 
-
 from app.agent import AgentType, get_agent_executor
+from app.lifespan import get_pg_pool
 from app.schema import Assistant, Thread
 from app.stream import map_chunk_to_msg
-from app.lifespan import get_pg_pool
 
 
 async def list_assistants(user_id: str) -> List[Assistant]:
