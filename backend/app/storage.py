@@ -176,10 +176,3 @@ async def put_thread(
             "name": name,
             "updated_at": updated_at,
         }
-
-
-if __name__ == "__main__":
-    print(list_assistants("133"))
-    print(list_threads("123"))
-    put_assistant("123", "i-am-a-test", name="Test Agent", config={"tags": ["hello"]})
-    put_thread("123", "i-am-a-test", "test1", name="Test Thread")
