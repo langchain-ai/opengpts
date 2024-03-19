@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 from typing import List, Sequence
 
 from langchain.schema.messages import AnyMessage
@@ -69,7 +69,7 @@ async def put_assistant(
     Returns:
         return the assistant model if no exception is raised.
     """
-    updated_at = datetime.utcnow()
+    updated_at = datetime.datetime.now(datetime.UTC)
     async with get_pg_pool().acquire() as conn:
         async with conn.transaction():
             await conn.execute(
@@ -152,7 +152,7 @@ async def put_thread(
     user_id: str, thread_id: str, *, assistant_id: str, name: str
 ) -> Thread:
     """Modify a thread."""
-    updated_at = datetime.utcnow()
+    updated_at = datetime.datetime.now(datetime.UTC)
     async with get_pg_pool().acquire() as conn:
         await conn.execute(
             (
