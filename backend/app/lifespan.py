@@ -1,20 +1,24 @@
-from contextlib import asynccontextmanager
-import asyncpg
-from fastapi import FastAPI
-import json
 import os
+from contextlib import asynccontextmanager
+
+import asyncpg
+import orjson
+from fastapi import FastAPI
 
 
 _pg_pool = None
 
 
-def get_pg_pool():
+def get_pg_pool() -> asyncpg.pool.Pool:
     return _pg_pool
 
 
-async def _init_connection(conn):
+async def _init_connection(conn) -> None:
     await conn.set_type_codec(
-        "json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog"
+        "json",
+        encoder=lambda v: orjson.dumps(v).decode(),
+        decoder=orjson.loads,
+        schema="pg_catalog",
     )
 
 
