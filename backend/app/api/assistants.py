@@ -77,23 +77,45 @@ def upsert_assistant(
     payload: AssistantPayload,
 ) -> Assistant:
     """Create or update an assistant."""
-    dataset = LANGSMITHCLIENT.create_dataset(aid)
-    trace_filter = f'and(and(eq(feedback_key, "user_score"), eq(feedback_score, 1)), and(eq(metadata_key, "assistant_id"), eq(metadata_value, "{aid}")))'
-    LANGSMITHCLIENT.request_with_retries(
-      "POST",
-      LANGSMITHCLIENT.api_url + "/runs/rules",
-      {
-        "json": {
-          "display_name": f"few shot {aid}",
-          "session_id": "37f535e9-22c4-4267-9d36-522930e59cb7",
-          "sampling_rate": 1,
-          "filter": 'eq(name, "chatbot")',
-          "trace_filter": trace_filter,
-          "add_to_dataset_id": str(dataset.id)
-        },
-        "headers": LANGSMITHCLIENT._headers
-      }
-    )
+    atype = payload.config['configurable']['type']
+    if atype == "agent":
+        dataset = LANGSMITHCLIENT.create_dataset(aid)
+        trace_filter = f'and(and(eq(feedback_key, "user_score"), eq(feedback_score, 1)), and(eq(metadata_key, "assistant_id"), eq(metadata_value, "{aid}")))'
+        LANGSMITHCLIENT.request_with_retries(
+            "POST",
+            LANGSMITHCLIENT.api_url + "/runs/rules",
+            {
+                "json": {
+                    "display_name": f"few shot {aid}",
+                    "session_id": "37f535e9-22c4-4267-9d36-522930e59cb7",
+                    "sampling_rate": 1,
+                    "filter": trace_filter,
+                    #"trace_filter": trace_filter,
+                    "add_to_dataset_id": str(dataset.id)
+                },
+                "headers": LANGSMITHCLIENT._headers
+            }
+        )
+    elif atype == "chatbot":
+        dataset = LANGSMITHCLIENT.create_dataset(aid)
+        trace_filter = f'and(and(eq(feedback_key, "user_score"), eq(feedback_score, 1)), and(eq(metadata_key, "assistant_id"), eq(metadata_value, "{aid}")))'
+        LANGSMITHCLIENT.request_with_retries(
+          "POST",
+          LANGSMITHCLIENT.api_url + "/runs/rules",
+          {
+            "json": {
+              "display_name": f"few shot {aid}",
+              "session_id": "37f535e9-22c4-4267-9d36-522930e59cb7",
+              "sampling_rate": 1,
+              "filter": 'eq(name, "chatbot")',
+              "trace_filter": trace_filter,
+              "add_to_dataset_id": str(dataset.id)
+            },
+            "headers": LANGSMITHCLIENT._headers
+          }
+        )
+    else:
+        pass
     return storage.put_assistant(
         opengpts_user_id,
         aid,

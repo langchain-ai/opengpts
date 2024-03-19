@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Any, Mapping, Optional, Sequence, Union
+import random
 
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import (
@@ -71,13 +72,88 @@ DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 CHECKPOINTER = RedisCheckpoint(at=CheckpointAt.END_OF_STEP)
 LANGSMITH_CLIENT = LangSmithClient()
 
+def _format_example(e):
+    return f"""<input>
+{e.inputs['input'][0]['content']}
+</input>
+<output>
+{e.outputs['output']['content']}
+</output>"""
+
+def _get_learnings(examples):
+    learnings = []
+    for e in examples:
+        for i in e.inputs['input'][1:]:
+            print(i)
+            if i['type'] == "human":
+                learnings.append(i['content'])
+    return learnings
+
+
+def _format_example_agent(e):
+    return f"""<trajectory>
+{e.inputs['input'] +[ e.outputs['output']]}
+</trajectory>"""
+
+def _format_example_agent1(e):
+    new_messages = []
+    for o in e.outputs['output'][1:][::-1]:
+        if o['type'] == "human":
+            break
+        new_messages.append(o)
+    return f"""<trajectory>
+{[e.outputs['output'][0]] + new_messages[::-1]}
+</trajectory>"""
+
+def _get_agent_examples(examples):
+    es = {}
+    for e in examples:
+        key = e.inputs['input'][0]['content']
+        if key in es:
+            curr_val = len(es[key].inputs['input'])
+            new_val = len(e.inputs['input'])
+            # Take the longer example
+            if new_val > curr_val:
+                es[key] = e
+        else:
+            es[key] = e
+    return list(es.values())
+
+def few_shot_examples(assistant_id: str, agent:bool = False):
+    if LANGSMITH_CLIENT.has_dataset(dataset_name=assistant_id):
+        # TODO: Update to randomize
+        examples = list(LANGSMITH_CLIENT.list_examples(dataset_name=assistant_id))
+        if not examples:
+            return ""
+        if agent:
+            # examples = _get_agent_examples(examples)
+            # examples = random.sample(examples, min(len(examples), 10))
+            # e_str = "\n".join([_format_example_agent(e) for e in examples])
+            examples = random.sample(examples, min(len(examples), 10))
+            e_str = "\n".join([_format_example_agent1(e) for e in examples])
+        else:
+            examples = random.sample(examples, min(len(examples), 10))
+            e_str = "\n".join([_format_example(e) for e in examples])
+            learnings = _get_learnings(examples)
+            e_str += "\n\nHere are some of the comments that lead to these examples. Keep these comments in mind as you generate a new tweet!" + "\n".join(
+                learnings
+            )
+        return f"""
+
+Here are some examples of good inputs and outputs. Use these to guide and shape the style of what your new response should look like:
+{e_str}
+"""
+
 
 def get_agent_executor(
     tools: list,
     agent: AgentType,
     system_message: str,
     interrupt_before_action: bool,
+    assistant_id: Optional[str] = None
 ):
+    if assistant_id is not None:
+        system_message += few_shot_examples(assistant_id, agent=True)
     if agent == AgentType.GPT_35_TURBO:
         llm = get_openai_llm()
         return get_openai_agent_executor(
@@ -155,7 +231,7 @@ class ConfigurableAgent(RunnableBinding):
                 else:
                     _tools.append(_returned_tools)
         _agent = get_agent_executor(
-            _tools, agent, system_message, interrupt_before_action
+            _tools, agent, system_message, interrupt_before_action, assistant_id=assistant_id
         )
         agent_executor = _agent.with_config({"recursion_limit": 50})
         super().__init__(
@@ -179,32 +255,6 @@ class LLMType(str, Enum):
     MIXTRAL = "Mixtral"
 
 
-import random
-
-def _format_example(e):
-    return f"""<input>
-{e.inputs['input'][0]['content']}
-</input>
-<output>
-{e.outputs['output']['content']}
-</output>"""
-
-def few_shot_examples(assistant_id: str):
-    if LANGSMITH_CLIENT.has_dataset(dataset_name=assistant_id):
-        # TODO: Update to randomize
-        examples = list(LANGSMITH_CLIENT.list_examples(dataset_name=assistant_id))
-        if not examples:
-            return ""
-        examples = random.sample(examples, min(len(examples), 10))
-        e_str = "\n".join([_format_example(e) for e in examples])
-
-        return f"""
-
-Here are some examples of good inputs and outputs. Use these to guide and shape the style of what your new response should look like:
-{e_str}
-"""
-
-
 def get_chatbot(
     llm_type: LLMType,
     system_message: str,
@@ -226,12 +276,11 @@ def get_chatbot(
         llm = get_mixtral_fireworks()
     else:
         raise ValueError("Unexpected llm type")
-    print(assistant_id)
     if assistant_id is not None:
         few_shot_example_string = few_shot_examples(assistant_id)
     else:
         few_shot_example_string = ""
-    message = system_message + few_shot_example_string + " 1"
+    message = system_message + few_shot_example_string
     return get_chatbot_executor(llm, message, CHECKPOINTER)
 
 
