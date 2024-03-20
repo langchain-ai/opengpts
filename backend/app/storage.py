@@ -1,10 +1,7 @@
 from datetime import datetime, timezone
 from typing import List, Optional, Sequence
 
-from langchain.schema.messages import AnyMessage
-from langgraph.channels.base import ChannelsManager
-from langgraph.checkpoint.base import empty_checkpoint
-from langgraph.pregel import _prepare_next_tasks
+from langchain_core.messages import AnyMessage
 
 from app.agent import AgentType, get_agent_executor
 from app.lifespan import get_pg_pool
@@ -102,37 +99,38 @@ async def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
         )
 
 
-# TODO remove hardcoded channel name
-MESSAGES_CHANNEL_NAME = "__root__"
-
-
 async def get_thread_messages(user_id: str, thread_id: str):
     """Get all messages for a thread."""
-    config = {"configurable": {"thread_id": thread_id}}
     app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
-    checkpoint = await app.checkpointer.aget(config) or empty_checkpoint()
-    with ChannelsManager(app.channels, checkpoint) as channels:
-        return {
-            "messages": [
-                map_chunk_to_msg(msg) for msg in channels[MESSAGES_CHANNEL_NAME].get()
-            ],
-            "resumeable": bool(_prepare_next_tasks(checkpoint, app.nodes, channels)),
-        }
+    state = await app.aget_state({"configurable": {"thread_id": thread_id}})
+    return {
+        "messages": [map_chunk_to_msg(msg) for msg in state.values],
+        "resumeable": bool(state.next),
+    }
 
 
 async def post_thread_messages(
     user_id: str, thread_id: str, messages: Sequence[AnyMessage]
 ):
     """Add messages to a thread."""
-    config = {"configurable": {"thread_id": thread_id}}
     app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
-    checkpoint = await app.checkpointer.aget(config) or empty_checkpoint()
-    with ChannelsManager(app.channels, checkpoint) as channels:
-        channel = channels[MESSAGES_CHANNEL_NAME]
-        channel.update([messages])
-        checkpoint["channel_values"][MESSAGES_CHANNEL_NAME] = channel.checkpoint()
-        checkpoint["channel_versions"][MESSAGES_CHANNEL_NAME] += 1
-        await app.checkpointer.aput(config, checkpoint)
+    await app.aupdate_state({"configurable": {"thread_id": thread_id}}, messages)
+
+
+async def get_thread_history(user_id: str, thread_id: str):
+    """Get the history of a thread."""
+    app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
+    return [
+        {
+            "values": [map_chunk_to_msg(msg) for msg in c.values],
+            "resumeable": bool(c.next),
+            "config": c.config,
+            "parent": c.parent_config,
+        }
+        async for c in app.aget_state_history(
+            {"configurable": {"thread_id": thread_id}}
+        )
+    ]
 
 
 async def put_thread(
