@@ -14,14 +14,12 @@ from app.stream import map_chunk_to_msg
 
 async def list_assistants(user_id: str) -> List[Assistant]:
     """List all assistants for the current user."""
-
     async with get_pg_pool().acquire() as conn:
         return await conn.fetch("SELECT * FROM assistant WHERE user_id = $1", user_id)
 
 
 async def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
     """Get an assistant by ID."""
-
     async with get_pg_pool().acquire() as conn:
         return await conn.fetchrow(
             "SELECT * FROM assistant WHERE assistant_id = $1 AND user_id = $2",
@@ -32,7 +30,6 @@ async def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
 
 async def get_public_assistant(assistant_id: str) -> Optional[Assistant]:
     """Get a public assistant by ID."""
-
     async with get_pg_pool().acquire() as conn:
         return await conn.fetchrow(
             "SELECT * FROM assistant WHERE assistant_id = $1 AND public = true",
