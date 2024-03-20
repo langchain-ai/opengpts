@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Chat } from "./components/Chat";
 import { ChatList } from "./components/ChatList";
@@ -13,7 +13,6 @@ import {
 } from "./hooks/useConfigList";
 import { Config } from "./components/Config";
 import { MessageWithFiles } from "./utils/formTypes.ts";
-import { TYPE_NAME } from "./constants.ts";
 import { Route, Routes, useNavigate } from "react-router-dom";
 
 function NotFound() {
@@ -27,8 +26,6 @@ function App() {
   const { chats, createChat } = useChatList();
   const { configs, saveConfig } = useConfigList();
   const { startStream, stopStream, stream } = useStreamState();
-  const [isDocumentRetrievalActive, setIsDocumentRetrievalActive] =
-    useState(false);
 
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [currentConfigId, setCurrentConfigId] = useState<string | null>(null);
@@ -36,31 +33,6 @@ function App() {
     configs?.find((config) => config.assistant_id === currentConfigId) ?? null;
   const currentChat =
     chats?.find((chat) => chat.thread_id === currentChatId) ?? null;
-
-  useEffect(() => {
-    let configurable = null;
-    if (currentConfig) {
-      configurable = currentConfig?.config?.configurable;
-    }
-    if (currentChat && configs) {
-      const conf = configs.find(
-        (c) => c.assistant_id === currentChat.assistant_id,
-      );
-      configurable = conf?.config?.configurable;
-    }
-    const agent_type = configurable?.["type"] as TYPE_NAME | null;
-    if (agent_type === null || agent_type === "chatbot") {
-      setIsDocumentRetrievalActive(false);
-      return;
-    }
-    if (agent_type === "chat_retrieval") {
-      setIsDocumentRetrievalActive(true);
-      return;
-    }
-    const tools =
-      (configurable?.["type==agent/tools"] as { name: string }[]) ?? [];
-    setIsDocumentRetrievalActive(tools.some((t) => t.name === "Retrieval"));
-  }, [currentConfig, currentChat, configs]);
 
   const startTurn = useCallback(
     async (
@@ -180,9 +152,11 @@ function App() {
               startStream={startTurn}
               stopStream={stopStream}
               stream={stream}
-              isDocumentRetrievalActive={isDocumentRetrievalActive}
               setCurrentChatId={setCurrentChatId}
               assistantId={currentChat?.assistant_id ?? null}
+              currentChat={currentChat}
+              config={currentConfig}
+              configs={configs}
             />
           }
         />
@@ -196,7 +170,6 @@ function App() {
               configs={configs}
               saveConfig={saveConfig}
               enterConfig={selectConfig}
-              isDocumentRetrievalActive={isDocumentRetrievalActive}
             />
           }
         />

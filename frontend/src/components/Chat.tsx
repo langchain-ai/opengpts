@@ -1,11 +1,13 @@
 import { useEffect, useRef } from "react";
 import { StreamStateProps } from "../hooks/useStreamState";
 import { useChatMessages } from "../hooks/useChatMessages";
+import { Chat as ChatInterface } from "../hooks/useChatList";
 import TypingBox from "./TypingBox";
 import { Message } from "./Message";
 import { ArrowDownCircleIcon } from "@heroicons/react/24/outline";
 import { MessageWithFiles } from "../utils/formTypes.ts";
 import { useParams } from "react-router-dom";
+import {Config} from "../hooks/useConfigList.ts";
 
 interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
   startStream: (
@@ -13,9 +15,11 @@ interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
     thread_id: string,
     assistant_id: string,
   ) => Promise<void>;
-  isDocumentRetrievalActive: boolean;
   setCurrentChatId: (id: string | null) => void;
   assistantId: string | null;
+  configs: Config[] | null;
+  config: Config | null;
+  currentChat: ChatInterface | null
 }
 
 function usePrevious<T>(value: T): T | undefined {
@@ -88,7 +92,9 @@ export function Chat(props: ChatProps) {
             props.stream?.status === "inflight" ? props.stopStream : undefined
           }
           inflight={props.stream?.status === "inflight"}
-          isDocumentRetrievalActive={props.isDocumentRetrievalActive}
+          configs={props.configs || []}
+          currentConfig={props.config}
+          currentChat={props.currentChat}
         />
       </div>
     </div>

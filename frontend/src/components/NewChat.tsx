@@ -19,7 +19,6 @@ interface NewChatProps extends ConfigListProps {
     config: ConfigInterface,
     message: MessageWithFiles,
   ) => Promise<void>;
-  isDocumentRetrievalActive: boolean;
 }
 
 export function NewChat(props: NewChatProps) {
@@ -89,7 +88,9 @@ export function NewChat(props: NewChatProps) {
               await props.startChat(selectedConfig, msg);
             }
           }}
-          isDocumentRetrievalActive={props.isDocumentRetrievalActive}
+          currentConfig={selectedConfig}
+          configs={props.configs || []}
+          currentChat={null}
         />
       </div>
     </div>
