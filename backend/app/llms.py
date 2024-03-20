@@ -24,7 +24,7 @@ def get_openai_llm(gpt_4: bool = False, azure: bool = False):
             logger.warn("Invalid proxy URL provided. Proceeding without proxy.")
 
     if not azure:
-        openai_model = "gpt-4-turbo-preview" if gpt_4 else "gpt-3.5-turbo-0125"
+        openai_model = "gpt-4-turbo-preview" if gpt_4 else "gpt-3.5-turbo"
         llm = ChatOpenAI(
             http_client=http_client,
             model=openai_model,
