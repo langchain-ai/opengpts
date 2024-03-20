@@ -4,10 +4,13 @@ import App from "./App.tsx";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { StrictMode } from "react";
+import {QueryClient, QueryClientProvider} from "react-query";
 
 if (document.cookie.indexOf("user_id") === -1) {
   document.cookie = `opengpts_user_id=${uuidv4()}; path=/; SameSite=Lax`;
 }
+
+const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
   {
@@ -18,6 +21,8 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
   </StrictMode>,
 );
