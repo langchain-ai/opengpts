@@ -2,7 +2,8 @@
 FROM python:3.11
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y libmagic1 && rm -rf /var/lib/apt/lists/*
+RUN curl -s https://packagecloud.io/install/repositories/golang-migrate/migrate/script.deb.sh | bash
+RUN apt-get update && apt-get install -y migrate libmagic1 && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry
 RUN pip install poetry
