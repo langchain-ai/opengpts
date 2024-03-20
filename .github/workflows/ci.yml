@@ -4,11 +4,7 @@ name: CI
 on:
   push:
     branches: [main]
-  pull_request:
-    paths:
-      - ".github/actions/poetry_setup/action.yml"
-      - ".github/workflows/_lint.yml"
-      - "backend/**"
+  pull_request: # Trigger on all PRs, ensuring required actions to be run.
   workflow_dispatch: # Allows to trigger the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
@@ -73,29 +69,23 @@ jobs:
         run: |
           python -c "import redis; redis.Redis(host='localhost', port=6379).ping()"
 
-#      - name: Install dependencies
-#        shell: bash
-#        run: |
-#          echo "Running tests, installing dependencies with poetry..."
-#          poetry install --with test,lint
-#
-#      - name: Run tests
-#        run: make test
-#        env:
-#          # Adding a DB number to match unit tests
-#          # Unit tests use DB 3, so user doesn't accidentally wipe their data
-#          # if they run the tests against a real redis instance.
-#          # Need to follow up and swap out default port numbers and add `test`
-#          # password
-#          REDIS_URL: "redis://redis:6379/0"
-#      - name: Ensure the tests did not create any additional files
-#        shell: bash
-#        run: |
-#          set -eu
-#
-#          STATUS="$(git status)"
-#          echo "$STATUS"
-#
-#          # grep will exit non-zero if the target message isn't found,
-#          # and `set -e` above will cause the step to fail.
-#          echo "$STATUS" | grep 'nothing to commit, working tree clean'
+  frontend-lint-and-build:
+      runs-on: ubuntu-latest
+      needs: [lint, test]
+      steps:
+        - uses: actions/checkout@v3
+        - name: Setup Node.js (LTS)
+          uses: actions/setup-node@v3
+          with:
+            node-version: '20'
+            cache: 'yarn'
+            cache-dependency-path: frontend/yarn.lock
+        - name: Install frontend dependencies
+          run: yarn install
+          working-directory: ./frontend
+        - name: Run frontend lint
+          run: yarn lint
+          working-directory: ./frontend
+        - name: Build frontend
+          run: yarn build
+          working-directory: ./frontend

@@ -18,7 +18,7 @@ Currently, there are three different architectures implemented:
 - Assistant
 - RAG
 - Chatbot
-- 
+
 See below for more details on those.
 Because this is open source, if you do not like those architectures or want to modify them, you can easily do that!
 
@@ -32,15 +32,18 @@ Because this is open source, if you do not like those architectures or want to m
 - [GPTs: a simple hosted version](https://opengpts-example-vz4y4ooboq-uc.a.run.app/)
 - [Assistants API: a getting started guide](API.md)
 
-## Quickstart
+## Quickstart without Docker
 
 ### Start the backend
 
 **Install requirements**
 
+The backend service uses [poetry](https://python-poetry.org/docs/#installation) to manage dependencies.
+It assumes libmagic to be [installed](https://github.com/ahupp/python-magic?tab=readme-ov-file#installation) in your host system.
+
 ```shell
 cd backend
-pip install -r requirements.txt
+poetry install
 ```
 
 **Set up persistence layer**
@@ -94,10 +97,10 @@ export LANGCHAIN_API_KEY=...
 Start the backend server
 
 ```shell
-langchain serve --port=8100
+make start
 ```
 
-**2. Start the frontend**
+### Start the frontend
 
 ```shell
 cd frontend
@@ -136,7 +139,7 @@ This project supports a Docker-based setup, streamlining installation and execut
 4. **Rebuilding After Changes:**  
    If you make changes to either the frontend or backend, rebuild the Docker images to reflect these changes. Run:
    ```
-   docker-compose up --build
+   docker compose up --build
    ```
    This command rebuilds the images with your latest changes and restarts the services.
 
@@ -285,12 +288,8 @@ If you want to use some preconfigured tools, these include:
 **_Robocorp Action Server_**
 
 Run AI Python based actions with [Robocorp Action Server](https://github.com/robocorp/robocorp).
-Does not require a service API key, but it requires the credentials for a running Action Server instance to be defined:
-
-```shell
-ROBOCORP_ACTION_SERVER_URL=https://dummy-action-server.robocorp.link
-ROBOCORP_ACTION_SERVER_KEY=dummy-api-key
-```
+Does not require a service API key, but it requires the credentials for a running Action Server instance to be defined.
+These you set while creating an assistant.
 
 **_Connery Actions_**
 

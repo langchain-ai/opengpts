@@ -1,19 +1,28 @@
+import logging
 import os
 from functools import lru_cache
-import httpx
+from urllib.parse import urlparse
+
 import boto3
+import httpx
 from langchain_community.chat_models import BedrockChat, ChatAnthropic, ChatFireworks
 from langchain_google_vertexai import ChatVertexAI
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
+
+logger = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=4)
 def get_openai_llm(gpt_4: bool = False, azure: bool = False):
     proxy_url = os.getenv("PROXY_URL")
-    if proxy_url is not None and proxy_url != "":
-        http_client = httpx.AsyncClient(proxies=proxy_url)
-    else:
-        http_client = None
+    http_client = None
+    if proxy_url:
+        parsed_url = urlparse(proxy_url)
+        if parsed_url.scheme and parsed_url.netloc:
+            http_client = httpx.AsyncClient(proxies=proxy_url)
+        else:
+            logger.warn("Invalid proxy URL provided. Proceeding without proxy.")
+
     if not azure:
         openai_model = "gpt-4-turbo-preview" if gpt_4 else "gpt-3.5-turbo-0125"
         llm = ChatOpenAI(

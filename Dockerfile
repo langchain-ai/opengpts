@@ -1,4 +1,4 @@
-FROM node:18 AS builder
+FROM node:20 AS builder
 
 WORKDIR /frontend
 
@@ -18,14 +18,22 @@ FROM python:3.11
 # Install system dependencies
 RUN apt-get update && apt-get install -y libmagic1 && rm -rf /var/lib/apt/lists/*
 
+# Install Poetry
+RUN pip install poetry
+
 # Set the working directory
 WORKDIR /backend
 
+# Copy only dependencies
+COPY ./backend/pyproject.toml ./backend/poetry.lock* ./
+
+# Install dependencies
+# --only main: Skip installing packages listed in the [tool.poetry.dev-dependencies] section
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi --only main
+
+# Copy the rest of backend
 COPY ./backend .
-
-RUN rm poetry.lock
-
-RUN pip install .
 
 # Copy the frontend build
 COPY --from=builder /frontend/dist ./ui

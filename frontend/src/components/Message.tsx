@@ -39,7 +39,7 @@ function Function(props: {
         <span
           className={cn(
             "inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 cursor-pointer relative top-1",
-            props.open && "mb-2"
+            props.open && "mb-2",
           )}
           onClick={(e) => {
             e.preventDefault();
@@ -63,7 +63,7 @@ function Function(props: {
                       <td
                         className={cn(
                           i === 0 ? "" : "border-t border-transparent",
-                          "py-1 px-3 table-cell text-sm border-r border-r-gray-300"
+                          "py-1 px-3 table-cell text-sm border-r border-r-gray-300",
                         )}
                       >
                         <div className="font-medium text-gray-500">{key}</div>
@@ -71,13 +71,13 @@ function Function(props: {
                       <td
                         className={cn(
                           i === 0 ? "" : "border-t border-gray-200",
-                          "py-1 px-3 table-cell"
+                          "py-1 px-3 table-cell",
                         )}
                       >
                         {str(value)}
                       </td>
                     </tr>
-                  )
+                  ),
                 )}
               </tbody>
             </table>
@@ -89,7 +89,7 @@ function Function(props: {
 }
 
 export const Message = memo(function Message(
-  props: MessageType & { runId?: string }
+  props: MessageType & { runId?: string },
 ) {
   const [open, setOpen] = useState(false);
   const contentIsDocuments =
@@ -102,7 +102,7 @@ export const Message = memo(function Message(
         <div
           className={cn(
             "font-medium text-sm text-gray-400 uppercase mr-2 mt-1 w-28 flex flex-col",
-            props.type === "function" && "mt-2"
+            props.type === "function" && "mt-2",
           )}
         >
           {props.type}
