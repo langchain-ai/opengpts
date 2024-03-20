@@ -7,7 +7,7 @@ import { Message } from "./Message";
 import { ArrowDownCircleIcon } from "@heroicons/react/24/outline";
 import { MessageWithFiles } from "../utils/formTypes.ts";
 import { useParams } from "react-router-dom";
-import {Config} from "../hooks/useConfigList.ts";
+import { Config } from "../hooks/useConfigList.ts";
 
 interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
   startStream: (
@@ -19,7 +19,7 @@ interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
   assistantId: string | null;
   configs: Config[] | null;
   config: Config | null;
-  currentChat: ChatInterface | null
+  currentChat: ChatInterface | null;
 }
 
 function usePrevious<T>(value: T): T | undefined {

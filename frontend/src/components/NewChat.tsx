@@ -8,8 +8,9 @@ import {
 } from "../hooks/useConfigList";
 import { cn } from "../utils/cn";
 import { MessageWithFiles } from "../utils/formTypes.ts";
-import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "react-query";
+import { getAssistant } from "../api/assistants.ts";
 
 interface NewChatProps extends ConfigListProps {
   configSchema: Schemas["configSchema"];
@@ -24,46 +25,40 @@ interface NewChatProps extends ConfigListProps {
 export function NewChat(props: NewChatProps) {
   const navigator = useNavigate();
   const { assistantId } = useParams();
-  const [selectedConfig, setSelectedConfig] = useState<ConfigInterface | null>(
-    null,
+
+  const {
+    data: assistantConfig,
+    isLoading,
+    isError,
+    error,
+  } = useQuery(
+    ["assistant", assistantId],
+    () => getAssistant(assistantId as string),
+    {
+      enabled: !!assistantId,
+    },
   );
 
-  useEffect(() => {
-    if (assistantId) {
-      (async () => {
-        let matchingConfig = props.configs?.find(
-          (c) => c.assistant_id === assistantId,
-        );
-        if (!matchingConfig) {
-          const response = await fetch(
-            `/assistants/public/?shared_id=${assistantId}`,
-            {
-              headers: {
-                Accept: "application/json",
-              },
-            },
-          );
-          matchingConfig = ((await response.json()) as ConfigInterface[]).find(
-            (c) => c.assistant_id === assistantId,
-          );
-        }
-        setSelectedConfig(matchingConfig ?? null);
-      })();
-    }
-  }, [assistantId, props.configs]);
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) {
+    const message = (error as Error).message;
+    return <div>Error: {message}</div>;
+  }
+  if (!assistantConfig)
+    return <div>Could not find assistant with given id.</div>;
 
   return (
     <div
       className={cn(
         "flex flex-col items-stretch",
-        selectedConfig ? "pb-[76px]" : "pb-6",
+        assistantConfig ? "pb-[76px]" : "pb-6",
       )}
     >
       <div className="flex-1 flex flex-col md:flex-row lg:items-stretch self-stretch">
         <div className="w-72 border-r border-gray-200 pr-6">
           <ConfigList
             configs={props.configs}
-            currentConfig={selectedConfig}
+            currentConfig={assistantConfig}
             enterConfig={(id) => navigator(`/assistant/${id}`)}
           />
         </div>
@@ -72,7 +67,7 @@ export function NewChat(props: NewChatProps) {
           <div className="px-4">
             <Config
               key={assistantId}
-              config={selectedConfig}
+              config={assistantConfig}
               configSchema={props.configSchema}
               configDefaults={props.configDefaults}
               saveConfig={props.saveConfig}
@@ -84,11 +79,11 @@ export function NewChat(props: NewChatProps) {
       <div className="fixed left-0 lg:left-72 bottom-0 right-0 p-4">
         <TypingBox
           onSubmit={async (msg: MessageWithFiles) => {
-            if (selectedConfig) {
-              await props.startChat(selectedConfig, msg);
+            if (assistantConfig) {
+              await props.startChat(assistantConfig, msg);
             }
           }}
-          currentConfig={selectedConfig}
+          currentConfig={assistantConfig}
           configs={props.configs || []}
           currentChat={null}
         />

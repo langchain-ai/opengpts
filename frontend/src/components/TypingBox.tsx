@@ -7,12 +7,12 @@ import {
   DocumentIcon,
 } from "@heroicons/react/20/solid";
 import { cn } from "../utils/cn";
-import {Fragment, useCallback, useEffect, useState} from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { MessageWithFiles } from "../utils/formTypes.ts";
-import {DROPZONE_CONFIG, TYPE_NAME} from "../constants.ts";
-import {Config} from "../hooks/useConfigList.ts";
-import {Chat} from "../hooks/useChatList.ts";
+import { DROPZONE_CONFIG, TYPE_NAME } from "../constants.ts";
+import { Config } from "../hooks/useConfigList.ts";
+import { Chat } from "../hooks/useChatList.ts";
 
 function getFileTypeIcon(fileType: string) {
   switch (fileType) {
@@ -55,9 +55,10 @@ export default function TypingBox(props: {
   const [inflight, setInflight] = useState(false);
   const isInflight = props.inflight || inflight;
   const [files, setFiles] = useState<File[]>([]);
-  const [isDocumentRetrievalActive, setIsDocumentRetrievalActive] = useState(false);
+  const [isDocumentRetrievalActive, setIsDocumentRetrievalActive] =
+    useState(false);
 
-  const {currentConfig, currentChat, configs} = props;
+  const { currentConfig, currentChat, configs } = props;
 
   useEffect(() => {
     let configurable = null;
