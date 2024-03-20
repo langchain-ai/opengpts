@@ -1,5 +1,5 @@
-import datetime
-from typing import List, Sequence
+from datetime import datetime, timezone
+from typing import List, Optional, Sequence
 
 from langchain.schema.messages import AnyMessage
 from langgraph.channels.base import ChannelsManager
@@ -19,7 +19,7 @@ async def list_assistants(user_id: str) -> List[Assistant]:
         return await conn.fetch("SELECT * FROM assistant WHERE user_id = $1", user_id)
 
 
-async def get_assistant(user_id: str, assistant_id: str) -> Assistant | None:
+async def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
     """Get an assistant by ID."""
 
     async with get_pg_pool().acquire() as conn:
@@ -30,7 +30,7 @@ async def get_assistant(user_id: str, assistant_id: str) -> Assistant | None:
         )
 
 
-async def get_public_assistant(assistant_id: str) -> Assistant | None:
+async def get_public_assistant(assistant_id: str) -> Optional[Assistant]:
     """Get a public assistant by ID."""
 
     async with get_pg_pool().acquire() as conn:
@@ -68,7 +68,7 @@ async def put_assistant(
     Returns:
         return the assistant model if no exception is raised.
     """
-    updated_at = datetime.datetime.now(datetime.UTC)
+    updated_at = datetime.now(timezone.utc)
     async with get_pg_pool().acquire() as conn:
         async with conn.transaction():
             await conn.execute(
@@ -104,7 +104,7 @@ async def list_threads(user_id: str) -> List[Thread]:
         return await conn.fetch("SELECT * FROM thread WHERE user_id = $1", user_id)
 
 
-async def get_thread(user_id: str, thread_id: str) -> Thread | None:
+async def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
     """Get a thread by ID."""
     async with get_pg_pool().acquire() as conn:
         return await conn.fetchrow(
@@ -151,7 +151,7 @@ async def put_thread(
     user_id: str, thread_id: str, *, assistant_id: str, name: str
 ) -> Thread:
     """Modify a thread."""
-    updated_at = datetime.datetime.now(datetime.UTC)
+    updated_at = datetime.now(timezone.utc)
     async with get_pg_pool().acquire() as conn:
         await conn.execute(
             (
