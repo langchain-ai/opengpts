@@ -1,5 +1,4 @@
-import asyncio
-from typing import Annotated, Any, Dict, List, Sequence, Union
+from typing import Annotated, Any, Dict, List, Optional, Sequence, Union
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path
@@ -27,6 +26,7 @@ class ThreadPostRequest(BaseModel):
     """Payload for adding state to a thread."""
 
     values: Union[Sequence[AnyMessage], Dict[str, Any]]
+    config: Optional[Dict[str, Any]] = None
 
 
 @router.get("/")
@@ -41,13 +41,14 @@ async def get_thread_state(
     tid: ThreadID,
 ):
     """Get state for a thread."""
-    thread, state = await asyncio.gather(
-        storage.get_thread(user["user_id"], tid),
-        storage.get_thread_state(user["user_id"], tid),
-    )
+    thread = await storage.get_thread(user["user_id"], tid)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
-    return state
+    return await storage.get_thread_state(
+        user_id=user["user_id"],
+        thread_id=tid,
+        assistant_id=thread["assistant_id"],
+    )
 
 
 @router.post("/{tid}/state")
@@ -60,7 +61,12 @@ async def add_thread_state(
     thread = await storage.get_thread(user["user_id"], tid)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
-    return await storage.update_thread_state(user["user_id"], tid, payload.values)
+    return await storage.update_thread_state(
+        payload.config or {"configurable": {"thread_id": tid}},
+        payload.values,
+        user_id=user["user_id"],
+        assistant_id=thread["assistant_id"],
+    )
 
 
 @router.get("/{tid}/history")
@@ -69,13 +75,14 @@ async def get_thread_history(
     tid: ThreadID,
 ):
     """Get all past states for a thread."""
-    thread, history = await asyncio.gather(
-        storage.get_thread(user["user_id"], tid),
-        storage.get_thread_history(user["user_id"], tid),
-    )
+    thread = await storage.get_thread(user["user_id"], tid)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
-    return history
+    return await storage.get_thread_history(
+        user_id=user["user_id"],
+        thread_id=tid,
+        assistant_id=thread["assistant_id"],
+    )
 
 
 @router.get("/{tid}")

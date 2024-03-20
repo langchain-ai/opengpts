@@ -14,6 +14,7 @@ export interface StreamStateProps {
   startStream: (
     input: Message[] | Record<string, any> | null,
     thread_id: string,
+    config?: Record<string, unknown>,
   ) => Promise<void>;
   stopStream?: (clear?: boolean) => void;
 }
@@ -26,6 +27,7 @@ export function useStreamState(): StreamStateProps {
     async (
       input: Message[] | Record<string, any> | null,
       thread_id: string,
+      config?: Record<string, unknown>,
     ) => {
       const controller = new AbortController();
       setController(controller);
@@ -35,7 +37,7 @@ export function useStreamState(): StreamStateProps {
         signal: controller.signal,
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input, thread_id }),
+        body: JSON.stringify({ input, thread_id, config }),
         openWhenHidden: true,
         onmessage(msg) {
           if (msg.event === "data") {
