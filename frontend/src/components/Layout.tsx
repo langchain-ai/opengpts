@@ -101,7 +101,8 @@ export function Layout(props: {
         <div className="flex-1 text-sm font-semibold leading-6 text-gray-900 lg:pl-72">
           {props.subtitle ? (
             <>
-              OpenGPTs: <span className="font-normal">{props.subtitle}</span>
+              Self Learning GPTs:{" "}
+              <span className="font-normal">{props.subtitle}</span>
             </>
           ) : (
             "OpenGPTs"
