@@ -12,7 +12,7 @@ from app.agent_types.google_agent import get_google_agent_executor
 from app.agent_types.openai_agent import get_openai_agent_executor
 from app.agent_types.xml_agent import get_xml_agent_executor
 from app.chatbot import get_chatbot_executor
-from app.checkpoint import RedisCheckpoint
+from app.checkpoint import PostgresCheckpoint
 from app.llms import (
     get_anthropic_llm,
     get_google_llm,
@@ -67,7 +67,7 @@ class AgentType(str, Enum):
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
-CHECKPOINTER = RedisCheckpoint(at=CheckpointAt.END_OF_STEP)
+CHECKPOINTER = PostgresCheckpoint(at=CheckpointAt.END_OF_STEP)
 
 
 def get_agent_executor(

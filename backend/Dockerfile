@@ -3,6 +3,9 @@ FROM python:3.11
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y libmagic1 && rm -rf /var/lib/apt/lists/*
+RUN wget -O golang-migrate.deb https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.deb \
+    && dpkg -i golang-migrate.deb \
+    && rm golang-migrate.deb
 
 # Install Poetry
 RUN pip install poetry
@@ -13,10 +16,9 @@ WORKDIR /backend
 # Copy only dependencies
 COPY pyproject.toml poetry.lock* ./
 
-# Install dependencies
-# --only main: Skip installing packages listed in the [tool.poetry.dev-dependencies] section
+# Install all dependencies
 RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi --only main
+    && poetry install --no-interaction --no-ansi
 
 # Copy the rest of application code
 COPY . .

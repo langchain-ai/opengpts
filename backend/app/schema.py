@@ -1,15 +1,18 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Optional
+from uuid import UUID
 
 from fastapi import Cookie
 from typing_extensions import TypedDict
 
 
-class AssistantWithoutUserId(TypedDict):
+class Assistant(TypedDict):
     """Assistant model."""
 
-    assistant_id: str
+    assistant_id: UUID
     """The ID of the assistant."""
+    user_id: str
+    """The ID of the user that owns the assistant."""
     name: str
     """The name of the assistant."""
     config: dict
@@ -20,29 +23,17 @@ class AssistantWithoutUserId(TypedDict):
     """Whether the assistant is public."""
 
 
-class Assistant(AssistantWithoutUserId):
-    """Assistant model."""
-
-    user_id: str
-    """The ID of the user that owns the assistant."""
-
-
-class ThreadWithoutUserId(TypedDict):
-    thread_id: str
+class Thread(TypedDict):
+    thread_id: UUID
     """The ID of the thread."""
-    assistant_id: str
+    user_id: str
+    """The ID of the user that owns the thread."""
+    assistant_id: Optional[UUID]
     """The assistant that was used in conjunction with this thread."""
     name: str
     """The name of the thread."""
     updated_at: datetime
     """The last time the thread was updated."""
-
-
-class Thread(ThreadWithoutUserId):
-    """Thread model."""
-
-    user_id: str
-    """The ID of the user that owns the thread."""
 
 
 OpengptsUserId = Annotated[

@@ -1,21 +1,22 @@
 version: "3"
 
 services:
-  redis:
-    container_name: opengpts-redis
-    image: redis/redis-stack-server:latest
+  postgres:
+    image: pgvector/pgvector:pg16
     ports:
-      - "6379:6379"
+      - "5432:5432"
+    env_file:
+      - .env
     volumes:
-      - ./redis-volume:/data
+      - ./postgres-volume:/var/lib/postgresql/data
   backend:
     container_name: opengpts-backend
     image: docker.io/langchain/open-gpts:latest
     ports:
       - "8100:8000" # Backend is accessible on localhost:8100 and serves the frontend
     depends_on:
-      - redis
+      - postgres
     env_file:
       - .env
     environment:
-      REDIS_URL: "redis://opengpts-redis:6379"
+      POSTGRES_HOST: "postgres"
