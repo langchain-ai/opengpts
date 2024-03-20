@@ -45,12 +45,7 @@ async def _drop_test_db() -> None:
 
 
 def _migrate_test_db() -> None:
-    dsn = (
-        f"postgres://{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASSWORD']}"
-        f"@{os.environ['POSTGRES_HOST']}:{os.environ['POSTGRES_PORT']}/{TEST_DB}?sslmode=disable"
-    )
-    cmd = ["migrate", "-path", "./migrations", "-database", dsn, "up"]
-    subprocess.run(cmd, check=True)
+    subprocess.run(["make", "migrate"], check=True)
 
 
 @pytest.fixture(scope="session")

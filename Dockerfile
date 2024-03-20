@@ -16,8 +16,9 @@ RUN yarn build
 FROM python:3.11
 
 # Install system dependencies
-RUN curl -s https://packagecloud.io/install/repositories/golang-migrate/migrate/script.deb.sh | bash
-RUN apt-get update && apt-get install -y migrate libmagic1 && rm -rf /var/lib/apt/lists/*
+RUN wget -O golang-migrate.deb https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.deb \
+    && dpkg -i golang-migrate.deb \
+    && rm golang-migrate.deb
 
 # Install Poetry
 RUN pip install poetry
