@@ -1,6 +1,7 @@
 *.env
 .env.gcp.yaml
 postgres-volume/
+redis-volume/
 backend/ui
 
 # Operating System generated files

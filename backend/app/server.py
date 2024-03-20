@@ -29,6 +29,11 @@ def ingest_files(files: list[UploadFile], config: str = Form(...)) -> None:
     return ingest_runnable.batch([file.file for file in files], config)
 
 
+@app.get("/health")
+async def health() -> dict:
+    return {"status": "ok"}
+
+
 ui_dir = str(ROOT / "ui")
 
 if os.path.exists(ui_dir):
