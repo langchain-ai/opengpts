@@ -110,11 +110,11 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
 
 PG_CONNECTION_STRING = PGVector.connection_string_from_db_params(
     driver="psycopg2",
-    host=os.environ.get("POSTGRES_HOST", "localhost"),
-    port=int(os.environ.get("POSTGRES_PORT", "5432")),
-    database=os.environ.get("POSTGRES_DB", "postgres"),
-    user=os.environ.get("POSTGRES_USER", "postgres"),
-    password=os.environ.get("POSTGRES_PASSWORD", "postgres"),
+    host=os.environ["POSTGRES_HOST"],
+    port=int(os.environ["POSTGRES_PORT"]),
+    database=os.environ["POSTGRES_DB"],
+    user=os.environ["POSTGRES_USER"],
+    password=os.environ["POSTGRES_PASSWORD"],
 )
 vstore = PGVector(
     connection_string=PG_CONNECTION_STRING,
