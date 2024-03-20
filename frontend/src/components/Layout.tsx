@@ -105,7 +105,7 @@ export function Layout(props: {
               <span className="font-normal">{props.subtitle}</span>
             </>
           ) : (
-            "OpenGPTs"
+            "Self Learning GPTs"
           )}
         </div>
         <div className="inline-flex items-center rounded-md bg-pink-100 px-2 py-1 text-xs font-medium text-pink-700">

@@ -272,12 +272,12 @@ class ConfigurableAgent(RunnableBinding):
 
 class LLMType(str, Enum):
     GPT_35_TURBO = "GPT 3.5 Turbo"
-    GPT_4 = "GPT 4"
-    AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
-    CLAUDE2 = "Claude 2"
-    BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
-    GEMINI = "GEMINI"
-    MIXTRAL = "Mixtral"
+    # GPT_4 = "GPT 4"
+    # AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
+    # CLAUDE2 = "Claude 2"
+    # BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
+    # GEMINI = "GEMINI"
+    # MIXTRAL = "Mixtral"
 
 
 def get_chatbot(
