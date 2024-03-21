@@ -9,7 +9,10 @@ For the time being, upload and ingestion are coupled
 from __future__ import annotations
 
 import os
+import httpx
+import logging
 from typing import Any, BinaryIO, List, Optional
+from urllib.parse import urlparse
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter, TextSplitter
 from langchain_community.document_loaders.blob_loaders.schema import Blob
@@ -22,8 +25,11 @@ from langchain_core.runnables import (
 from langchain_core.vectorstores import VectorStore
 from langchain_openai import OpenAIEmbeddings
 
+
 from app.ingest import ingest_blob
 from app.parsing import MIMETYPE_BASED_PARSER
+
+logger = logging.getLogger(__name__)
 
 
 def _guess_mimetype(file_bytes: bytes) -> str:
@@ -50,6 +56,27 @@ def _convert_ingestion_input_to_blob(data: BinaryIO) -> Blob:
         path=file_name,
         mime_type=mimetype,
     )
+
+
+def _get_http_client() -> httpx.Client:
+    """Create and return a httpx.Client instance, configured with a proxy if available and valid.
+
+    The method checks for a PROXY_URL environment variable. If a valid proxy URL is found,
+    the client is configured to use this proxy. Otherwise, a default client is returned.
+
+    Returns:
+        An httpx.Client instance configured with or without a proxy based on the environment configuration.
+    """
+    proxy_url = os.getenv("PROXY_URL")
+    if proxy_url:
+        parsed_url = urlparse(proxy_url)
+        if parsed_url.scheme and parsed_url.netloc:
+            return httpx.Client(proxies=proxy_url)
+        else:
+            logger.warning("Invalid proxy URL provided. Proceeding without proxy.")
+
+    # Return a default client if no valid proxy URL is set
+    return httpx.Client()
 
 
 class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
@@ -118,7 +145,7 @@ PG_CONNECTION_STRING = PGVector.connection_string_from_db_params(
 )
 vstore = PGVector(
     connection_string=PG_CONNECTION_STRING,
-    embedding_function=OpenAIEmbeddings(),
+    embedding_function=OpenAIEmbeddings(http_client=_get_http_client()),
     use_jsonb=True,
 )
 
