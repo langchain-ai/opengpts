@@ -153,9 +153,6 @@ function App() {
               stopStream={stopStream}
               stream={stream}
               setCurrentChatId={setCurrentChatId}
-              assistantId={currentChat?.assistant_id ?? null}
-              currentChat={currentChat}
-              config={currentConfig}
               configs={configs}
             />
           }
