@@ -14,7 +14,6 @@ import {
 import { Config } from "./components/Config";
 import { MessageWithFiles } from "./utils/formTypes.ts";
 import { Route, Routes, useNavigate } from "react-router-dom";
-import { useThreadAndAssistant } from "./hooks/useThreadAndAssistant.ts";
 import { NotFound } from "./components/NotFound.tsx";
 
 function App() {
