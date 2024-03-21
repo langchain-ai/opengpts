@@ -1,8 +1,6 @@
-import {Chat} from "../hooks/useChatList.ts";
+import { Chat } from "../hooks/useChatList.ts";
 
-export async function getThread(
-  threadId: string,
-): Promise<Chat | null> {
+export async function getThread(threadId: string): Promise<Chat | null> {
   try {
     const response = await fetch(`/threads/${threadId}`);
     if (!response.ok) {

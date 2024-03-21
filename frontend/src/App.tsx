@@ -14,23 +14,18 @@ import {
 import { Config } from "./components/Config";
 import { MessageWithFiles } from "./utils/formTypes.ts";
 import { Route, Routes, useNavigate } from "react-router-dom";
-
-function NotFound() {
-  return <div>Page not found.</div>;
-}
+import { useThreadAndAssistant } from "./hooks/useThreadAndAssistant.ts";
+import { NotFound } from "./components/NotFound.tsx";
 
 function App() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { configSchema, configDefaults } = useSchemas();
   const { chats, createChat } = useChatList();
   const { configs, saveConfig } = useConfigList();
   const { startStream, stopStream, stream } = useStreamState();
+  const { configSchema, configDefaults } = useSchemas();
 
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
-  const [currentConfigId, setCurrentConfigId] = useState<string | null>(null);
-  const currentConfig =
-    configs?.find((config) => config.assistant_id === currentConfigId) ?? null;
   const currentChat =
     chats?.find((chat) => chat.thread_id === currentChatId) ?? null;
 
@@ -104,26 +99,23 @@ function App() {
   const selectConfig = useCallback(
     (id: string | null) => {
       setCurrentChatId(null);
-      setCurrentConfigId(id);
       navigate(id ? `/assistant/${id}` : "/");
     },
     [navigate],
   );
 
-  const currentChatConfig = configs?.find(
-    (c) => c.assistant_id === currentChat?.assistant_id,
-  );
+  const { assistantConfig } = useThreadAndAssistant();
 
   return (
     <Layout
       subtitle={
-        currentChatConfig ? (
+        assistantConfig ? (
           <span className="inline-flex gap-1 items-center">
-            {currentChatConfig.name}
+            {assistantConfig.name}
             <InformationCircleIcon
               className="h-5 w-5 cursor-pointer text-indigo-600"
               onClick={() => {
-                selectConfig(currentChatConfig.assistant_id);
+                selectConfig(assistantConfig.assistant_id);
               }}
             />
           </span>
@@ -139,7 +131,7 @@ function App() {
           }, [chats, configs])}
           currentChat={currentChat}
           enterChat={selectChat}
-          currentConfig={currentConfig}
+          currentConfig={assistantConfig || null}
           enterConfig={selectConfig}
         />
       }
@@ -153,7 +145,6 @@ function App() {
               stopStream={stopStream}
               stream={stream}
               setCurrentChatId={setCurrentChatId}
-              configs={configs}
             />
           }
         />

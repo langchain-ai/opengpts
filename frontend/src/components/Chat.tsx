@@ -6,9 +6,7 @@ import { Message } from "./Message";
 import { ArrowDownCircleIcon } from "@heroicons/react/24/outline";
 import { MessageWithFiles } from "../utils/formTypes.ts";
 import { useParams } from "react-router-dom";
-import {useQuery} from "react-query";
-import {getAssistant} from "../api/assistants.ts";
-import {getThread} from "../api/threads.ts";
+import { useThreadAndAssistant } from "../hooks/useThreadAndAssistant.ts";
 
 interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
   startStream: (
@@ -35,26 +33,7 @@ export function Chat(props: ChatProps) {
     props.stopStream,
   );
 
-  const {
-    data: currentChat,
-  } = useQuery(
-    ["thread", chatId],
-    () => getThread(chatId as string),
-    {
-      enabled: !!chatId,
-    },
-  );
-
-    const {
-    data: assistantConfig,
-  } = useQuery(
-    ["assistant", currentChat?.assistant_id],
-    () => getAssistant(currentChat?.assistant_id as string),
-    {
-      enabled: !!currentChat,
-    },
-  );
-
+  const { currentChat, assistantConfig, isLoading } = useThreadAndAssistant();
 
   useEffect(() => {
     props.setCurrentChatId(chatId ?? null);
@@ -70,7 +49,9 @@ export function Chat(props: ChatProps) {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
-  if (!currentChat || !assistantConfig) return <div>...</div>;
+
+  if (isLoading) return <div>Loading...</div>;
+  if (!currentChat || !assistantConfig) return <div>No data.</div>;
 
   return (
     <div className="flex-1 flex flex-col items-stretch pb-[76px] pt-2">
@@ -98,7 +79,13 @@ export function Chat(props: ChatProps) {
       {resumeable && props.stream?.status !== "inflight" && (
         <div
           className="flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 ring-1 ring-inset ring-yellow-600/20 cursor-pointer"
-          onClick={() => props.startStream(null, currentChat.thread_id, currentChat.assistant_id)}
+          onClick={() =>
+            props.startStream(
+              null,
+              currentChat.thread_id,
+              currentChat.assistant_id,
+            )
+          }
         >
           <ArrowDownCircleIcon className="h-5 w-5 mr-1" />
           Click to continue.
@@ -106,7 +93,13 @@ export function Chat(props: ChatProps) {
       )}
       <div className="fixed left-0 lg:left-72 bottom-0 right-0 p-4">
         <TypingBox
-          onSubmit={(msg) => props.startStream(msg, currentChat.thread_id, currentChat.assistant_id)}
+          onSubmit={(msg) =>
+            props.startStream(
+              msg,
+              currentChat.thread_id,
+              currentChat.assistant_id,
+            )
+          }
           onInterrupt={
             props.stream?.status === "inflight" ? props.stopStream : undefined
           }

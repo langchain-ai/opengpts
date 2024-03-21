@@ -9,8 +9,7 @@ import {
 import { cn } from "../utils/cn";
 import { MessageWithFiles } from "../utils/formTypes.ts";
 import { useNavigate, useParams } from "react-router-dom";
-import { useQuery } from "react-query";
-import { getAssistant } from "../api/assistants.ts";
+import { useThreadAndAssistant } from "../hooks/useThreadAndAssistant.ts";
 
 interface NewChatProps extends ConfigListProps {
   configSchema: Schemas["configSchema"];
@@ -26,24 +25,9 @@ export function NewChat(props: NewChatProps) {
   const navigator = useNavigate();
   const { assistantId } = useParams();
 
-  const {
-    data: assistantConfig,
-    isLoading,
-    isError,
-    error,
-  } = useQuery(
-    ["assistant", assistantId],
-    () => getAssistant(assistantId as string),
-    {
-      enabled: !!assistantId,
-    },
-  );
+  const { assistantConfig, isLoading } = useThreadAndAssistant();
 
   if (isLoading) return <div>Loading...</div>;
-  if (isError) {
-    const message = (error as Error).message;
-    return <div>Error: {message}</div>;
-  }
   if (!assistantConfig)
     return <div>Could not find assistant with given id.</div>;
 
