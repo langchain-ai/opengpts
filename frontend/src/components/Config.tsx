@@ -500,8 +500,7 @@ export function Config(props: {
   const [isPublic, setPublic] = useState(props.config?.public ?? false);
 
   useEffect(() => {
-    if (props.config === null)
-      props.setCurrentConfig(null);
+    if (props.config === null) props.setCurrentConfig(null);
   }, [props]);
 
   useEffect(() => {

@@ -28,7 +28,8 @@ function App() {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const currentChat =
     chats?.find((chat) => chat.thread_id === currentChatId) ?? null;
-  const [assistantConfig, setAssistantConfig] = useState<ConfigInterface | null>(null);
+  const [assistantConfig, setAssistantConfig] =
+    useState<ConfigInterface | null>(null);
 
   const startTurn = useCallback(
     async (

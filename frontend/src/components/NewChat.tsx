@@ -10,7 +10,7 @@ import { cn } from "../utils/cn";
 import { MessageWithFiles } from "../utils/formTypes.ts";
 import { useNavigate, useParams } from "react-router-dom";
 import { useThreadAndAssistant } from "../hooks/useThreadAndAssistant.ts";
-import {useEffect} from "react";
+import { useEffect } from "react";
 
 interface NewChatProps extends ConfigListProps {
   configSchema: Schemas["configSchema"];
