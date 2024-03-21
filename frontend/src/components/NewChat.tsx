@@ -10,6 +10,7 @@ import { cn } from "../utils/cn";
 import { MessageWithFiles } from "../utils/formTypes.ts";
 import { useNavigate, useParams } from "react-router-dom";
 import { useThreadAndAssistant } from "../hooks/useThreadAndAssistant.ts";
+import {useEffect} from "react";
 
 interface NewChatProps extends ConfigListProps {
   configSchema: Schemas["configSchema"];
@@ -19,6 +20,7 @@ interface NewChatProps extends ConfigListProps {
     config: ConfigInterface,
     message: MessageWithFiles,
   ) => Promise<void>;
+  setCurrentConfig: (config: ConfigInterface | null) => void;
 }
 
 export function NewChat(props: NewChatProps) {
@@ -26,6 +28,12 @@ export function NewChat(props: NewChatProps) {
   const { assistantId } = useParams();
 
   const { assistantConfig, isLoading } = useThreadAndAssistant();
+
+  useEffect(() => {
+    if (!isLoading) {
+      props.setCurrentConfig(assistantConfig || null);
+    }
+  }, [assistantConfig, isLoading, props]);
 
   if (isLoading) return <div>Loading...</div>;
   if (!assistantConfig)

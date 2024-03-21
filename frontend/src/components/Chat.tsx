@@ -7,6 +7,7 @@ import { ArrowDownCircleIcon } from "@heroicons/react/24/outline";
 import { MessageWithFiles } from "../utils/formTypes.ts";
 import { useParams } from "react-router-dom";
 import { useThreadAndAssistant } from "../hooks/useThreadAndAssistant.ts";
+import {Config} from "../hooks/useConfigList.ts";
 
 interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
   startStream: (
@@ -15,6 +16,7 @@ interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
     assistant_id: string,
   ) => Promise<void>;
   setCurrentChatId: (id: string | null) => void;
+  setCurrentConfig: (config: Config | null) => void;
 }
 
 function usePrevious<T>(value: T): T | undefined {
@@ -38,6 +40,14 @@ export function Chat(props: ChatProps) {
   useEffect(() => {
     props.setCurrentChatId(chatId ?? null);
   }, [chatId, props]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      props.setCurrentConfig(assistantConfig || null);
+    }
+  }, [assistantConfig, isLoading, props]);
+
+
   const prevMessages = usePrevious(messages);
   useEffect(() => {
     scrollTo({

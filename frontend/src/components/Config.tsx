@@ -484,6 +484,7 @@ export function Config(props: {
   config: ConfigInterface | null;
   saveConfig: ConfigListProps["saveConfig"];
   enterConfig: (id: string | null) => void;
+  setCurrentConfig: (config: ConfigInterface | null) => void;
 }) {
   const [values, setValues] = useState(
     props.config?.config ?? props.configDefaults,
@@ -497,6 +498,11 @@ export function Config(props: {
   const [files, setFiles] = useState<File[]>([]);
   const dropzone = useDropzone(DROPZONE_CONFIG);
   const [isPublic, setPublic] = useState(props.config?.public ?? false);
+
+  useEffect(() => {
+    if (props.config === null)
+      props.setCurrentConfig(null);
+  }, [props]);
 
   useEffect(() => {
     if (!values) return;
