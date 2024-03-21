@@ -13,7 +13,7 @@ from typing import Any, BinaryIO, List, Optional
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter, TextSplitter
 from langchain_community.document_loaders.blob_loaders import Blob
-from langchain_community.vectorstores.redis import Redis
+from langchain_community.vectorstores.pgvector import PGVector
 from langchain_core.runnables import (
     ConfigurableField,
     RunnableConfig,
@@ -108,14 +108,17 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
         return ids
 
 
-index_schema = {
-    "tag": [{"name": "namespace"}],
-}
-vstore = Redis(
-    redis_url=os.environ["REDIS_URL"],
-    index_name="opengpts",
-    embedding=OpenAIEmbeddings(),
-    index_schema=index_schema,
+PG_CONNECTION_STRING = PGVector.connection_string_from_db_params(
+    driver="psycopg2",
+    host=os.environ["POSTGRES_HOST"],
+    port=int(os.environ["POSTGRES_PORT"]),
+    database=os.environ["POSTGRES_DB"],
+    user=os.environ["POSTGRES_USER"],
+    password=os.environ["POSTGRES_PASSWORD"],
+)
+vstore = PGVector(
+    connection_string=PG_CONNECTION_STRING,
+    embedding_function=OpenAIEmbeddings(),
 )
 
 
