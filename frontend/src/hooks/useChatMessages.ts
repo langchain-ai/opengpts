@@ -65,13 +65,16 @@ export function useChatMessages(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stream?.status]);
 
-  return useMemo(
-    () => ({
-      messages: stream?.merge
-        ? [...(messages ?? []), ...(stream.messages ?? [])]
-        : stream?.messages ?? messages,
-      resumeable,
-    }),
-    [messages, stream?.merge, stream?.messages, resumeable],
-  );
+  return useMemo(() => {
+    const merged = (messages ?? [])?.slice();
+    for (const msg of stream?.messages ?? []) {
+      const foundIdx = merged.findIndex((m) => m.id === msg.id);
+      if (foundIdx === -1) {
+        merged.push(msg);
+      } else {
+        merged[foundIdx] = msg;
+      }
+    }
+    return { messages: merged, resumeable };
+  }, [messages, stream?.messages, resumeable]);
 }

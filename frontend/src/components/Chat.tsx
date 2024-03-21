@@ -43,7 +43,7 @@ export function Chat(props: ChatProps) {
       {messages?.map((msg, i) => (
         <Message
           {...msg}
-          key={i}
+          key={msg.id}
           runId={
             i === messages.length - 1 && props.stream?.status === "done"
               ? props.stream?.run_id

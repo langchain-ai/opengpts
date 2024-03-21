@@ -6,7 +6,6 @@ export interface StreamState {
   status: "inflight" | "error" | "done";
   messages?: Message[];
   run_id?: string;
-  merge?: boolean;
 }
 
 export interface StreamStateProps {
@@ -31,7 +30,7 @@ export function useStreamState(): StreamStateProps {
     ) => {
       const controller = new AbortController();
       setController(controller);
-      setCurrent({ status: "inflight", messages: input || [], merge: true });
+      setCurrent({ status: "inflight", messages: input || [] });
 
       await fetchEventSource("/runs/stream", {
         signal: controller.signal,
@@ -44,7 +43,7 @@ export function useStreamState(): StreamStateProps {
             const messages = JSON.parse(msg.data);
             setCurrent((current) => ({
               status: "inflight",
-              messages,
+              messages: [...(current?.messages || []), ...messages],
               run_id: current?.run_id,
             }));
           } else if (msg.event === "metadata") {
@@ -53,7 +52,6 @@ export function useStreamState(): StreamStateProps {
               status: "inflight",
               messages: current?.messages,
               run_id: run_id,
-              merge: current?.merge,
             }));
           } else if (msg.event === "error") {
             setCurrent((current) => ({
@@ -68,7 +66,6 @@ export function useStreamState(): StreamStateProps {
             status: current?.status === "error" ? current.status : "done",
             messages: current?.messages,
             run_id: current?.run_id,
-            merge: current?.merge,
           }));
           setController(null);
         },
@@ -77,7 +74,6 @@ export function useStreamState(): StreamStateProps {
             status: "error",
             messages: current?.messages,
             run_id: current?.run_id,
-            merge: current?.merge,
           }));
           setController(null);
           throw error;
@@ -101,7 +97,6 @@ export function useStreamState(): StreamStateProps {
           status: "done",
           messages: current?.messages,
           run_id: current?.run_id,
-          merge: false,
         }));
       }
     },
