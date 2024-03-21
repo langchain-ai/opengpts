@@ -64,6 +64,7 @@ export function NewChat(props: NewChatProps) {
               configDefaults={props.configDefaults}
               saveConfig={props.saveConfig}
               enterConfig={props.enterConfig}
+              setCurrentConfig={props.setCurrentConfig}
             />
           </div>
         </main>
