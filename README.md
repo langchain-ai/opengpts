@@ -51,8 +51,7 @@ This project supports a Docker-based setup, streamlining installation and execut
    ```
 
 2. **Set Up Environment Variables:**  
-   Create a `.env` file (copy `.env.example` as template) in the root directory of the project and add the following environment variables:
-
+   Create a `.env` file in the root directory of the project by copying `.env.example` as a template, and add the following environment variables:
    ```shell
    # At least one language model API key is required
    OPENAI_API_KEY=sk-...
