@@ -9,14 +9,11 @@ For the time being, upload and ingestion are coupled
 from __future__ import annotations
 
 import os
-import httpx
-import logging
-
 from typing import Any, BinaryIO, List, Optional
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter, TextSplitter
 from langchain_community.document_loaders.blob_loaders import Blob
-from langchain_community.vectorstores.redis import Redis
+from langchain_community.vectorstores.pgvector import PGVector
 from langchain_core.runnables import (
     ConfigurableField,
     RunnableConfig,
@@ -24,13 +21,9 @@ from langchain_core.runnables import (
 )
 from langchain_core.vectorstores import VectorStore
 from langchain_openai import OpenAIEmbeddings
-from urllib.parse import urlparse
-
 
 from app.ingest import ingest_blob
 from app.parsing import MIMETYPE_BASED_PARSER
-
-logger = logging.getLogger(__name__)
 
 
 def _guess_mimetype(file_bytes: bytes) -> str:
@@ -115,26 +108,17 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
         return ids
 
 
-index_schema = {
-    "tag": [{"name": "namespace"}],
-}
-
-proxy_url = os.getenv("PROXY_URL")
-if proxy_url is not None and proxy_url != "":
-    parsed_url = urlparse(proxy_url)
-    if parsed_url.scheme and parsed_url.netloc:
-        http_client = httpx.Client(proxies=proxy_url)
-    else:
-        http_client = None
-        logger.warn("Invalid proxy URL provided. Proceeding without proxy.")
-else:
-    http_client = None
-
-vstore = Redis(
-    redis_url=os.environ["REDIS_URL"],
-    index_name="opengpts",
-    embedding=OpenAIEmbeddings(http_client=http_client),
-    index_schema=index_schema,
+PG_CONNECTION_STRING = PGVector.connection_string_from_db_params(
+    driver="psycopg2",
+    host=os.environ["POSTGRES_HOST"],
+    port=int(os.environ["POSTGRES_PORT"]),
+    database=os.environ["POSTGRES_DB"],
+    user=os.environ["POSTGRES_USER"],
+    password=os.environ["POSTGRES_PASSWORD"],
+)
+vstore = PGVector(
+    connection_string=PG_CONNECTION_STRING,
+    embedding_function=OpenAIEmbeddings(),
 )
 
 

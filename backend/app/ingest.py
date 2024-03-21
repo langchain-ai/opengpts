@@ -20,6 +20,13 @@ def _update_document_metadata(document: Document, namespace: str) -> None:
     document.metadata["namespace"] = namespace
 
 
+def _sanitize_document_content(document: Document) -> Document:
+    """Sanitize the document."""
+    # Without this, PDF ingestion fails with
+    # "A string literal cannot contain NUL (0x00) characters".
+    document.page_content = document.page_content.replace("\x00", "x")
+
+
 # PUBLIC API
 
 
@@ -38,6 +45,7 @@ def ingest_blob(
     for document in parser.lazy_parse(blob):
         docs = text_splitter.split_documents([document])
         for doc in docs:
+            _sanitize_document_content(doc)
             _update_document_metadata(doc, namespace)
         docs_to_index.extend(docs)
 

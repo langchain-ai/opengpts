@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS thread;
+DROP TABLE IF EXISTS assistant;
