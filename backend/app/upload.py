@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 import httpx
 import logging
-from typing import Any, BinaryIO, List, Optional
+from typing import Any, BinaryIO, List, Optional, Union
 from urllib.parse import urlparse
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter, TextSplitter
@@ -24,7 +24,6 @@ from langchain_core.runnables import (
 )
 from langchain_core.vectorstores import VectorStore
 from langchain_openai import OpenAIEmbeddings
-
 
 from app.ingest import ingest_blob
 from app.parsing import MIMETYPE_BASED_PARSER
@@ -58,25 +57,32 @@ def _convert_ingestion_input_to_blob(data: BinaryIO) -> Blob:
     )
 
 
-def _get_http_client() -> httpx.Client:
-    """Create and return a httpx.Client instance, configured with a proxy if available and valid.
+def _get_http_client(use_async: bool = False) -> Union[httpx.Client, httpx.AsyncClient]:
+    """
+    Create and return a httpx.Client or httpx.AsyncClient instance, configured with a proxy if available and valid.
 
     The method checks for a PROXY_URL environment variable. If a valid proxy URL is found,
     the client is configured to use this proxy. Otherwise, a default client is returned.
 
+    Args:
+        use_async (bool): Flag indicating whether to return an asynchronous HTTP client.
+
     Returns:
-        An httpx.Client instance configured with or without a proxy based on the environment configuration.
+        An instance of httpx.Client or httpx.AsyncClient configured with or without a proxy based on the environment configuration.
     """
     proxy_url = os.getenv("PROXY_URL")
+    client_kwargs = {}
     if proxy_url:
         parsed_url = urlparse(proxy_url)
         if parsed_url.scheme and parsed_url.netloc:
-            return httpx.Client(proxies=proxy_url)
+            client_kwargs["proxies"] = proxy_url
         else:
             logger.warning("Invalid proxy URL provided. Proceeding without proxy.")
 
-    # Return a default client if no valid proxy URL is set
-    return httpx.Client()
+    if use_async:
+        return httpx.AsyncClient(**client_kwargs)
+    else:
+        return httpx.Client(**client_kwargs)
 
 
 class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
@@ -99,7 +105,7 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
     @property
     def namespace(self) -> str:
         if (self.assistant_id is None and self.thread_id is None) or (
-            self.assistant_id is not None and self.thread_id is not None
+                self.assistant_id is not None and self.thread_id is not None
         ):
             raise ValueError(
                 "Exactly one of assistant_id or thread_id must be provided"
@@ -107,17 +113,17 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
         return self.assistant_id if self.assistant_id is not None else self.thread_id
 
     def invoke(
-        self, input: BinaryIO, config: Optional[RunnableConfig] = None
+            self, input: BinaryIO, config: Optional[RunnableConfig] = None
     ) -> List[str]:
         return self.batch([input], config)
 
     def batch(
-        self,
-        inputs: List[BinaryIO],
-        config: RunnableConfig | List[RunnableConfig] | None = None,
-        *,
-        return_exceptions: bool = False,
-        **kwargs: Any | None,
+            self,
+            inputs: List[BinaryIO],
+            config: RunnableConfig | List[RunnableConfig] | None = None,
+            *,
+            return_exceptions: bool = False,
+            **kwargs: Any | None,
     ) -> List:
         """Ingest a batch of files into the vectorstore."""
         ids = []
@@ -148,7 +154,6 @@ vstore = PGVector(
     embedding_function=OpenAIEmbeddings(http_client=_get_http_client()),
     use_jsonb=True,
 )
-
 
 ingest_runnable = IngestRunnable(
     text_splitter=RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200),
