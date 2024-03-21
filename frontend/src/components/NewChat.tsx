@@ -84,7 +84,6 @@ export function NewChat(props: NewChatProps) {
             }
           }}
           currentConfig={assistantConfig}
-          configs={props.configs || []}
           currentChat={null}
         />
       </div>

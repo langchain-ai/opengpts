@@ -48,8 +48,7 @@ export default function TypingBox(props: {
   onSubmit: (data: MessageWithFiles) => void;
   onInterrupt?: () => void;
   inflight?: boolean;
-  configs: Config[];
-  currentConfig: Config | null;
+  currentConfig: Config;
   currentChat: Chat | null;
 }) {
   const [inflight, setInflight] = useState(false);
@@ -58,18 +57,12 @@ export default function TypingBox(props: {
   const [isDocumentRetrievalActive, setIsDocumentRetrievalActive] =
     useState(false);
 
-  const { currentConfig, currentChat, configs } = props;
+  const { currentConfig, currentChat } = props;
 
   useEffect(() => {
     let configurable = null;
     if (currentConfig) {
       configurable = currentConfig.config?.configurable;
-    }
-    if (currentChat && configs) {
-      const conf = configs.find(
-        (c) => c.assistant_id === currentChat.assistant_id,
-      );
-      configurable = conf?.config?.configurable;
     }
     const agent_type = configurable?.["type"] as TYPE_NAME | null;
     if (agent_type === null || agent_type === "chatbot") {
@@ -83,7 +76,7 @@ export default function TypingBox(props: {
     const tools =
       (configurable?.["type==agent/tools"] as { name: string }[]) ?? [];
     setIsDocumentRetrievalActive(tools.some((t) => t.name === "Retrieval"));
-  }, [currentConfig, currentChat, configs]);
+  }, [currentConfig, currentChat]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles((prevFiles) => {

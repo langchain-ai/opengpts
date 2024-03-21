@@ -6,7 +6,6 @@ import { Message } from "./Message";
 import { ArrowDownCircleIcon } from "@heroicons/react/24/outline";
 import { MessageWithFiles } from "../utils/formTypes.ts";
 import { useParams } from "react-router-dom";
-import { Config } from "../hooks/useConfigList.ts";
 import {useQuery} from "react-query";
 import {getAssistant} from "../api/assistants.ts";
 import {getThread} from "../api/threads.ts";
@@ -18,7 +17,6 @@ interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
     assistant_id: string,
   ) => Promise<void>;
   setCurrentChatId: (id: string | null) => void;
-  configs: Config[] | null;
 }
 
 function usePrevious<T>(value: T): T | undefined {
@@ -113,7 +111,6 @@ export function Chat(props: ChatProps) {
             props.stream?.status === "inflight" ? props.stopStream : undefined
           }
           inflight={props.stream?.status === "inflight"}
-          configs={props.configs || []}
           currentConfig={assistantConfig}
           currentChat={currentChat}
         />
