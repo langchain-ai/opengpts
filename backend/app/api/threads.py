@@ -52,6 +52,15 @@ async def add_thread_messages(
     return await storage.post_thread_messages(opengpts_user_id, tid, payload.messages)
 
 
+@router.get("/{tid}/history")
+async def get_thread_history(
+    opengpts_user_id: OpengptsUserId,
+    tid: ThreadID,
+):
+    """Get all past states for a thread."""
+    return await storage.get_thread_history(opengpts_user_id, tid)
+
+
 @router.get("/{tid}")
 async def get_thread(
     opengpts_user_id: OpengptsUserId,

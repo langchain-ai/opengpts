@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Message } from "./useChatList";
 import { StreamState } from "./useStreamState";
 
@@ -14,6 +14,14 @@ async function getMessages(threadId: string) {
   return { messages, resumeable };
 }
 
+function usePrevious<T>(value: T): T | undefined {
+  const ref = useRef<T>();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+}
+
 export function useChatMessages(
   threadId: string | null,
   stream: StreamState | null,
@@ -21,6 +29,7 @@ export function useChatMessages(
 ): { messages: Message[] | null; resumeable: boolean } {
   const [messages, setMessages] = useState<Message[] | null>(null);
   const [resumeable, setResumeable] = useState(false);
+  const prevStreamStatus = usePrevious(stream?.status);
 
   useEffect(() => {
     async function fetchMessages() {
@@ -48,7 +57,7 @@ export function useChatMessages(
       }
     }
 
-    if (stream?.status !== "inflight") {
+    if (prevStreamStatus === "inflight" && stream?.status !== "inflight") {
       setResumeable(false);
       fetchMessages();
     }
