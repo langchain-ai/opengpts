@@ -27,6 +27,7 @@ class CreateRunPayload(BaseModel):
     assistant_id: str
     thread_id: str
     input: Optional[Sequence[AnyMessage]] = Field(default_factory=list)
+    config: Optional[RunnableConfig] = None
 
 
 async def _run_input_and_config(request: Request, opengpts_user_id: OpengptsUserId):
@@ -41,6 +42,7 @@ async def _run_input_and_config(request: Request, opengpts_user_id: OpengptsUser
         **assistant["config"],
         "configurable": {
             **assistant["config"]["configurable"],
+            **(body.get("config", {}).get("configurable") or {}),
             "user_id": opengpts_user_id,
             "thread_id": body["thread_id"],
             "assistant_id": body["assistant_id"],
