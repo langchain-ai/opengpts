@@ -1,58 +1,41 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Chat } from "./components/Chat";
 import { ChatList } from "./components/ChatList";
 import { Layout } from "./components/Layout";
 import { NewChat } from "./components/NewChat";
-import { Chat as ChatType, useChatList } from "./hooks/useChatList";
+import { useChatList } from "./hooks/useChatList";
 import { useSchemas } from "./hooks/useSchemas";
 import { useStreamState } from "./hooks/useStreamState";
-import { useConfigList } from "./hooks/useConfigList";
+import {
+  useConfigList,
+  Config as ConfigInterface,
+} from "./hooks/useConfigList";
 import { Config } from "./components/Config";
 import { MessageWithFiles } from "./utils/formTypes.ts";
-import { TYPE_NAME } from "./constants.ts";
+import { Route, Routes, useNavigate } from "react-router-dom";
+import { NotFound } from "./components/NotFound.tsx";
 
 function App() {
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { configSchema, configDefaults } = useSchemas();
-  const { chats, currentChat, createChat, enterChat } = useChatList();
-  const { configs, currentConfig, saveConfig, enterConfig } = useConfigList();
+  const { chats, createChat } = useChatList();
+  const { configs, saveConfig } = useConfigList();
   const { startStream, stopStream, stream } = useStreamState();
-  const [isDocumentRetrievalActive, setIsDocumentRetrievalActive] =
-    useState(false);
+  const { configSchema, configDefaults } = useSchemas();
 
-  useEffect(() => {
-    let configurable = null;
-    if (currentConfig) {
-      configurable = currentConfig?.config?.configurable;
-    }
-    if (currentChat && configs) {
-      const conf = configs.find(
-        (c) => c.assistant_id === currentChat.assistant_id,
-      );
-      configurable = conf?.config?.configurable;
-    }
-    const agent_type = configurable?.["type"] as TYPE_NAME | null;
-    if (agent_type === null || agent_type === "chatbot") {
-      setIsDocumentRetrievalActive(false);
-      return;
-    }
-    if (agent_type === "chat_retrieval") {
-      setIsDocumentRetrievalActive(true);
-      return;
-    }
-    const tools =
-      (configurable?.["type==agent/tools"] as { name: string }[]) ?? [];
-    setIsDocumentRetrievalActive(tools.some((t) => t.name === "Retrieval"));
-  }, [currentConfig, currentChat, configs]);
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const currentChat =
+    chats?.find((chat) => chat.thread_id === currentChatId) ?? null;
+  const [assistantConfig, setAssistantConfig] =
+    useState<ConfigInterface | null>(null);
 
   const startTurn = useCallback(
-    async (message?: MessageWithFiles, chat: ChatType | null = currentChat) => {
-      if (!chat) return;
-      const config = configs?.find(
-        (c) => c.assistant_id === chat.assistant_id,
-      )?.config;
-      if (!config) return;
+    async (
+      message: MessageWithFiles | null,
+      thread_id: string,
+      assistant_id: string,
+    ) => {
       const files = message?.files || [];
       if (files.length > 0) {
         const formData = files.reduce((formData, file) => {
@@ -61,7 +44,7 @@ function App() {
         }, new FormData());
         formData.append(
           "config",
-          JSON.stringify({ configurable: { thread_id: chat.thread_id } }),
+          JSON.stringify({ configurable: { thread_id } }),
         );
         await fetch(`/ingest`, {
           method: "POST",
@@ -79,23 +62,20 @@ function App() {
               },
             ]
           : null,
-        chat.assistant_id,
-        chat.thread_id,
+        assistant_id,
+        thread_id,
       );
     },
-    [currentChat, startStream, configs],
+    [startStream],
   );
 
   const startChat = useCallback(
-    async (message: MessageWithFiles) => {
-      if (!currentConfig) return;
-      const chat = await createChat(
-        message.message,
-        currentConfig.assistant_id,
-      );
-      return startTurn(message, chat);
+    async (config: ConfigInterface, message: MessageWithFiles) => {
+      const chat = await createChat(message.message, config.assistant_id);
+      navigate(`/thread/${chat.thread_id}`);
+      return startTurn(message, chat.thread_id, chat.assistant_id);
     },
-    [createChat, startTurn, currentConfig],
+    [createChat, navigate, startTurn],
   );
 
   const selectChat = useCallback(
@@ -103,69 +83,38 @@ function App() {
       if (currentChat) {
         stopStream?.(true);
       }
-      enterChat(id);
       if (!id) {
-        enterConfig(configs?.[0]?.assistant_id ?? null);
+        const firstAssistant = configs?.[0]?.assistant_id ?? null;
+        navigate(firstAssistant ? `/assistant/${firstAssistant}` : "/");
         window.scrollTo({ top: 0 });
+      } else {
+        navigate(`/thread/${id}`);
       }
       if (sidebarOpen) {
         setSidebarOpen(false);
       }
     },
-    [enterChat, stopStream, sidebarOpen, currentChat, enterConfig, configs],
+    [currentChat, sidebarOpen, stopStream, configs, navigate],
   );
 
   const selectConfig = useCallback(
     (id: string | null) => {
-      enterConfig(id);
-      enterChat(null);
+      setCurrentChatId(null);
+      navigate(id ? `/assistant/${id}` : "/");
     },
-    [enterConfig, enterChat],
-  );
-
-  const content = currentChat ? (
-    <Chat
-      chat={currentChat}
-      startStream={startTurn}
-      stopStream={stopStream}
-      stream={stream}
-      isDocumentRetrievalActive={isDocumentRetrievalActive}
-    />
-  ) : currentConfig ? (
-    <NewChat
-      startChat={startChat}
-      configSchema={configSchema}
-      configDefaults={configDefaults}
-      configs={configs}
-      currentConfig={currentConfig}
-      saveConfig={saveConfig}
-      enterConfig={selectConfig}
-      isDocumentRetrievalActive={isDocumentRetrievalActive}
-    />
-  ) : (
-    <Config
-      className="mb-6"
-      config={currentConfig}
-      configSchema={configSchema}
-      configDefaults={configDefaults}
-      saveConfig={saveConfig}
-    />
-  );
-
-  const currentChatConfig = configs?.find(
-    (c) => c.assistant_id === currentChat?.assistant_id,
+    [navigate],
   );
 
   return (
     <Layout
       subtitle={
-        currentChatConfig ? (
+        assistantConfig ? (
           <span className="inline-flex gap-1 items-center">
-            {currentChatConfig.name}
+            {assistantConfig.name}
             <InformationCircleIcon
               className="h-5 w-5 cursor-pointer text-indigo-600"
               onClick={() => {
-                selectConfig(currentChatConfig.assistant_id);
+                selectConfig(assistantConfig.assistant_id);
               }}
             />
           </span>
@@ -177,18 +126,58 @@ function App() {
         <ChatList
           chats={useMemo(() => {
             if (configs === null || chats === null) return null;
-            return chats.filter((c) =>
-              configs.some((config) => config.assistant_id === c.assistant_id),
-            );
+            return chats;
           }, [chats, configs])}
           currentChat={currentChat}
           enterChat={selectChat}
-          currentConfig={currentConfig}
+          currentConfig={assistantConfig || null}
           enterConfig={selectConfig}
         />
       }
     >
-      {configSchema ? content : null}
+      <Routes>
+        <Route
+          path="/thread/:chatId"
+          element={
+            <Chat
+              startStream={startTurn}
+              stopStream={stopStream}
+              stream={stream}
+              setCurrentChatId={setCurrentChatId}
+              setCurrentConfig={setAssistantConfig}
+            />
+          }
+        />
+        <Route
+          path="/assistant/:assistantId"
+          element={
+            <NewChat
+              startChat={startChat}
+              configSchema={configSchema}
+              configDefaults={configDefaults}
+              configs={configs}
+              saveConfig={saveConfig}
+              enterConfig={selectConfig}
+              setCurrentConfig={setAssistantConfig}
+            />
+          }
+        />
+        <Route
+          path="/"
+          element={
+            <Config
+              className="mb-6"
+              config={null}
+              configSchema={configSchema}
+              configDefaults={configDefaults}
+              saveConfig={saveConfig}
+              enterConfig={selectConfig}
+              setCurrentConfig={setAssistantConfig}
+            />
+          }
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     </Layout>
   );
 }

@@ -1,15 +1,15 @@
 import { PlusIcon } from "@heroicons/react/24/outline";
 
-import { ChatListProps } from "../hooks/useChatList";
-import { ConfigListProps } from "../hooks/useConfigList";
+import { Chat, ChatListProps } from "../hooks/useChatList";
+import { Config } from "../hooks/useConfigList";
 import { cn } from "../utils/cn";
 
 export function ChatList(props: {
   chats: ChatListProps["chats"];
-  currentChat: ChatListProps["currentChat"];
-  enterChat: ChatListProps["enterChat"];
-  currentConfig: ConfigListProps["currentConfig"];
-  enterConfig: ConfigListProps["enterConfig"];
+  currentChat: Chat | null;
+  enterChat: (id: string | null) => void;
+  currentConfig: Config | null;
+  enterConfig: (id: string | null) => void;
 }) {
   return (
     <>
