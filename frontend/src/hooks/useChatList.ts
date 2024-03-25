@@ -3,6 +3,7 @@ import orderBy from "lodash/orderBy";
 import { v4 as uuidv4 } from "uuid";
 
 export interface Message {
+  id: string;
   type: string;
   content:
     | string
@@ -16,6 +17,7 @@ export interface Message {
       arguments?: string;
     };
     tool_calls?: {
+      id: string;
       function?: {
         name?: string;
         arguments?: string;

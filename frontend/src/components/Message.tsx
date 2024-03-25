@@ -127,6 +127,7 @@ export const Message = memo(function Message(
             ?.filter((call) => call.function)
             ?.map((call) => (
               <Function
+                key={call.id}
                 call={true}
                 name={call.function?.name}
                 args={call.function?.arguments}

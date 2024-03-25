@@ -14,7 +14,6 @@ from langchain_core.messages import (
     FunctionMessageChunk,
     HumanMessage,
     HumanMessageChunk,
-    SystemMessage,
 )
 from langchain_core.runnables import Runnable, RunnableConfig
 from langserve.serialization import WellKnownLCSerializer
@@ -29,7 +28,7 @@ async def astream_messages(
 ) -> MessagesStream:
     """Stream messages from the runnable."""
     root_run_id: Optional[str] = None
-    last_messages_list: Optional[list[AnyMessage]] = None
+    last_message: Optional[AnyMessage] = None
     last_stream_run_id: Optional[str] = None
 
     async for event in app.astream_events(
@@ -37,43 +36,23 @@ async def astream_messages(
     ):
         if event["event"] == "on_chain_start" and not root_run_id:
             root_run_id = event["run_id"]
-
             yield root_run_id
         elif event["event"] == "on_chain_stream" and event["run_id"] == root_run_id:
-            last_messages_list = event["data"]["chunk"]
-
-            yield last_messages_list
-        elif event["event"] == "on_chat_model_start" and last_messages_list is None:
-            input_messages_outer = event["data"]["input"].get("messages")
-            input_messages = (
-                input_messages_outer[0]
-                if isinstance(input_messages_outer, list)
-                else None
-            )
-            input_messages = (
-                [msg for msg in input_messages if not isinstance(msg, SystemMessage)]
-                if input_messages is not None
-                else None
-            )
-            if input_messages:
-                last_messages_list = input_messages
-                yield last_messages_list
-        elif (
-            event["event"] == "on_chat_model_stream" and last_messages_list is not None
-        ):
+            yield event["data"]["chunk"]
+        elif event["event"] == "on_chat_model_stream":
             is_new_stream_run = (
                 last_stream_run_id is None or last_stream_run_id != event["run_id"]
             )
-            is_diff_msg_type = last_messages_list and type(  # noqa: E721
-                last_messages_list[-1]
+            is_diff_msg_type = not last_message or type(  # noqa: E721
+                last_message
             ) != type(event["data"]["chunk"])
             if is_new_stream_run or is_diff_msg_type:
                 last_stream_run_id = event["run_id"]
-                last_messages_list.append(event["data"]["chunk"])
+                last_message = event["data"]["chunk"]
             else:
-                last_messages_list[-1] = last_messages_list[-1] + event["data"]["chunk"]
+                last_message = last_message + event["data"]["chunk"]
 
-            yield last_messages_list
+            yield [last_message]
 
 
 def map_chunk_to_msg(chunk: BaseMessageChunk) -> BaseMessage:
