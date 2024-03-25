@@ -1,0 +1,33 @@
+from fastapi import FastAPI, Form, UploadFile
+from fastapi.staticfiles import StaticFiles
+from gizmo_agent import ingest_runnable
+from fastapi import HTTPException
+
+from app.api import router as api_router
+
+app = FastAPI(title="OpenGPTs API")
+
+# Define the maximum file size (100 MB in bytes)
+MAX_FILE_SIZE = 100 * 1024 * 1024
+
+
+# Get root of app, used to point to directory containing static files
+	@@ -23,18 +23,18 @@
+
+@app.post("/ingest", description="Upload files to the given assistant.")
+def ingest_files(files: list[UploadFile], config: str = Form(...)) -> None:
+    """Ingest a list of files."""
+    for file in files:
+        # Move to the end of the file to get its size
+        file.file.seek(0, 2)  # Seek to the end
+        file_size = file.file.tell()  # Get the file size
+        file.file.seek(0)  # Reset the pointer to the start of the file
+
+        if file_size > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File '{file.filename}' exceeds the maximum size limit of 100 MB.",
+            )
+
+    config = orjson.loads(config)
+    return ingest_runnable.batch([file.file for file in files], confi
