@@ -18,6 +18,7 @@ from app.llms import (
     get_google_llm,
     get_mixtral_fireworks,
     get_openai_llm,
+    get_gigachat_llm,
 )
 from app.retrieval import get_retrieval_executor
 from app.tools import (
@@ -175,6 +176,7 @@ class LLMType(str, Enum):
     BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
     GEMINI = "GEMINI"
     MIXTRAL = "Mixtral"
+    GIGACHAT = "GigaChat"
 
 
 def get_chatbot(
@@ -195,6 +197,8 @@ def get_chatbot(
         llm = get_google_llm()
     elif llm_type == LLMType.MIXTRAL:
         llm = get_mixtral_fireworks()
+    elif llm_type == LLMType.GIGACHAT:
+        llm = get_gigachat_llm()
     else:
         raise ValueError("Unexpected llm type")
     return get_chatbot_executor(llm, system_message, CHECKPOINTER)
@@ -270,6 +274,8 @@ class ConfigurableRetrieval(RunnableBinding):
             llm = get_google_llm()
         elif llm_type == LLMType.MIXTRAL:
             llm = get_mixtral_fireworks()
+        elif llm_type == LLMType.GIGACHAT:
+            llm = get_gigachat_llm()
         else:
             raise ValueError("Unexpected llm type")
         chatbot = get_retrieval_executor(llm, retriever, system_message, CHECKPOINTER)
