@@ -8,7 +8,7 @@ from langchain.pydantic_v1 import ValidationError
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import RunnableConfig
 from langserve.schema import FeedbackCreateRequest
-from langserve.server import _unpack_input
+from langserve.api_handler import _unpack_input
 from langsmith.utils import tracing_is_enabled
 from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
@@ -50,7 +50,8 @@ async def _run_input_and_config(request: Request, opengpts_user_id: OpengptsUser
     }
     try:
         input_ = (
-            _unpack_input(agent.get_input_schema(config).validate(body["input"]))
+            _unpack_input(agent.get_input_schema(
+                config).validate(body["input"]))
             if body["input"] is not None
             else None
         )
