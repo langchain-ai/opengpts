@@ -19,6 +19,9 @@ start:
 migrate:
 	migrate -database postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable -path ./migrations up
 
+redis_to_postgres:
+	poetry run python redis_to_postgres.py
+
 test:
 	# We need to update handling of env variables for tests
 	YDC_API_KEY=placeholder OPENAI_API_KEY=placeholder poetry run pytest $(TEST_FILE)
