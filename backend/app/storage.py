@@ -1,11 +1,11 @@
 from datetime import datetime, timezone
 from typing import List, Optional, Sequence
-
+from fastapi import HTTPException, status
 from langchain_core.messages import AnyMessage
 
 from app.agent import AgentType, get_agent_executor
 from app.lifespan import get_pg_pool
-from app.schema import Assistant, Thread
+from app.schema import Assistant, Thread, User
 from app.stream import map_chunk_to_msg
 
 
@@ -161,3 +161,140 @@ async def put_thread(
             "name": name,
             "updated_at": updated_at,
         }
+
+
+async def get_user(user_id: str) -> Optional[User]:
+    """Get a user by ID."""
+    async with get_pg_pool().acquire() as conn:
+        return await conn.fetchrow(
+            "SELECT * FROM users WHERE user_id = $1 AND is_deleted = FALSE",
+            user_id,
+        )
+
+
+async def list_active_users() -> List[User]:
+    """List all active users."""
+    async with get_pg_pool().acquire() as conn:
+        return await conn.fetch(
+            "SELECT * FROM users WHERE is_active = TRUE AND is_deleted = FALSE"
+        )
+
+
+async def register_user(
+    username: str,
+    password_hash: str,
+    email: str,
+    full_name: str,
+    address: str,
+    role: str
+) -> User:
+    """Register a new user."""
+    creation_date = datetime.now(timezone.utc)
+    last_login_date = None
+    is_active = True
+    
+    async with get_pg_pool().acquire() as conn:
+        try:
+            async with conn.transaction():
+                await conn.execute(
+                    "INSERT INTO users (username, password_hash, email, full_name, address, role, creation_date, last_login_date, is_active, is_deleted) "
+                    "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+                    username, password_hash, email, full_name, address, role,
+                    creation_date, last_login_date, is_active, False
+                )
+                return User(
+                    username=username,
+                    password_hash=password_hash,
+                    email=email,
+                    full_name=full_name,
+                    address=address,
+                    role=role,
+                    creation_date=creation_date,
+                    last_login_date=last_login_date,
+                    is_active=is_active
+                )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to register user",
+            )
+
+async def login_user(
+    username: str,
+    password_hash: str
+) -> Optional[User]:
+    """Login a user."""
+    async with get_pg_pool().acquire() as conn:
+        try:
+            user_record = await conn.fetchrow(
+                "SELECT * FROM users WHERE username = $1 AND password_hash = $2 AND is_deleted = FALSE",
+                username, password_hash
+            )
+            
+            if user_record is not None:
+                last_login_date = datetime.now(timezone.utc)
+                await conn.execute(
+                    "UPDATE users SET last_login_date = $1 WHERE username = $2",
+                    last_login_date, username
+                )
+                return User(
+                    username=user_record['username'],
+                    password_hash=user_record['password_hash'],
+                    email=user_record['email'],
+                    full_name=user_record['full_name'],
+                    address=user_record['address'],
+                    role=user_record['role'],
+                    creation_date=user_record['creation_date'],
+                    last_login_date=last_login_date,
+                    is_active=user_record['is_active']
+                )
+            else:
+                return None
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to login user",
+            )
+
+async def update_user(
+    user_id: str,
+    username: str,
+    password_hash: str,
+    email: str,
+    full_name: str,
+    address: str,
+    role: str
+) -> Optional[User]:
+    """Update a user."""
+    async with get_pg_pool().acquire() as conn:
+        try:
+            async with conn.transaction():
+                await conn.execute(
+                    "UPDATE users SET username = $1, password_hash = $2, email = $3, full_name = $4, address = $5, role = $6 WHERE user_id = $7 AND is_deleted = FALSE",
+                    username, password_hash, email, full_name, address, role, user_id
+                )
+                # Retrieve the updated user to return
+                updated_user = await get_user(user_id)
+                return updated_user
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update user",
+            )
+
+async def delete_user(user_id: str) -> bool:
+    """Soft delete a user."""
+    async with get_pg_pool().acquire() as conn:
+        try:
+            async with conn.transaction():
+                result = await conn.execute(
+                    "UPDATE users SET is_deleted = TRUE WHERE user_id = $1 AND is_deleted = FALSE",
+                    user_id
+                )
+                # Check if a row was affected
+                return result == 'UPDATE 1'
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete user",
+            )
