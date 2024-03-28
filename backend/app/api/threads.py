@@ -1,14 +1,15 @@
 from typing import Annotated, List, Sequence
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Path
+from app.api.security import verify_token
+from fastapi import APIRouter, HTTPException, Path, Depends
 from langchain.schema.messages import AnyMessage
 from pydantic import BaseModel, Field
 
 import app.storage as storage
 from app.schema import OpengptsUserId, Thread
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(verify_token)])
 
 
 ThreadID = Annotated[str, Path(description="The ID of the thread.")]
