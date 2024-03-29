@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from app.api.security import create_token, verify_token
 from fastapi import APIRouter, HTTPException, Depends
@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 import app.storage as storage
 from app.schema import User
 
-router = APIRouter(dependencies=[Depends(verify_token)])
+router = APIRouter()
 
 class UserID(str):
     """Type annotation for user ID."""
@@ -26,25 +26,31 @@ class UserLoginRequest(BaseModel):
     username: str = Field(..., description="The username of the user.")
     password_hash: str = Field(..., description="The hashed password of the user.")
 
-@router.post("/register", response_model=User, status_code=201)
-async def register_user(user_register_request: UserRegisterRequest) -> User:
+class UserResponse(BaseModel):
+    """Response model for registering a new user."""
+    token: str
+    message: str
+
+
+@router.post("/register", response_model=UserResponse, status_code=201)
+async def register_user(user_register_request: UserRegisterRequest) -> UserResponse:
     """Register a new user."""
     user = await storage.register_user(**user_register_request.dict())
     if user:
         # Generate token
         token = create_token(user.username)
-        return {"token": token, "message": 'registration successful'}
+        return {'token': token, "message": "Register successful"}
     else:
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
-@router.post("/login", response_model=Optional[User])
-async def login_user(user_login_request: UserLoginRequest) -> Optional[User]:
+@router.post("/login", response_model=Optional[UserResponse])
+async def login_user(user_login_request: UserLoginRequest) -> Optional[UserResponse]:
     """Login a user."""
     user = await storage.login_user(**user_login_request.dict())
     if user:
         # Generate token
         token = create_token(user.username)
-        return {"token": token, "message": 'login successful'}
+        return {"token": token, "message": 'Login successful'}
     else:
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
@@ -55,6 +61,16 @@ async def get_user_by_id(user_id: UserID) -> User:
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+@router.get("/", response_model=List[User], status_code=200)
+async def list_active_users():
+    """List all active users."""
+    users = await storage.list_active_users()
+    if users:
+        return users
+    else:
+        raise HTTPException(status_code=404, detail="No active users found")
+
 
 @router.put("/{user_id}", response_model=User)
 async def update_user_by_id(user_id: UserID, user_update_request: UserRegisterRequest) -> User:
