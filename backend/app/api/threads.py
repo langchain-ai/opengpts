@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 import app.storage as storage
 from app.schema import OpengptsUserId, Thread
 
-router = APIRouter(dependencies=[Depends(verify_token)])
+router = APIRouter()
 
 
 ThreadID = Annotated[str, Path(description="The ID of the thread.")]

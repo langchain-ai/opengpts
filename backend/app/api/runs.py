@@ -19,7 +19,7 @@ from app.schema import OpengptsUserId
 from app.storage import get_assistant
 from app.stream import astream_messages, to_sse
 
-router = APIRouter(dependencies=[Depends(verify_token)])
+router = APIRouter()
 
 
 class CreateRunPayload(BaseModel):
