@@ -174,40 +174,7 @@ Navigate to [http://localhost:5173/](http://localhost:5173/) and enjoy!
 
 ## Migrating data from Redis to Postgres
 
-OpenGPTs previously used Redis for data persistence, but has since switched to Postgres. If you have data in Redis that you would like to migrate to Postgres, you can use the following steps:
-
-### With Docker
-
-Add Postgres' environment variables to the `.env` file (by following `.env.example`). Then, start the services with `docker compose` and run the following command to migrate data from Redis to Postgres:
-
-```shell
-docker exec -it opengpts-backend make redis_to_postgres
-```
-
-### Without Docker
-
-Make sure the following environment variables are set:
-
-```shell
-export POSTGRES_HOST=...
-export POSTGRES_PORT=...
-export POSTGRES_DB=...
-export POSTGRES_USER=...
-export POSTGRES_PASSWORD=...
-export REDIS_URL=...
-```
-
-Install [golang-migrate](https://github.com/golang-migrate/migrate) on your machine if you haven't already and run database schema migrations:
-
-```shell
-make migrate
-```
-
-Finally, run the following command to migrate data from Redis to Postgres:
-
-```shell
-make redis_to_postgres
-```
+Refer to this [guide](tools/redis_to_postgres/README.md) for migrating data from Redis to Postgres.
 
 ## Features
 

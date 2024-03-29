@@ -43,7 +43,6 @@ pgvector = "^0.2.5"
 psycopg2-binary = "^2.9.9"
 asyncpg = "^0.29.0"
 langchain-core = "^0.1.33"
-redis = "5.0.1"
 
 [tool.poetry.group.dev.dependencies]
 uvicorn = "^0.23.2"

@@ -1,13 +1,6 @@
 version: "3"
 
 services:
-  redis:
-    container_name: opengpts-redis
-    image: redis/redis-stack-server:latest
-    ports:
-      - "6379:6379"
-    volumes:
-      - ./redis-volume:/data
   postgres:
     image: pgvector/pgvector:pg16
     healthcheck:
@@ -44,4 +37,3 @@ services:
       - .env
     environment:
       POSTGRES_HOST: "postgres"
-      REDIS_URL: "redis://opengpts-redis:6379"
