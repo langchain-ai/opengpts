@@ -2,7 +2,6 @@ version: "3"
 
 services:
   redis:
-    container_name: opengpts-redis
     image: redis/redis-stack-server:latest
     ports:
       - "6380:6379"
