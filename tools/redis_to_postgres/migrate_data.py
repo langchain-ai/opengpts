@@ -187,6 +187,11 @@ async def migrate_checkpoints() -> None:
         config = {"configurable": {"user_id": user_id, "thread_id": thread_id}}
         checkpoint = redis_checkpoint.get(config)
         if checkpoint:
+            if checkpoint.get("channel_values", {}).get("__root__"):
+                checkpoint["channel_values"]["__root__"] = [
+                    msg.__class__(**msg.__dict__.items())
+                    for msg in checkpoint["channel_values"]["__root__"]
+                ]
             await postgres_checkpoint.aput(config, checkpoint)
             logger.info(
                 f"Migrated checkpoint for thread {thread_id} for user {user_id}."
