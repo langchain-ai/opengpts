@@ -51,7 +51,6 @@ async def astream_messages(
                 last_message = event["data"]["chunk"]
             else:
                 last_message = last_message + event["data"]["chunk"]
-
             yield [last_message]
 
 

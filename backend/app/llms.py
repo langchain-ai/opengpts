@@ -29,7 +29,6 @@ def get_openai_llm(gpt_4: bool = False, azure: bool = False):
             http_client=http_client,
             model=openai_model,
             temperature=0,
-            streaming=True,
         )
     else:
         llm = AzureChatOpenAI(
@@ -39,7 +38,6 @@ def get_openai_llm(gpt_4: bool = False, azure: bool = False):
             openai_api_base=os.environ["AZURE_OPENAI_API_BASE"],
             openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
             openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],
-            streaming=True,
         )
     return llm
 
