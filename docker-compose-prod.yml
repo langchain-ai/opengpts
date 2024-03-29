@@ -3,19 +3,36 @@ version: "3"
 services:
   postgres:
     image: pgvector/pgvector:pg16
+    healthcheck:
+      test: pg_isready -U $POSTGRES_USER
+      start_interval: 1s
+      start_period: 5s
+      interval: 5s
+      retries: 5
     ports:
-      - "5432:5432"
+      - "5433:5432"
     env_file:
       - .env
     volumes:
       - ./postgres-volume:/var/lib/postgresql/data
+  postgres-setup:
+    image: migrate/migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/migrations:/migrations
+    env_file:
+      - .env
+    command: ["-path", "/migrations", "-database", "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:$POSTGRES_PORT/$POSTGRES_DB?sslmode=disable", "up"]
   backend:
     container_name: opengpts-backend
     image: docker.io/langchain/open-gpts:latest
     ports:
       - "8100:8000" # Backend is accessible on localhost:8100 and serves the frontend
     depends_on:
-      - postgres
+      postgres-setup:
+        condition: service_completed_successfully
     env_file:
       - .env
     environment:
