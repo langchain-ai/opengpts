@@ -167,7 +167,7 @@ async def get_user(user_id: str) -> Optional[User]:
     """Get a user by ID."""
     async with get_pg_pool().acquire() as conn:
         return await conn.fetchrow(
-            "SELECT * FROM users WHERE user_id = $1 AND is_deleted = FALSE",
+            "SELECT * FROM \"user\" WHERE user_id = $1 AND is_deleted = FALSE",
             user_id,
         )
 
@@ -176,7 +176,7 @@ async def list_active_users() -> List[User]:
     """List all active users."""
     async with get_pg_pool().acquire() as conn:
         return await conn.fetch(
-            "SELECT * FROM users WHERE is_active = TRUE AND is_deleted = FALSE"
+            "SELECT * FROM \"user\" WHERE is_active = TRUE AND is_deleted = FALSE"
         )
 
 
@@ -190,14 +190,14 @@ async def register_user(
 ) -> User:
     """Register a new user."""
     creation_date = datetime.now(timezone.utc)
-    last_login_date = None
+    last_login_date = None  # Assuming no login has occurred yet
     is_active = True
     
     async with get_pg_pool().acquire() as conn:
         try:
             async with conn.transaction():
                 await conn.execute(
-                    "INSERT INTO users (username, password_hash, email, full_name, address, role, creation_date, last_login_date, is_active, is_deleted) "
+                    "INSERT INTO \"user\" (username, password_hash, email, full_name, address, role, creation_date, last_login_date, is_active, is_deleted) "
                     "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
                     username, password_hash, email, full_name, address, role,
                     creation_date, last_login_date, is_active, False
@@ -216,28 +216,28 @@ async def register_user(
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to register user",
+                detail=f"Failed to register user {e}",
             )
 
 async def login_user(
     username: str,
     password_hash: str
 ) -> Optional[User]:
-    """Login a user."""
     async with get_pg_pool().acquire() as conn:
         try:
             user_record = await conn.fetchrow(
-                "SELECT * FROM users WHERE username = $1 AND password_hash = $2 AND is_deleted = FALSE",
+                "SELECT * FROM \"user\" WHERE username = $1 AND password_hash = $2 AND is_deleted = FALSE",
                 username, password_hash
             )
             
             if user_record is not None:
                 last_login_date = datetime.now(timezone.utc)
                 await conn.execute(
-                    "UPDATE users SET last_login_date = $1 WHERE username = $2",
+                    "UPDATE \"user\" SET last_login_date = $1 WHERE username = $2",
                     last_login_date, username
                 )
                 return User(
+                    user_id=user_record['user_id'],
                     username=user_record['username'],
                     password_hash=user_record['password_hash'],
                     email=user_record['email'],
@@ -253,8 +253,9 @@ async def login_user(
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to login user",
+                detail=f"Failed to login user {e}",
             )
+
 
 async def update_user(
     user_id: str,
@@ -270,7 +271,7 @@ async def update_user(
         try:
             async with conn.transaction():
                 await conn.execute(
-                    "UPDATE users SET username = $1, password_hash = $2, email = $3, full_name = $4, address = $5, role = $6 WHERE user_id = $7 AND is_deleted = FALSE",
+                    "UPDATE \"user\" SET username = $1, password_hash = $2, email = $3, full_name = $4, address = $5, role = $6 WHERE user_id = $7 AND is_deleted = FALSE",
                     username, password_hash, email, full_name, address, role, user_id
                 )
                 # Retrieve the updated user to return
@@ -288,7 +289,7 @@ async def delete_user(user_id: str) -> bool:
         try:
             async with conn.transaction():
                 result = await conn.execute(
-                    "UPDATE users SET is_deleted = TRUE WHERE user_id = $1 AND is_deleted = FALSE",
+                    "UPDATE \"user\" SET is_deleted = TRUE WHERE user_id = $1 AND is_deleted = FALSE",
                     user_id
                 )
                 # Check if a row was affected

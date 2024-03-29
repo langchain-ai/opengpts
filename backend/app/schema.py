@@ -39,6 +39,9 @@ class Thread(TypedDict):
 
 class User(BaseModel):
     """User model"""
+
+    user_id: UUID
+    """The ID of the user."""
     username: str
     """The username of the user."""
     password_hash: str
@@ -53,8 +56,8 @@ class User(BaseModel):
     """The role of the user."""
     creation_date: datetime
     """The date and time when the user account was created."""
-    last_login_date: datetime
-    """The date and time when the user last logged in."""
+    last_login_date: Optional[datetime] = None
+    """The date and time when the user last logged in. Can be None initially."""
     is_active: bool
     """Boolean flag indicating whether the user account is active."""
     is_deleted: bool = False
