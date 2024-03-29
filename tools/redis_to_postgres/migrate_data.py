@@ -189,7 +189,7 @@ async def migrate_checkpoints() -> None:
         if checkpoint:
             if checkpoint.get("channel_values", {}).get("__root__"):
                 checkpoint["channel_values"]["__root__"] = [
-                    msg.__class__(**msg.__dict__.items())
+                    msg.__class__(**msg.__dict__)
                     for msg in checkpoint["channel_values"]["__root__"]
                 ]
             await postgres_checkpoint.aput(config, checkpoint)
