@@ -172,6 +172,10 @@ yarn dev
 
 Navigate to [http://localhost:5173/](http://localhost:5173/) and enjoy!
 
+## Migrating data from Redis to Postgres
+
+Refer to this [guide](tools/redis_to_postgres/README.md) for migrating data from Redis to Postgres.
+
 ## Features
 
 As much as possible, we are striving for feature parity with OpenAI.
