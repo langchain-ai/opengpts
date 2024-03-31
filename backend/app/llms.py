@@ -5,7 +5,12 @@ from urllib.parse import urlparse
 
 import boto3
 import httpx
-from langchain_community.chat_models import BedrockChat, ChatAnthropic, ChatFireworks
+from langchain_community.chat_models import (
+    BedrockChat,
+    ChatAnthropic,
+    ChatFireworks,
+    GigaChat,
+)
 from langchain_google_vertexai import ChatVertexAI
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
@@ -69,3 +74,10 @@ def get_google_llm():
 @lru_cache(maxsize=1)
 def get_mixtral_fireworks():
     return ChatFireworks(model="accounts/fireworks/models/mixtral-8x7b-instruct")
+
+
+@lru_cache(maxsize=1)
+def get_gigachat_llm():
+    return GigaChat(
+        credentials=os.environ.get("GIGACHAT_API_KEY"), verify_ssl_certs=False
+    )
