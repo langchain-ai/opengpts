@@ -271,7 +271,7 @@ We have exposed four agent types by default:
 
 We will work to add more when we have confidence they can work well.
 
-If you want to add your own LLM or agent configuration, or want to edit the existing ones, you can find them in `backend/packages/gizmo-agent/gizmo_agent/agent_types`
+If you want to add your own LLM or agent configuration, or want to edit the existing ones, you can find them in `backend/app/agent_types`
 
 #### Claude 2
 
