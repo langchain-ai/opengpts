@@ -1,5 +1,6 @@
 *.env
 .env.gcp.yaml
+postgres-volume/
 redis-volume/
 backend/ui
 

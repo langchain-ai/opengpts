@@ -1,4 +1,3 @@
-import asyncio
 import json
 from typing import Optional, Sequence
 
@@ -16,7 +15,7 @@ from sse_starlette import EventSourceResponse
 
 from app.agent import agent
 from app.schema import OpengptsUserId
-from app.storage import get_assistant, public_user_id
+from app.storage import get_assistant
 from app.stream import astream_messages, to_sse
 
 router = APIRouter()
@@ -28,6 +27,7 @@ class CreateRunPayload(BaseModel):
     assistant_id: str
     thread_id: str
     input: Optional[Sequence[AnyMessage]] = Field(default_factory=list)
+    config: Optional[RunnableConfig] = None
 
 
 async def _run_input_and_config(request: Request, opengpts_user_id: OpengptsUserId):
@@ -35,21 +35,14 @@ async def _run_input_and_config(request: Request, opengpts_user_id: OpengptsUser
         body = await request.json()
     except json.JSONDecodeError:
         raise RequestValidationError(errors=["Invalid JSON body"])
-    assistant, public_assistant = await asyncio.gather(
-        asyncio.get_running_loop().run_in_executor(
-            None, get_assistant, opengpts_user_id, body["assistant_id"]
-        ),
-        asyncio.get_running_loop().run_in_executor(
-            None, get_assistant, public_user_id, body["assistant_id"]
-        ),
-    )
-    assistant = assistant or public_assistant
+    assistant = await get_assistant(opengpts_user_id, body["assistant_id"])
     if not assistant:
         raise HTTPException(status_code=404, detail="Assistant not found")
     config: RunnableConfig = {
         **assistant["config"],
         "configurable": {
             **assistant["config"]["configurable"],
+            **(body.get("config", {}).get("configurable") or {}),
             "user_id": opengpts_user_id,
             "thread_id": body["thread_id"],
             "assistant_id": body["assistant_id"],

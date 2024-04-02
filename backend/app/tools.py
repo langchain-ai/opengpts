@@ -21,7 +21,6 @@ from langchain_community.tools.tavily_search import (
 )
 from langchain_community.utilities.arxiv import ArxivAPIWrapper
 from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
-from langchain_community.vectorstores.redis import RedisFilter
 from langchain_robocorp import ActionServerToolkit
 from typing_extensions import TypedDict
 
@@ -192,10 +191,7 @@ If the user asks a vague question, they are likely meaning to look up info from 
 
 def get_retriever(assistant_id: str, thread_id: str):
     return vstore.as_retriever(
-        search_kwargs={
-            "filter": (RedisFilter.tag("namespace") == assistant_id)
-            | (RedisFilter.tag("namespace") == thread_id)
-        }
+        search_kwargs={"filter": {"namespace": {"$in": [assistant_id, thread_id]}}}
     )
 
 

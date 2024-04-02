@@ -1,6 +1,6 @@
+import random
 from enum import Enum
 from typing import Any, Mapping, Optional, Sequence, Union
-import random
 
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import (
@@ -14,7 +14,7 @@ from app.agent_types.google_agent import get_google_agent_executor
 from app.agent_types.openai_agent import get_openai_agent_executor
 from app.agent_types.xml_agent import get_xml_agent_executor
 from app.chatbot import get_chatbot_executor
-from app.checkpoint import RedisCheckpoint
+from app.checkpoint import PostgresCheckpoint
 from app.llms import (
     get_anthropic_llm,
     get_google_llm,
@@ -60,7 +60,7 @@ Tool = Union[
 
 class AgentType(str, Enum):
     GPT_35_TURBO = "GPT 3.5 Turbo"
-    # GPT_4 = "GPT 4"
+    # GPT_4 = "GPT 4 Turbo"
     # AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
     # CLAUDE2 = "Claude 2"
     # BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
@@ -69,7 +69,7 @@ class AgentType(str, Enum):
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
-CHECKPOINTER = RedisCheckpoint(at=CheckpointAt.END_OF_STEP)
+CHECKPOINTER = PostgresCheckpoint(at=CheckpointAt.END_OF_STEP)
 LANGSMITH_CLIENT = LangSmithClient()
 
 
@@ -272,7 +272,7 @@ class ConfigurableAgent(RunnableBinding):
 
 class LLMType(str, Enum):
     GPT_35_TURBO = "GPT 3.5 Turbo"
-    # GPT_4 = "GPT 4"
+    # GPT_4 = "GPT 4 Turbo"
     # AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
     # CLAUDE2 = "Claude 2"
     # BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"

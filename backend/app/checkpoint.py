@@ -1,50 +1,21 @@
 import pickle
-from typing import Any, Optional
+from datetime import datetime
+from typing import AsyncIterator, Optional
 
-from langchain.pydantic_v1 import Field
-from langchain.schema.runnable import RunnableConfig
-from langchain.schema.runnable.utils import ConfigurableFieldSpec
+from langchain_core.runnables import ConfigurableFieldSpec, RunnableConfig
 from langgraph.checkpoint import BaseCheckpointSaver
-from langgraph.checkpoint.base import Checkpoint, empty_checkpoint
-from redis.client import Redis as RedisType
+from langgraph.checkpoint.base import Checkpoint, CheckpointThreadTs, CheckpointTuple
 
-from app.redis import get_redis_client
-
-
-def checkpoint_key(user_id: str, thread_id: str):
-    return f"opengpts:{user_id}:thread:{thread_id}:checkpoint"
+from app.lifespan import get_pg_pool
 
 
-def _dump(mapping: dict[str, Any]) -> dict:
-    return {k: pickle.dumps(v) if v is not None else None for k, v in mapping.items()}
-
-
-def _load(mapping: dict[bytes, bytes]) -> dict:
-    return {
-        k.decode(): pickle.loads(v) if v is not None else None
-        for k, v in mapping.items()
-    }
-
-
-class RedisCheckpoint(BaseCheckpointSaver):
-    client: RedisType = Field(default_factory=get_redis_client)
-
+class PostgresCheckpoint(BaseCheckpointSaver):
     class Config:
         arbitrary_types_allowed = True
 
     @property
     def config_specs(self) -> list[ConfigurableFieldSpec]:
-        # Although the annotations are Optional[str], both fields are actually
-        # required to create a valid checkpoint key.
         return [
-            ConfigurableFieldSpec(
-                id="user_id",
-                annotation=Optional[str],
-                name="User ID",
-                description=None,
-                default=None,
-                is_shared=True,
-            ),
             ConfigurableFieldSpec(
                 id="thread_id",
                 annotation=Optional[str],
@@ -53,33 +24,104 @@ class RedisCheckpoint(BaseCheckpointSaver):
                 default=None,
                 is_shared=True,
             ),
+            CheckpointThreadTs,
         ]
 
-    def _hash_key(self, config: RunnableConfig) -> str:
-        return checkpoint_key(
-            config["configurable"]["user_id"], config["configurable"]["thread_id"]
-        )
+    def get(self, config: RunnableConfig) -> Optional[Checkpoint]:
+        raise NotImplementedError
 
-    def get(self, config: RunnableConfig) -> Checkpoint | None:
-        value = _load(self.client.hgetall(self._hash_key(config)))
-        if value.get("v") == 1:
-            # langgraph version 1
-            return value
-        elif value.get("__pregel_version") == 1:
-            # permchain version 1
-            value.pop("__pregel_version")
-            value.pop("__pregel_ts")
-            checkpoint = empty_checkpoint()
-            if value.get("messages"):
-                checkpoint["channel_values"] = {"__root__": value["messages"][1]}
+    def put(self, config: RunnableConfig, checkpoint: Checkpoint) -> RunnableConfig:
+        raise NotImplementedError
+
+    async def alist(self, config: RunnableConfig) -> AsyncIterator[CheckpointTuple]:
+        async with get_pg_pool().acquire() as db, db.transaction():
+            thread_id = config["configurable"]["thread_id"]
+            async for value in db.cursor(
+                "SELECT checkpoint, thread_ts, parent_ts FROM checkpoints WHERE thread_id = $1 ORDER BY thread_ts DESC",
+                thread_id,
+            ):
+                yield CheckpointTuple(
+                    {
+                        "configurable": {
+                            "thread_id": thread_id,
+                            "thread_ts": value[1],
+                        }
+                    },
+                    pickle.loads(value[0]),
+                    {
+                        "configurable": {
+                            "thread_id": thread_id,
+                            "thread_ts": value[2],
+                        }
+                    }
+                    if value[2]
+                    else None,
+                )
+
+    async def aget_tuple(self, config: RunnableConfig) -> Optional[CheckpointTuple]:
+        thread_id = config["configurable"]["thread_id"]
+        thread_ts = config["configurable"].get("thread_ts")
+        async with get_pg_pool().acquire() as conn:
+            if thread_ts:
+                if value := await conn.fetchrow(
+                    "SELECT checkpoint, parent_ts FROM checkpoints WHERE thread_id = $1 AND thread_ts = $2",
+                    thread_id,
+                    datetime.fromisoformat(thread_ts),
+                ):
+                    return CheckpointTuple(
+                        config,
+                        pickle.loads(value[0]),
+                        {
+                            "configurable": {
+                                "thread_id": thread_id,
+                                "thread_ts": value[1],
+                            }
+                        }
+                        if value[1]
+                        else None,
+                    )
             else:
-                checkpoint["channel_values"] = {}
-            for key in checkpoint["channel_values"]:
-                checkpoint["channel_versions"][key] = 1
-            return checkpoint
-        else:
-            # unknown version
-            return None
+                if value := await conn.fetchrow(
+                    "SELECT checkpoint, thread_ts, parent_ts FROM checkpoints WHERE thread_id = $1 ORDER BY thread_ts DESC LIMIT 1",
+                    thread_id,
+                ):
+                    return CheckpointTuple(
+                        {
+                            "configurable": {
+                                "thread_id": thread_id,
+                                "thread_ts": value[1],
+                            }
+                        },
+                        pickle.loads(value[0]),
+                        {
+                            "configurable": {
+                                "thread_id": thread_id,
+                                "thread_ts": value[2],
+                            }
+                        }
+                        if value[2]
+                        else None,
+                    )
 
-    def put(self, config: RunnableConfig, checkpoint: Checkpoint) -> None:
-        return self.client.hmset(self._hash_key(config), _dump(checkpoint))
+    async def aput(self, config: RunnableConfig, checkpoint: Checkpoint) -> None:
+        thread_id = config["configurable"]["thread_id"]
+        async with get_pg_pool().acquire() as conn:
+            await conn.execute(
+                """
+                INSERT INTO checkpoints (thread_id, thread_ts, parent_ts, checkpoint)
+                VALUES ($1, $2, $3, $4) 
+                ON CONFLICT (thread_id, thread_ts) 
+                DO UPDATE SET checkpoint = EXCLUDED.checkpoint;""",
+                thread_id,
+                datetime.fromisoformat(checkpoint["ts"]),
+                datetime.fromisoformat(checkpoint.get("parent_ts"))
+                if checkpoint.get("parent_ts")
+                else None,
+                pickle.dumps(checkpoint),
+            )
+        return {
+            "configurable": {
+                "thread_id": thread_id,
+                "thread_ts": checkpoint["ts"],
+            }
+        }

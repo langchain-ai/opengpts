@@ -43,16 +43,20 @@ jobs:
     name: Python ${{ matrix.python-version }} tests
     services:
       # Label used to access the service container
-      redis:
-        image: redislabs/redisearch:latest
-        # Set health checks to wait until redis has started
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        # Set health checks to wait until postgres has started
         options: >-
-          --health-cmd "redis-cli ping"
+          --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
         ports:
-          - "6379:6379"
+          - "5432:5432"
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }} + Poetry ${{ env.POETRY_VERSION }}
@@ -62,12 +66,21 @@ jobs:
           poetry-version: ${{ env.POETRY_VERSION }}
           working-directory: .
           cache-key: langserve-all
-      - name: install redis
+      - name: Install dependencies
         run: |
-          pip install redis
-      - name: check redis is running
+          poetry install --with test
+      - name: Install golang-migrate
         run: |
-          python -c "import redis; redis.Redis(host='localhost', port=6379).ping()"
+          wget -O golang-migrate.deb https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.deb
+          sudo dpkg -i golang-migrate.deb && rm golang-migrate.deb
+      - name: Run tests
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        run: make test
 
   frontend-lint-and-build:
       runs-on: ubuntu-latest

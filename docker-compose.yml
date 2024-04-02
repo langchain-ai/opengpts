@@ -1,13 +1,30 @@
 version: "3"
 
 services:
-  redis:
-    container_name: opengpts-redis
-    image: redis/redis-stack-server:latest
+  postgres:
+    image: pgvector/pgvector:pg16
+    healthcheck:
+      test: pg_isready -U $POSTGRES_USER
+      start_interval: 1s
+      start_period: 5s
+      interval: 5s
+      retries: 5
     ports:
-      - "6379:6379"
+      - "5433:5432"
+    env_file:
+      - .env
     volumes:
-      - ./redis-volume:/data
+      - ./postgres-volume:/var/lib/postgresql/data
+  postgres-setup:
+    image: migrate/migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/migrations:/migrations
+    env_file:
+      - .env
+    command: ["-path", "/migrations", "-database", "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:$POSTGRES_PORT/$POSTGRES_DB?sslmode=disable", "up"]
   backend:
     container_name: opengpts-backend
     build:
@@ -15,22 +32,26 @@ services:
     ports:
       - "8100:8000" # Backend is accessible on localhost:8100
     depends_on:
-      - redis
+      postgres-setup:
+        condition: service_completed_successfully
     env_file:
       - .env
     volumes:
       - ./backend:/backend
     environment:
-      REDIS_URL: "redis://opengpts-redis:6379"
+      POSTGRES_HOST: "postgres"
     command:
       - --reload
   frontend:
     container_name: opengpts-frontend
     build:
       context: frontend
+    depends_on:
+      backend:
+        condition: service_healthy
     volumes:
       - ./frontend/src:/frontend/src
     ports:
       - "5173:5173" # Frontend is accessible on localhost:5173
     environment:
-      VITE_BACKEND_URL: "http://opengpts-backend:8000"
+      VITE_BACKEND_URL: "http://backend:8000"

@@ -2,11 +2,11 @@ from typing import Annotated, List, Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path, Query
-from pydantic import BaseModel, Field
 from langsmith import Client as LangSmithClient
+from pydantic import BaseModel, Field
 
 import app.storage as storage
-from app.schema import Assistant, AssistantWithoutUserId, OpengptsUserId
+from app.schema import Assistant, OpengptsUserId
 
 router = APIRouter()
 
@@ -26,42 +26,42 @@ AssistantID = Annotated[str, Path(description="The ID of the assistant.")]
 
 
 @router.get("/")
-def list_assistants(opengpts_user_id: OpengptsUserId) -> List[AssistantWithoutUserId]:
+async def list_assistants(opengpts_user_id: OpengptsUserId) -> List[Assistant]:
     """List all assistants for the current user."""
-    return storage.list_assistants(opengpts_user_id)
+    return await storage.list_assistants(opengpts_user_id)
 
 
 @router.get("/public/")
-def list_public_assistants(
+async def list_public_assistants(
     shared_id: Annotated[
         Optional[str], Query(description="ID of a publicly shared assistant.")
     ] = None,
-) -> List[AssistantWithoutUserId]:
+) -> List[Assistant]:
     """List all public assistants."""
-    return storage.list_public_assistants(
+    return await storage.list_public_assistants(
         FEATURED_PUBLIC_ASSISTANTS + ([shared_id] if shared_id else [])
     )
 
 
 @router.get("/{aid}")
-def get_asistant(
+async def get_assistant(
     opengpts_user_id: OpengptsUserId,
     aid: AssistantID,
 ) -> Assistant:
     """Get an assistant by ID."""
-    assistant = storage.get_assistant(opengpts_user_id, aid)
+    assistant = await storage.get_assistant(opengpts_user_id, aid)
     if not assistant:
         raise HTTPException(status_code=404, detail="Assistant not found")
     return assistant
 
 
 @router.post("")
-def create_assistant(
+async def create_assistant(
     opengpts_user_id: OpengptsUserId,
     payload: AssistantPayload,
 ) -> Assistant:
     """Create an assistant."""
-    return storage.put_assistant(
+    return await storage.put_assistant(
         opengpts_user_id,
         str(uuid4()),
         name=payload.name,
@@ -71,13 +71,13 @@ def create_assistant(
 
 
 @router.put("/{aid}")
-def upsert_assistant(
+async def upsert_assistant(
     opengpts_user_id: OpengptsUserId,
     aid: AssistantID,
     payload: AssistantPayload,
 ) -> Assistant:
     """Create or update an assistant."""
-    atype = payload.config['configurable']['type']
+    atype = payload.config["configurable"]["type"]
     if atype == "agent":
         dataset = LANGSMITHCLIENT.create_dataset(aid)
         trace_filter = f'and(and(eq(feedback_key, "user_score"), eq(feedback_score, 1)), and(eq(metadata_key, "assistant_id"), eq(metadata_value, "{aid}")))'
@@ -90,33 +90,33 @@ def upsert_assistant(
                     "session_id": "37f535e9-22c4-4267-9d36-522930e59cb7",
                     "sampling_rate": 1,
                     "filter": trace_filter,
-                    #"trace_filter": trace_filter,
-                    "add_to_dataset_id": str(dataset.id)
+                    # "trace_filter": trace_filter,
+                    "add_to_dataset_id": str(dataset.id),
                 },
-                "headers": LANGSMITHCLIENT._headers
-            }
+                "headers": LANGSMITHCLIENT._headers,
+            },
         )
     elif atype == "chatbot":
         dataset = LANGSMITHCLIENT.create_dataset(aid)
         trace_filter = f'and(and(eq(feedback_key, "user_score"), eq(feedback_score, 1)), and(eq(metadata_key, "assistant_id"), eq(metadata_value, "{aid}")))'
         LANGSMITHCLIENT.request_with_retries(
-          "POST",
-          LANGSMITHCLIENT.api_url + "/runs/rules",
-          {
-            "json": {
-              "display_name": f"few shot {aid}",
-              "session_id": "37f535e9-22c4-4267-9d36-522930e59cb7",
-              "sampling_rate": 1,
-              "filter": 'eq(name, "chatbot")',
-              "trace_filter": trace_filter,
-              "add_to_dataset_id": str(dataset.id)
+            "POST",
+            LANGSMITHCLIENT.api_url + "/runs/rules",
+            {
+                "json": {
+                    "display_name": f"few shot {aid}",
+                    "session_id": "37f535e9-22c4-4267-9d36-522930e59cb7",
+                    "sampling_rate": 1,
+                    "filter": 'eq(name, "chatbot")',
+                    "trace_filter": trace_filter,
+                    "add_to_dataset_id": str(dataset.id),
+                },
+                "headers": LANGSMITHCLIENT._headers,
             },
-            "headers": LANGSMITHCLIENT._headers
-          }
         )
     else:
         pass
-    return storage.put_assistant(
+    return await storage.put_assistant(
         opengpts_user_id,
         aid,
         name=payload.name,

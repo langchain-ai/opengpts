@@ -18,7 +18,7 @@ Currently, there are three different architectures implemented:
 - Assistant
 - RAG
 - Chatbot
-- 
+
 See below for more details on those.
 Because this is open source, if you do not like those architectures or want to modify them, you can easily do that!
 
@@ -31,6 +31,63 @@ Because this is open source, if you do not like those architectures or want to m
 
 - [GPTs: a simple hosted version](https://opengpts-example-vz4y4ooboq-uc.a.run.app/)
 - [Assistants API: a getting started guide](API.md)
+
+## Quickstart with Docker
+
+This project supports a Docker-based setup, streamlining installation and execution. It automatically builds images for the frontend and backend and sets up Postgres using docker-compose.
+
+### Quick Start
+
+1. **Prerequisites:**  
+    Ensure you have Docker and docker-compose installed on your system.
+
+
+2. **Clone the Repository:**  
+   Obtain the project files by cloning the repository.
+
+   ```
+   git clone https://github.com/langchain-ai/opengpts.git
+   cd opengpts
+   ```
+
+3. **Set Up Environment Variables:**  
+   Create a `.env` file in the root directory of the project by copying `.env.example` as a template, and add the following environment variables:
+   ```shell
+   # At least one language model API key is required
+   OPENAI_API_KEY=sk-...
+   # LANGCHAIN_TRACING_V2=true
+   # LANGCHAIN_API_KEY=...
+   
+   # Setup for Postgres. Docker compose will use these values to set up the database.
+   POSTGRES_PORT=5432
+   POSTGRES_DB=opengpts
+   POSTGRES_USER=postgres
+   POSTGRES_PASSWORD=...
+   ```
+
+   Replace `sk-...` with your OpenAI API key and `...` with your LangChain API key.
+
+
+4. **Run with Docker Compose:**  
+   In the root directory of the project, execute:
+
+   ```
+   docker compose up
+   ```
+
+   This command builds the Docker images for the frontend and backend from their respective Dockerfiles and starts all necessary services, including Postgres.
+
+5. **Access the Application:**  
+   With the services running, access the frontend at [http://localhost:5173](http://localhost:5173), substituting `5173` with the designated port number.
+
+
+6. **Rebuilding After Changes:**  
+   If you make changes to either the frontend or backend, rebuild the Docker images to reflect these changes. Run:
+   ```
+   docker compose up --build
+   ```
+   This command rebuilds the images with your latest changes and restarts the services.
+
 
 ## Quickstart without Docker
 
@@ -48,19 +105,24 @@ poetry install
 
 **Set up persistence layer**
 
-The backend by default uses Redis for saving agent configurations and chat message history.
-In order to you use this, you need to a `REDIS_URL` variable.
+The backend uses Postgres for saving agent configurations and chat message history.
+In order to use this, you need to set the following environment variables:
 
 ```shell
-export REDIS_URL=...
+export POSTGRES_HOST=...
+export POSTGRES_PORT=...
+export POSTGRES_DB=...
+export POSTGRES_USER=...
+export POSTGRES_PASSWORD=...
 ```
+
+Migrations are managed with [golang-migrate](https://github.com/golang-migrate/migrate). Ensure it's installed on your machine and use `make migrate` to run all migrations. For those opting to run the project via Docker, the Dockerfile already includes golang-migrate.
 
 **Set up vector database**
 
-The backend by default also uses Redis as a vector database,
+The backend by default also uses Postgres as a vector database,
 although you can easily switch this out to use any of the 50+ vector databases in LangChain.
-If you are using Redis as a vectorstore, the above environment variable should work
-(assuming you've enabled `redissearch`)
+If you are using Postgres as a vectorstore, the above environment variables should work.
 
 **Set up language models**
 
@@ -110,45 +172,9 @@ yarn dev
 
 Navigate to [http://localhost:5173/](http://localhost:5173/) and enjoy!
 
-## Installation and Running with Docker
+## Migrating data from Redis to Postgres
 
-This project supports a Docker-based setup, streamlining installation and execution. It automatically builds images for the frontend and backend and sets up Redis using docker-compose.
-
-### Quick Start
-
-1. **Clone the Repository:**  
-   Obtain the project files by cloning the repository.
-
-   ```
-   git clone https://github.com/langchain-ai/opengpts.git
-   cd opengpts
-   ```
-
-2. **Run with Docker Compose:**  
-   In the root directory of the project, execute:
-
-   ```
-   docker compose up
-   ```
-
-   This command builds the Docker images for the frontend and backend from their respective Dockerfiles and starts all necessary services, including Redis.
-
-3. **Access the Application:**  
-   With the services running, access the frontend at [http://localhost:5173](http://localhost:5173), substituting `5173` with the designated port number.
-
-4. **Rebuilding After Changes:**  
-   If you make changes to either the frontend or backend, rebuild the Docker images to reflect these changes. Run:
-   ```
-   docker compose up --build
-   ```
-   This command rebuilds the images with your latest changes and restarts the services.
-
-### Note
-
-- Ensure Docker and docker-compose are installed on your system.
-- Adjust the `.env` file as required for specific environment configurations.
-
----
+Refer to this [guide](tools/redis_to_postgres/README.md) for migrating data from Redis to Postgres.
 
 ## Features
 
@@ -245,7 +271,7 @@ We have exposed four agent types by default:
 
 We will work to add more when we have confidence they can work well.
 
-If you want to add your own LLM or agent configuration, or want to edit the existing ones, you can find them in `backend/packages/gizmo-agent/gizmo_agent/agent_types`
+If you want to add your own LLM or agent configuration, or want to edit the existing ones, you can find them in `backend/app/agent_types`
 
 #### Claude 2
 
