@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timezone
 from typing import List, Optional, Sequence
 from fastapi import HTTPException, status
@@ -186,9 +187,9 @@ async def register_user(
     email: str,
     full_name: str,
     address: str,
-    role: str
 ) -> User:
     """Register a new user."""
+    user_id = uuid.uuid4()  # Generate a unique user ID
     creation_date = datetime.now(timezone.utc)
     last_login_date = None  # Assuming no login has occurred yet
     is_active = True
@@ -197,18 +198,18 @@ async def register_user(
         try:
             async with conn.transaction():
                 await conn.execute(
-                    "INSERT INTO \"user\" (username, password_hash, email, full_name, address, role, creation_date, last_login_date, is_active, is_deleted) "
-                    "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
-                    username, password_hash, email, full_name, address, role,
+                    "INSERT INTO \"user\" (username, password_hash, email, full_name, address, creation_date, last_login_date, is_active, is_deleted) "
+                    "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+                    username, password_hash, email, full_name, address,
                     creation_date, last_login_date, is_active, False
                 )
                 return User(
+                    user_id=user_id,
                     username=username,
                     password_hash=password_hash,
                     email=email,
                     full_name=full_name,
                     address=address,
-                    role=role,
                     creation_date=creation_date,
                     last_login_date=last_login_date,
                     is_active=is_active
@@ -243,7 +244,6 @@ async def login_user(
                     email=user_record['email'],
                     full_name=user_record['full_name'],
                     address=user_record['address'],
-                    role=user_record['role'],
                     creation_date=user_record['creation_date'],
                     last_login_date=last_login_date,
                     is_active=user_record['is_active']
@@ -264,15 +264,14 @@ async def update_user(
     email: str,
     full_name: str,
     address: str,
-    role: str
 ) -> Optional[User]:
     """Update a user."""
     async with get_pg_pool().acquire() as conn:
         try:
             async with conn.transaction():
                 await conn.execute(
-                    "UPDATE \"user\" SET username = $1, password_hash = $2, email = $3, full_name = $4, address = $5, role = $6 WHERE user_id = $7 AND is_deleted = FALSE",
-                    username, password_hash, email, full_name, address, role, user_id
+                    "UPDATE \"user\" SET username = $1, password_hash = $2, email = $3, full_name = $4, address = $5,  WHERE user_id = $6 AND is_deleted = FALSE",
+                    username, password_hash, email, full_name, address,  user_id
                 )
                 # Retrieve the updated user to return
                 updated_user = await get_user(user_id)
@@ -299,3 +298,4 @@ async def delete_user(user_id: str) -> bool:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to delete user",
             )
+

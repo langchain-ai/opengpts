@@ -19,7 +19,6 @@ class UserRegisterRequest(BaseModel):
     email: str = Field(..., description="The email of the user.")
     full_name: str = Field(..., description="The full name of the user.")
     address: str = Field(..., description="The address of the user.")
-    role: str = Field(..., description="The role of the user.")
 
 class UserLoginRequest(BaseModel):
     """Payload for logging in a user."""
@@ -53,6 +52,11 @@ async def login_user(user_login_request: UserLoginRequest) -> Optional[UserRespo
         return {"token": token, "message": 'Login successful'}
     else:
         raise HTTPException(status_code=401, detail="Invalid username or password")
+
+@router.post("/logout")
+async def logout_user():
+    # You may add additional logic here if needed, such as invalidating sessions, etc.
+    return {"message": "Logout successful"}
 
 @router.get("/{user_id}", response_model=User)
 async def get_user_by_id(user_id: UserID) -> User:

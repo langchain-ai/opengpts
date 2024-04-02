@@ -52,8 +52,6 @@ class User(BaseModel):
     """The full name of the user."""
     address: str
     """The address of the user."""
-    role: str
-    """The role of the user."""
     creation_date: datetime
     """The date and time when the user account was created."""
     last_login_date: Optional[datetime] = None
