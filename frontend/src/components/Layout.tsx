@@ -1,6 +1,8 @@
-import { Fragment } from "react";
+import { Fragment , useEffect} from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { useNavigate } from 'react-router-dom'; // Import useHistory hook from React Router
+
 
 export function Layout(props: {
   sidebarOpen: boolean;
@@ -9,6 +11,46 @@ export function Layout(props: {
   children: React.ReactNode;
   subtitle?: React.ReactNode;
 }) {
+  const navigate = useNavigate(); // Initialize useHistory hook
+  const authToken = sessionStorage.getItem('authToken');
+
+  useEffect(() => {
+    if (!sessionStorage.getItem('authToken')) {
+      navigate("/");
+  }},[])
+
+
+  const handleLogout = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch("http://localhost:8100/users/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+      });
+      
+      if (response.ok) {
+        // Login successful
+        const data = await response.json();
+
+        console.log("Login successful:", data.token);
+        // If authentication is successful:
+        sessionStorage.removeItem("authToken");
+        // Redirect user to /home
+        navigate('/');
+      } else {
+        // Login failed
+        console.error("Login failed");
+        // Handle login failure (e.g., display error message to user)
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      // Handle error (e.g., display error message to user)
+    }
+  };
   return (
     <>
       <Transition.Root show={props.sidebarOpen} as={Fragment}>
@@ -98,12 +140,14 @@ export function Layout(props: {
           <span className="sr-only">Open sidebar</span>
           <Bars3Icon className="h-6 w-6" aria-hidden="true" />
         </button>
+
         <div className="flex-1 text-sm font-semibold leading-6 text-gray-900 lg:pl-72">
           {props.subtitle ? (
             <>
               OpenGPTs: <span className="font-normal">{props.subtitle}</span>
             </>
           ) : (
+          
             "OpenGPTs"
           )}
         </div>
@@ -111,6 +155,7 @@ export function Layout(props: {
           Research Preview: this is unauthenticated and all data can be found.
           Do not use with sensitive data
         </div>
+        <button onClick={handleLogout}>Logout</button>
       </div>
 
       <main className="pt-20 lg:pl-72 flex flex-col min-h-[calc(100%-56px)]">
