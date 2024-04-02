@@ -104,30 +104,6 @@ def _format_example_agent(example: Example) -> str:
 </trajectory>"""
 
 
-def _format_trajectory(example: Example) -> str:
-    s = "<trajectory>"
-    for i in example.inputs["input"]:
-        s += f"\n{i['type']}: {i['content']}\n"
-    s += f"\nFinal Answer: {example.outputs['output']['content']}\n"
-    s += "</trajectory>"
-    return s
-
-
-def _get_agent_examples(examples: List[Example]) -> List[Example]:
-    es = {}
-    for e in examples:
-        key = e.inputs["input"][0]["content"]
-        if key in es:
-            curr_val = len(es[key].inputs["input"])
-            new_val = len(e.inputs["input"])
-            # Take the longer example
-            if new_val > curr_val:
-                es[key] = e
-        else:
-            es[key] = e
-    return list(es.values())
-
-
 def few_shot_examples(assistant_id: str, *, agent: bool = False) -> str:
     if LANGSMITH_CLIENT.has_dataset(dataset_name=assistant_id):
         # TODO: Update to randomize
@@ -135,7 +111,6 @@ def few_shot_examples(assistant_id: str, *, agent: bool = False) -> str:
         if not examples:
             return ""
         if agent:
-            # examples = _get_agent_examples(examples)
             examples = random.sample(examples, min(len(examples), 10))
             e_str = "\n".join([_format_example_agent(e) for e in examples])
         else:
@@ -147,7 +122,6 @@ def few_shot_examples(assistant_id: str, *, agent: bool = False) -> str:
                 "these comments in mind as you generate a new tweet!"
                 + "\n".join(learnings)
             )
-            # e_str = "\n".join([_format_trajectory(e) for e in examples])
         return f"""
 
 Here are some previous interactions with a user trying to accomplish a similar task. \
