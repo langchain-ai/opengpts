@@ -97,7 +97,7 @@ def _format_agent_example(example: Example) -> str:
 </trajectory>"""
 
 
-def few_shot_examples(assistant_id: str, *, agent: bool = False) -> str:
+def get_few_shot_str(assistant_id: str, *, agent: bool = False) -> str:
     client = LangSmithClient()
     if client.has_dataset(dataset_name=assistant_id):
         # TODO: Update to randomize
@@ -131,7 +131,7 @@ def get_agent_executor(
     assistant_id: Optional[str] = None,
 ):
     if assistant_id is not None:
-        system_message += few_shot_examples(assistant_id, agent=True)
+        system_message += get_few_shot_str(assistant_id, agent=True)
 
     if agent == AgentType.GPT_35_TURBO:
         llm = get_openai_llm()
@@ -260,12 +260,11 @@ def get_chatbot(
         llm = get_mixtral_fireworks()
     else:
         raise ValueError("Unexpected llm type")
-    if assistant_id is not None:
-        few_shot_example_string = few_shot_examples(assistant_id)
-    else:
-        few_shot_example_string = ""
-    message = system_message + few_shot_example_string
-    return get_chatbot_executor(llm, message, CHECKPOINTER)
+
+    if assistant_id:
+        system_message += get_few_shot_str(assistant_id)
+
+    return get_chatbot_executor(llm, system_message, CHECKPOINTER)
 
 
 class ConfigurableChatBot(RunnableBinding):
