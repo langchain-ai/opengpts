@@ -104,15 +104,12 @@ def get_few_shot_str(assistant_id: str, *, agent: bool = False) -> str:
         examples = list(client.list_examples(dataset_name=assistant_id))
         if not examples:
             return ""
+        examples = random.sample(examples, min(len(examples), 10))
         if agent:
-            examples = random.sample(examples, min(len(examples), 10))
             example_str = "\n".join([_format_agent_example(e) for e in examples])
         else:
-            examples = random.sample(examples, min(len(examples), 10))
             example_str = "\n".join([_format_chat_example(e) for e in examples])
-        return f"""
-
-Here are some previous interactions with a user trying to accomplish a similar task. \
+        return f"""Here are some previous interactions with a user trying to accomplish a similar task. \
 You should assume that the final output is the desired one, and any \
 intermediate steps were wrong in some way, and the human then tried to improve upon \
 them in specific ways. Learn from these previous interactions and do not repeat past \
@@ -132,7 +129,7 @@ def get_agent_executor(
     self_learning: bool = False,
 ):
     if self_learning and assistant_id is not None:
-        system_message += get_few_shot_str(assistant_id, agent=True)
+        system_message += "\n\n" + get_few_shot_str(assistant_id, agent=True)
 
     if agent == AgentType.GPT_35_TURBO:
         llm = get_openai_llm()
@@ -267,7 +264,7 @@ def get_chatbot(
         raise ValueError("Unexpected llm type")
 
     if self_learning and assistant_id:
-        system_message += get_few_shot_str(assistant_id)
+        system_message += "\n\n" + get_few_shot_str(assistant_id)
 
     return get_chatbot_executor(llm, system_message, CHECKPOINTER)
 
