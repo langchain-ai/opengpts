@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Chat } from "./components/Chat";
 import { ChatList } from "./components/ChatList";
@@ -13,8 +13,8 @@ import {
 } from "./hooks/useConfigList";
 import { Config } from "./components/Config";
 import { MessageWithFiles } from "./utils/formTypes.ts";
-import { Route, Routes, useNavigate } from "react-router-dom";
-import { NotFound } from "./components/NotFound.tsx";
+import { useNavigate } from "react-router-dom";
+import { useThreadAndAssistant } from "./hooks/useThreadAndAssistant.ts";
 
 function App() {
   const navigate = useNavigate();
@@ -24,11 +24,7 @@ function App() {
   const { startStream, stopStream, stream } = useStreamState();
   const { configSchema, configDefaults } = useSchemas();
 
-  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
-  const currentChat =
-    chats?.find((chat) => chat.thread_id === currentChatId) ?? null;
-  const [assistantConfig, setAssistantConfig] =
-    useState<ConfigInterface | null>(null);
+  const { currentChat, assistantConfig, isLoading } = useThreadAndAssistant();
 
   const startTurn = useCallback(
     async (
@@ -99,11 +95,12 @@ function App() {
 
   const selectConfig = useCallback(
     (id: string | null) => {
-      setCurrentChatId(null);
       navigate(id ? `/assistant/${id}` : "/");
     },
     [navigate],
   );
+
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <Layout
@@ -124,60 +121,37 @@ function App() {
       setSidebarOpen={setSidebarOpen}
       sidebar={
         <ChatList
-          chats={useMemo(() => {
-            if (configs === null || chats === null) return null;
-            return chats;
-          }, [chats, configs])}
-          currentChat={currentChat}
+          chats={chats}
+          currentChat={currentChat || null}
           enterChat={selectChat}
           currentConfig={assistantConfig || null}
           enterConfig={selectConfig}
         />
       }
     >
-      <Routes>
-        <Route
-          path="/thread/:chatId"
-          element={
-            <Chat
-              startStream={startTurn}
-              stopStream={stopStream}
-              stream={stream}
-              setCurrentChatId={setCurrentChatId}
-              setCurrentConfig={setAssistantConfig}
-            />
-          }
+      {currentChat && assistantConfig && (
+        <Chat startStream={startTurn} stopStream={stopStream} stream={stream} />
+      )}
+      {!currentChat && assistantConfig && (
+        <NewChat
+          startChat={startChat}
+          configSchema={configSchema}
+          configDefaults={configDefaults}
+          configs={configs}
+          saveConfig={saveConfig}
+          enterConfig={selectConfig}
         />
-        <Route
-          path="/assistant/:assistantId"
-          element={
-            <NewChat
-              startChat={startChat}
-              configSchema={configSchema}
-              configDefaults={configDefaults}
-              configs={configs}
-              saveConfig={saveConfig}
-              enterConfig={selectConfig}
-              setCurrentConfig={setAssistantConfig}
-            />
-          }
+      )}
+      {!currentChat && !assistantConfig && (
+        <Config
+          className="mb-6"
+          config={null}
+          configSchema={configSchema}
+          configDefaults={configDefaults}
+          saveConfig={saveConfig}
+          enterConfig={selectConfig}
         />
-        <Route
-          path="/"
-          element={
-            <Config
-              className="mb-6"
-              config={null}
-              configSchema={configSchema}
-              configDefaults={configDefaults}
-              saveConfig={saveConfig}
-              enterConfig={selectConfig}
-              setCurrentConfig={setAssistantConfig}
-            />
-          }
-        />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      )}
     </Layout>
   );
 }
