@@ -61,11 +61,11 @@ Tool = Union[
 
 class AgentType(str, Enum):
     GPT_35_TURBO = "GPT 3.5 Turbo"
-    # GPT_4 = "GPT 4 Turbo"
-    # AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
-    # CLAUDE2 = "Claude 2"
-    # BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
-    # GEMINI = "GEMINI"
+    GPT_4 = "GPT 4 Turbo"
+    AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
+    CLAUDE2 = "Claude 2"
+    BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
+    GEMINI = "GEMINI"
 
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
@@ -267,17 +267,18 @@ class ConfigurableAgent(RunnableBinding):
 
 class LLMType(str, Enum):
     GPT_35_TURBO = "GPT 3.5 Turbo"
-    # GPT_4 = "GPT 4 Turbo"
-    # AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
-    # CLAUDE2 = "Claude 2"
-    # BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
-    # GEMINI = "GEMINI"
-    # MIXTRAL = "Mixtral"
+    GPT_4 = "GPT 4 Turbo"
+    AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
+    CLAUDE2 = "Claude 2"
+    BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
+    GEMINI = "GEMINI"
+    MIXTRAL = "Mixtral"
 
 
 def get_chatbot(
     llm_type: LLMType,
     system_message: str,
+    *,
     assistant_id: Optional[str] = None,
 ):
     if llm_type == LLMType.GPT_35_TURBO:
@@ -322,7 +323,7 @@ class ConfigurableChatBot(RunnableBinding):
     ) -> None:
         others.pop("bound", None)
 
-        chatbot = get_chatbot(llm, system_message, assistant_id)
+        chatbot = get_chatbot(llm, system_message, assistant_id=assistant_id)
         super().__init__(
             llm=llm,
             system_message=system_message,
