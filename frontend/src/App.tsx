@@ -100,8 +100,6 @@ function App() {
     [navigate],
   );
 
-  if (isLoading) return <div>Loading...</div>;
-
   return (
     <Layout
       subtitle={
@@ -140,7 +138,7 @@ function App() {
           enterConfig={selectConfig}
         />
       )}
-      {!currentChat && !assistantConfig && (
+      {!currentChat && !assistantConfig && !isLoading && (
         <Config
           className="mb-6"
           config={null}
@@ -150,6 +148,7 @@ function App() {
           enterConfig={selectConfig}
         />
       )}
+      {isLoading && <div>Loading...</div>}
     </Layout>
   );
 }

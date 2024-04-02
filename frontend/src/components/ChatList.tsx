@@ -2,15 +2,14 @@ import { PlusIcon } from "@heroicons/react/24/outline";
 
 import { ChatListProps } from "../hooks/useChatList";
 import { cn } from "../utils/cn";
-import {useThreadAndAssistant} from "../hooks/useThreadAndAssistant.ts";
+import { useThreadAndAssistant } from "../hooks/useThreadAndAssistant.ts";
 
 export function ChatList(props: {
   chats: ChatListProps["chats"];
   enterChat: (id: string | null) => void;
   enterConfig: (id: string | null) => void;
 }) {
-
-    const { currentChat, assistantConfig } = useThreadAndAssistant();
+  const { currentChat, assistantConfig } = useThreadAndAssistant();
 
   return (
     <>
