@@ -100,7 +100,6 @@ def _format_agent_example(example: Example) -> str:
 def get_few_shot_str(assistant_id: str, *, agent: bool = False) -> str:
     client = LangSmithClient()
     if client.has_dataset(dataset_name=assistant_id):
-        # TODO: Update to randomize
         examples = list(client.list_examples(dataset_name=assistant_id))
         if not examples:
             return ""
