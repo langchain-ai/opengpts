@@ -11,7 +11,7 @@ from app.schema import Assistant, OpengptsUserId
 router = APIRouter()
 
 FEATURED_PUBLIC_ASSISTANTS = []
-LANGSMITHCLIENT = LangSmithClient()
+LANGSMITH_CLIENT = LangSmithClient()
 
 
 class AssistantPayload(BaseModel):
@@ -77,31 +77,30 @@ async def upsert_assistant(
     payload: AssistantPayload,
 ) -> Assistant:
     """Create or update an assistant."""
-    atype = payload.config["configurable"]["type"]
-    if atype == "agent":
-        dataset = LANGSMITHCLIENT.create_dataset(aid)
-        trace_filter = f'and(and(eq(feedback_key, "user_score"), eq(feedback_score, 1)), and(eq(metadata_key, "assistant_id"), eq(metadata_value, "{aid}")))'
-        LANGSMITHCLIENT.request_with_retries(
+    assistant_type = payload.config["configurable"]["type"]
+    if assistant_type == "agent":
+        dataset = LANGSMITH_CLIENT.create_dataset(aid)
+        filter = f'and(and(eq(feedback_key, "user_score"), eq(feedback_score, 1)), and(eq(metadata_key, "assistant_id"), eq(metadata_value, "{aid}")))'
+        LANGSMITH_CLIENT.request_with_retries(
             "POST",
-            LANGSMITHCLIENT.api_url + "/runs/rules",
+            LANGSMITH_CLIENT.api_url + "/runs/rules",
             {
                 "json": {
                     "display_name": f"few shot {aid}",
                     "session_id": "37f535e9-22c4-4267-9d36-522930e59cb7",
                     "sampling_rate": 1,
-                    "filter": trace_filter,
-                    # "trace_filter": trace_filter,
+                    "filter": filter,
                     "add_to_dataset_id": str(dataset.id),
                 },
-                "headers": LANGSMITHCLIENT._headers,
+                "headers": LANGSMITH_CLIENT._headers,
             },
         )
-    elif atype == "chatbot":
-        dataset = LANGSMITHCLIENT.create_dataset(aid)
+    elif assistant_type == "chatbot":
+        dataset = LANGSMITH_CLIENT.create_dataset(aid)
         trace_filter = f'and(and(eq(feedback_key, "user_score"), eq(feedback_score, 1)), and(eq(metadata_key, "assistant_id"), eq(metadata_value, "{aid}")))'
-        LANGSMITHCLIENT.request_with_retries(
+        LANGSMITH_CLIENT.request_with_retries(
             "POST",
-            LANGSMITHCLIENT.api_url + "/runs/rules",
+            LANGSMITH_CLIENT.api_url + "/runs/rules",
             {
                 "json": {
                     "display_name": f"few shot {aid}",
@@ -111,7 +110,7 @@ async def upsert_assistant(
                     "trace_filter": trace_filter,
                     "add_to_dataset_id": str(dataset.id),
                 },
-                "headers": LANGSMITHCLIENT._headers,
+                "headers": LANGSMITH_CLIENT._headers,
             },
         )
     else:
