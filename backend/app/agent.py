@@ -129,8 +129,9 @@ def get_agent_executor(
     interrupt_before_action: bool,
     *,
     assistant_id: Optional[str] = None,
+    self_learning: bool = False,
 ):
-    if assistant_id is not None:
+    if self_learning and assistant_id is not None:
         system_message += get_few_shot_str(assistant_id, agent=True)
 
     if agent == AgentType.GPT_35_TURBO:
@@ -176,6 +177,7 @@ class ConfigurableAgent(RunnableBinding):
     assistant_id: Optional[str] = None
     thread_id: Optional[str] = None
     user_id: Optional[str] = None
+    self_learning: bool = False
 
     def __init__(
         self,
@@ -187,6 +189,7 @@ class ConfigurableAgent(RunnableBinding):
         thread_id: Optional[str] = None,
         retrieval_description: str = RETRIEVAL_DESCRIPTION,
         interrupt_before_action: bool = False,
+        self_learning: bool = False,
         kwargs: Optional[Mapping[str, Any]] = None,
         config: Optional[Mapping[str, Any]] = None,
         **others: Any,
@@ -215,6 +218,7 @@ class ConfigurableAgent(RunnableBinding):
             system_message,
             interrupt_before_action,
             assistant_id=assistant_id,
+            self_learning=self_learning,
         )
         agent_executor = _agent.with_config({"recursion_limit": 50})
         super().__init__(
@@ -243,6 +247,7 @@ def get_chatbot(
     system_message: str,
     *,
     assistant_id: Optional[str] = None,
+    self_learning: bool = False,
 ):
     if llm_type == LLMType.GPT_35_TURBO:
         llm = get_openai_llm()
@@ -261,7 +266,7 @@ def get_chatbot(
     else:
         raise ValueError("Unexpected llm type")
 
-    if assistant_id:
+    if self_learning and assistant_id:
         system_message += get_few_shot_str(assistant_id)
 
     return get_chatbot_executor(llm, system_message, CHECKPOINTER)
@@ -272,6 +277,7 @@ class ConfigurableChatBot(RunnableBinding):
     system_message: str = DEFAULT_SYSTEM_MESSAGE
     user_id: Optional[str] = None
     assistant_id: Optional[str] = None
+    self_learning: bool = False
 
     def __init__(
         self,
@@ -279,13 +285,16 @@ class ConfigurableChatBot(RunnableBinding):
         llm: LLMType = LLMType.GPT_35_TURBO,
         system_message: str = DEFAULT_SYSTEM_MESSAGE,
         assistant_id: Optional[str] = None,
+        self_learning: bool = False,
         kwargs: Optional[Mapping[str, Any]] = None,
         config: Optional[Mapping[str, Any]] = None,
         **others: Any,
     ) -> None:
         others.pop("bound", None)
 
-        chatbot = get_chatbot(llm, system_message, assistant_id=assistant_id)
+        chatbot = get_chatbot(
+            llm, system_message, assistant_id=assistant_id, self_learning=self_learning
+        )
         super().__init__(
             llm=llm,
             system_message=system_message,
@@ -302,6 +311,11 @@ chatbot = (
         system_message=ConfigurableField(id="system_message", name="Instructions"),
         assistant_id=ConfigurableField(
             id="assistant_id", name="Assistant ID", is_shared=True
+        ),
+        self_learning=ConfigurableField(
+            id="self_learning",
+            name="Self-learning",
+            description="A self-learning GPT is one that will learn use user feedback to improve over time.",
         ),
     )
     .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
@@ -363,6 +377,8 @@ chat_retrieval = (
             id="assistant_id", name="Assistant ID", is_shared=True
         ),
         thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
+        # TODO: Add support
+        # self_learning=ConfigurableField(id="self_learning", name="Self-learning")
     )
     .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
 )
@@ -392,6 +408,11 @@ agent_w_tools = (
         tools=ConfigurableField(id="tools", name="Tools"),
         retrieval_description=ConfigurableField(
             id="retrieval_description", name="Retrieval Description"
+        ),
+        self_learning=ConfigurableField(
+            id="self_learning",
+            name="Self-learning",
+            description="A self-learning GPT is one that will learn use user feedback to improve over time.",
         ),
     )
     .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])

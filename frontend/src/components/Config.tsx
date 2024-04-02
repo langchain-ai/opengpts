@@ -474,6 +474,7 @@ const ORDER = [
   "tools",
   "llm_type",
   "agent_type",
+  "self_learning",
 ];
 
 export function Config(props: {
