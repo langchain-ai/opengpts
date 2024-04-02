@@ -104,7 +104,7 @@ def get_few_shot_str(assistant_id: str, *, agent: bool = False) -> str:
         examples = list(client.list_examples(dataset_name=assistant_id))
         if not examples:
             return ""
-        examples = random.sample(examples, min(len(examples), 10))
+        examples = random.sample(examples, min(len(examples), 5))
         if agent:
             example_str = "\n".join([_format_agent_example(e) for e in examples])
         else:
