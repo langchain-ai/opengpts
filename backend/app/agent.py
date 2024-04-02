@@ -1,6 +1,6 @@
 import random
 from enum import Enum
-from typing import Any, List, Mapping, Optional, Sequence, Union
+from typing import Any, Mapping, Optional, Sequence, Union
 
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import (
@@ -71,7 +71,6 @@ class AgentType(str, Enum):
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
 CHECKPOINTER = PostgresCheckpoint(at=CheckpointAt.END_OF_STEP)
-LANGSMITH_CLIENT = LangSmithClient()
 
 
 def _format_chat_example(example: Example) -> str:
@@ -99,9 +98,10 @@ def _format_agent_example(example: Example) -> str:
 
 
 def few_shot_examples(assistant_id: str, *, agent: bool = False) -> str:
-    if LANGSMITH_CLIENT.has_dataset(dataset_name=assistant_id):
+    client = LangSmithClient()
+    if client.has_dataset(dataset_name=assistant_id):
         # TODO: Update to randomize
-        examples = list(LANGSMITH_CLIENT.list_examples(dataset_name=assistant_id))
+        examples = list(client.list_examples(dataset_name=assistant_id))
         if not examples:
             return ""
         if agent:
