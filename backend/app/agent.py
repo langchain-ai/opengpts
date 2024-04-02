@@ -307,14 +307,16 @@ class ConfigurableChatBot(RunnableBinding):
         )
 
 
-chatbot = ConfigurableChatBot(
-    llm=LLMType.GPT_35_TURBO, checkpoint=CHECKPOINTER
-).configurable_fields(
-    llm=ConfigurableField(id="llm_type", name="LLM Type"),
-    system_message=ConfigurableField(id="system_message", name="Instructions"),
-    assistant_id=ConfigurableField(
-        id="assistant_id", name="Assistant ID", is_shared=True
-    ),
+chatbot = (
+    ConfigurableChatBot(llm=LLMType.GPT_35_TURBO, checkpoint=CHECKPOINTER)
+    .configurable_fields(
+        llm=ConfigurableField(id="llm_type", name="LLM Type"),
+        system_message=ConfigurableField(id="system_message", name="Instructions"),
+        assistant_id=ConfigurableField(
+            id="assistant_id", name="Assistant ID", is_shared=True
+        ),
+    )
+    .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
 )
 
 
@@ -364,41 +366,47 @@ class ConfigurableRetrieval(RunnableBinding):
         )
 
 
-chat_retrieval = ConfigurableRetrieval(
-    llm_type=LLMType.GPT_35_TURBO, checkpoint=CHECKPOINTER
-).configurable_fields(
-    llm_type=ConfigurableField(id="llm_type", name="LLM Type"),
-    system_message=ConfigurableField(id="system_message", name="Instructions"),
-    assistant_id=ConfigurableField(
-        id="assistant_id", name="Assistant ID", is_shared=True
-    ),
-    thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
+chat_retrieval = (
+    ConfigurableRetrieval(llm_type=LLMType.GPT_35_TURBO, checkpoint=CHECKPOINTER)
+    .configurable_fields(
+        llm_type=ConfigurableField(id="llm_type", name="LLM Type"),
+        system_message=ConfigurableField(id="system_message", name="Instructions"),
+        assistant_id=ConfigurableField(
+            id="assistant_id", name="Assistant ID", is_shared=True
+        ),
+        thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
+    )
+    .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
 )
 
 
-agent_w_tools = ConfigurableAgent(
-    agent=AgentType.GPT_35_TURBO,
-    tools=[],
-    system_message=DEFAULT_SYSTEM_MESSAGE,
-    retrieval_description=RETRIEVAL_DESCRIPTION,
-    assistant_id=None,
-    thread_id=None,
-).configurable_fields(
-    agent=ConfigurableField(id="agent_type", name="Agent Type"),
-    system_message=ConfigurableField(id="system_message", name="Instructions"),
-    interrupt_before_action=ConfigurableField(
-        id="interrupt_before_action",
-        name="Tool Confirmation",
-        description="If Yes, you'll be prompted to continue before each tool is executed.\nIf No, tools will be executed automatically by the agent.",
-    ),
-    assistant_id=ConfigurableField(
-        id="assistant_id", name="Assistant ID", is_shared=True
-    ),
-    thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
-    tools=ConfigurableField(id="tools", name="Tools"),
-    retrieval_description=ConfigurableField(
-        id="retrieval_description", name="Retrieval Description"
-    ),
+agent_w_tools = (
+    ConfigurableAgent(
+        agent=AgentType.GPT_35_TURBO,
+        tools=[],
+        system_message=DEFAULT_SYSTEM_MESSAGE,
+        retrieval_description=RETRIEVAL_DESCRIPTION,
+        assistant_id=None,
+        thread_id=None,
+    )
+    .configurable_fields(
+        agent=ConfigurableField(id="agent_type", name="Agent Type"),
+        system_message=ConfigurableField(id="system_message", name="Instructions"),
+        interrupt_before_action=ConfigurableField(
+            id="interrupt_before_action",
+            name="Tool Confirmation",
+            description="If Yes, you'll be prompted to continue before each tool is executed.\nIf No, tools will be executed automatically by the agent.",
+        ),
+        assistant_id=ConfigurableField(
+            id="assistant_id", name="Assistant ID", is_shared=True
+        ),
+        thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
+        tools=ConfigurableField(id="tools", name="Tools"),
+        retrieval_description=ConfigurableField(
+            id="retrieval_description", name="Retrieval Description"
+        ),
+    )
+    .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
 )
 
 
@@ -406,8 +414,8 @@ agent = chatbot.configurable_alternatives(
     ConfigurableField(id="type", name="Bot Type"),
     default_key="chatbot",
     prefix_keys=True,
-    # chatbot=chatbot,
-    # chat_retrieval=chat_retrieval,
+    chatbot=chatbot,
+    chat_retrieval=chat_retrieval,
 ).with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
 
 if __name__ == "__main__":
