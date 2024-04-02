@@ -20,7 +20,6 @@ response = requests.post('http://127.0.0.1:8100/users/register', json={
   "email": "user@example.com",
   "full_name": "Example User",
   "address": "123 Example St, City",
-  "role": "user"
 }).content
 ```
 
@@ -67,7 +66,6 @@ response = requests.put('http://127.0.0.1:8100/users/{user_id}', json={
   "email": "new_email@example.com",
   "full_name": "New Name",
   "address": "456 New St, City",
-  "role": "admin"
 }).content
 ```
 
