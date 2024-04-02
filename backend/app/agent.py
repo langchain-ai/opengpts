@@ -1,6 +1,6 @@
 import random
 from enum import Enum
-from typing import Any, Mapping, Optional, Sequence, Union
+from typing import Any, List, Mapping, Optional, Sequence, Union
 
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import (
@@ -9,6 +9,7 @@ from langchain_core.runnables import (
 )
 from langgraph.checkpoint import CheckpointAt
 from langsmith import Client as LangSmithClient
+from langsmith.schemas import Example
 
 from app.agent_types.google_agent import get_google_agent_executor
 from app.agent_types.openai_agent import get_openai_agent_executor
@@ -73,25 +74,16 @@ CHECKPOINTER = PostgresCheckpoint(at=CheckpointAt.END_OF_STEP)
 LANGSMITH_CLIENT = LangSmithClient()
 
 
-def _format_example(e):
+def _format_example(example: Example) -> str:
     return f"""<input>
-{e.inputs['input'][0]['content']}
+{example.inputs['input'][0]['content']}
 </input>
 <output>
-{e.outputs['output']['content']}
+{example.outputs['output']['content']}
 </output>"""
 
 
-def _format_trajectory(e):
-    s = "<trajectory>"
-    for i in e.inputs["input"]:
-        s += f"\n{i['type']}: {i['content']}\n"
-    s += f"\nFinal Answer: {e.outputs['output']['content']}\n"
-    s += "</trajectory>"
-    return s
-
-
-def _get_learnings(examples):
+def _get_learnings(examples: List[Example]) -> List[str]:
     learnings = []
     for e in examples:
         for i in e.inputs["input"][1:]:
@@ -101,24 +93,27 @@ def _get_learnings(examples):
     return learnings
 
 
-def _format_example_agent(e):
-    return f"""<trajectory>
-{e.inputs['input'] +[ e.outputs['output']]}
-</trajectory>"""
-
-
-def _format_example_agent1(e):
+def _format_example_agent(example: Example) -> str:
     new_messages = []
-    for o in e.outputs["output"][1:][::-1]:
+    for o in example.outputs["output"][1:][::-1]:
         if o["type"] == "human":
             break
         new_messages.append(o)
     return f"""<trajectory>
-{[e.outputs['output'][0]] + new_messages[::-1]}
+{[example.outputs['output'][0]] + new_messages[::-1]}
 </trajectory>"""
 
 
-def _get_agent_examples(examples):
+def _format_trajectory(example: Example) -> str:
+    s = "<trajectory>"
+    for i in example.inputs["input"]:
+        s += f"\n{i['type']}: {i['content']}\n"
+    s += f"\nFinal Answer: {example.outputs['output']['content']}\n"
+    s += "</trajectory>"
+    return s
+
+
+def _get_agent_examples(examples: List[Example]) -> List[Example]:
     es = {}
     for e in examples:
         key = e.inputs["input"][0]["content"]
@@ -133,7 +128,7 @@ def _get_agent_examples(examples):
     return list(es.values())
 
 
-def few_shot_examples(assistant_id: str, agent: bool = False):
+def few_shot_examples(assistant_id: str, *, agent: bool = False) -> str:
     if LANGSMITH_CLIENT.has_dataset(dataset_name=assistant_id):
         # TODO: Update to randomize
         examples = list(LANGSMITH_CLIENT.list_examples(dataset_name=assistant_id))
@@ -141,27 +136,25 @@ def few_shot_examples(assistant_id: str, agent: bool = False):
             return ""
         if agent:
             # examples = _get_agent_examples(examples)
-            # examples = random.sample(examples, min(len(examples), 10))
-            # e_str = "\n".join([_format_example_agent(e) for e in examples])
             examples = random.sample(examples, min(len(examples), 10))
-            e_str = "\n".join([_format_example_agent1(e) for e in examples])
+            e_str = "\n".join([_format_example_agent(e) for e in examples])
         else:
             examples = random.sample(examples, min(len(examples), 10))
             e_str = "\n".join([_format_example(e) for e in examples])
             learnings = _get_learnings(examples)
             e_str += (
-                "\n\nHere are some of the comments that lead to these examples. Keep these comments in mind as you generate a new tweet!"
+                "\n\nHere are some of the comments that lead to these examples. Keep "
+                "these comments in mind as you generate a new tweet!"
                 + "\n".join(learnings)
             )
             # e_str = "\n".join([_format_trajectory(e) for e in examples])
-        #         return f"""
-        #
-        # Here are some examples of good inputs and outputs. Use these to guide and shape the style of what your new response should look like:
-        # {e_str}
-        # """
         return f"""
 
-Here are some previous interactions with a user trying to accomplish a similar task. You should assumed that the final result in all scenarios is the desired one, and any previous steps were wrong in some way, and the human then tried to improve upon them in specific ways. Learn from these previous interactions and do not repeat previous mistakes!
+Here are some previous interactions with a user trying to accomplish a similar task. \
+You should assumed that the final result in all scenarios is the desired one, and any \
+previous steps were wrong in some way, and the human then tried to improve upon them \
+in specific ways. Learn from these previous interactions and do not repeat previous \
+mistakes!
 {e_str}
 """
 
@@ -171,10 +164,12 @@ def get_agent_executor(
     agent: AgentType,
     system_message: str,
     interrupt_before_action: bool,
+    *,
     assistant_id: Optional[str] = None,
 ):
     if assistant_id is not None:
         system_message += few_shot_examples(assistant_id, agent=True)
+
     if agent == AgentType.GPT_35_TURBO:
         llm = get_openai_llm()
         return get_openai_agent_executor(
