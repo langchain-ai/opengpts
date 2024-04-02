@@ -410,9 +410,9 @@ agent_w_tools = (
 )
 
 
-agent = chatbot.configurable_alternatives(
+agent = agent_w_tools.configurable_alternatives(
     ConfigurableField(id="type", name="Bot Type"),
-    default_key="chatbot",
+    default_key="agent",
     prefix_keys=True,
     chatbot=chatbot,
     chat_retrieval=chat_retrieval,

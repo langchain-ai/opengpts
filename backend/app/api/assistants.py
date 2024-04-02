@@ -1,3 +1,4 @@
+import os
 from typing import Annotated, List, Literal, Optional
 from uuid import uuid4
 
@@ -11,8 +12,6 @@ from app.schema import Assistant, OpengptsUserId
 router = APIRouter()
 
 FEATURED_PUBLIC_ASSISTANTS = []
-LANGSMITH_CLIENT = LangSmithClient()
-LANGSMITH_SESSION_ID = "37f535e9-22c4-4267-9d36-522930e59cb7"
 
 
 class AssistantPayload(BaseModel):
@@ -74,11 +73,20 @@ async def create_assistant(
 def _create_few_shot_dataset_and_rule(
     aid: AssistantID, assistant_type: Literal["agent", "chatbot"]
 ) -> None:
-    dataset = LANGSMITH_CLIENT.create_dataset(aid)
-    user_liked_filter = f'and(eq(feedback_key, "user_score"), eq(feedback_score, 1), eq(metadata_key, "assistant_id"), eq(metadata_value, "{aid}"))'
+    client = LangSmithClient()
+    dataset = client.create_dataset(aid)
+    eq_filters = [
+        ("feedback_key", '"user_score"'),
+        ("feedback_score", 1),
+        ("metadata_key", '"assistant_id"'),
+        ("metadata_value", f'"{aid}"'),
+    ]
+    formatted_eq_filters = ", ".join(f"eq({attr}, {val})" for attr, val in eq_filters)
+    user_liked_filter = f"and({formatted_eq_filters})"
+    session_id = client.read_project(project_name=os.environ["LANGCHAIN_PROJECT"]).id
     payload = {
         "display_name": f"few shot {aid}",
-        "session_id": LANGSMITH_SESSION_ID,
+        "session_id": str(session_id),
         "sampling_rate": 1,
         "add_to_dataset_id": str(dataset.id),
     }
@@ -91,10 +99,10 @@ def _create_few_shot_dataset_and_rule(
         raise ValueError(
             f"Unknown assistant_type {assistant_type}. Expected 'agent' or 'chatbot'."
         )
-    LANGSMITH_CLIENT.request_with_retries(
+    client.request_with_retries(
         "POST",
-        LANGSMITH_CLIENT.api_url + "/runs/rules",
-        {"json": payload, "headers": LANGSMITH_CLIENT._headers},
+        client.api_url + "/runs/rules",
+        {"json": payload, "headers": client._headers},
     )
 
 
