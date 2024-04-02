@@ -74,26 +74,20 @@ CHECKPOINTER = PostgresCheckpoint(at=CheckpointAt.END_OF_STEP)
 LANGSMITH_CLIENT = LangSmithClient()
 
 
-def _format_example(example: Example) -> str:
-    return f"""<input>
+def _format_chat_example(example: Example) -> str:
+    feedback = ""
+    for i in example.inputs["input"][1:]:
+        if i["type"] == "human":
+            feedback += "<human_feedback>\n" + i["content"] + "\n</human_feedback>\n"
+    return f"""<original_input>
 {example.inputs['input'][0]['content']}
-</input>
-<output>
+</original_input>
+{feedback}<output>
 {example.outputs['output']['content']}
 </output>"""
 
 
-def _get_learnings(examples: List[Example]) -> List[str]:
-    learnings = []
-    for e in examples:
-        for i in e.inputs["input"][1:]:
-            print(i)
-            if i["type"] == "human":
-                learnings.append(i["content"])
-    return learnings
-
-
-def _format_example_agent(example: Example) -> str:
+def _format_agent_example(example: Example) -> str:
     new_messages = []
     for o in example.outputs["output"][1:][::-1]:
         if o["type"] == "human":
@@ -112,24 +106,19 @@ def few_shot_examples(assistant_id: str, *, agent: bool = False) -> str:
             return ""
         if agent:
             examples = random.sample(examples, min(len(examples), 10))
-            e_str = "\n".join([_format_example_agent(e) for e in examples])
+            example_str = "\n".join([_format_agent_example(e) for e in examples])
         else:
             examples = random.sample(examples, min(len(examples), 10))
-            e_str = "\n".join([_format_example(e) for e in examples])
-            learnings = _get_learnings(examples)
-            e_str += (
-                "\n\nHere are some of the comments that lead to these examples. Keep "
-                "these comments in mind as you generate a new response!"
-                + "\n".join(learnings)
-            )
+            example_str = "\n".join([_format_chat_example(e) for e in examples])
         return f"""
 
 Here are some previous interactions with a user trying to accomplish a similar task. \
-You should assumed that the final result in all scenarios is the desired one, and any \
-previous steps were wrong in some way, and the human then tried to improve upon them \
-in specific ways. Learn from these previous interactions and do not repeat previous \
+You should assume that the final output is the desired one, and any \
+intermediate steps were wrong in some way, and the human then tried to improve upon \
+them in specific ways. Learn from these previous interactions and do not repeat past \
 mistakes!
-{e_str}
+
+{example_str}
 """
 
 
