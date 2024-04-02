@@ -122,9 +122,7 @@ function App() {
       sidebar={
         <ChatList
           chats={chats}
-          currentChat={currentChat || null}
           enterChat={selectChat}
-          currentConfig={assistantConfig || null}
           enterConfig={selectConfig}
         />
       }
