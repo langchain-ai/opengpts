@@ -1,8 +1,9 @@
 import json
 from typing import Optional, Sequence
 
+from app.api.security import verify_token
 import langsmith.client
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Depends
 from fastapi.exceptions import RequestValidationError
 from langchain.pydantic_v1 import ValidationError
 from langchain_core.messages import AnyMessage

@@ -1,13 +1,15 @@
 from typing import Annotated, List, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Path, Query
+from app.api.security import verify_token
+from fastapi import APIRouter, HTTPException, Path, Query, Depends
 from pydantic import BaseModel, Field
 
 import app.storage as storage
 from app.schema import Assistant, OpengptsUserId
 
 router = APIRouter()
+
 
 FEATURED_PUBLIC_ASSISTANTS = []
 

@@ -1,7 +1,8 @@
 from typing import Annotated, List, Sequence
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Path
+from app.api.security import verify_token
+from fastapi import APIRouter, HTTPException, Path, Depends
 from langchain.schema.messages import AnyMessage
 from pydantic import BaseModel, Field
 

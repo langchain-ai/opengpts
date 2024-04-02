@@ -7,6 +7,78 @@ For full API documentation, see [localhost:8100/docs](localhost:8100/docs) after
 
 If you want to see the API docs before deployment, check out the [hosted docs here](https://opengpts-example-vz4y4ooboq-uc.a.run.app/docs).
 
+## Register a New User
+
+To register a new user, you can use the following API endpoint:
+
+```python
+import requests
+
+response = requests.post('http://127.0.0.1:8100/users/register', json={
+  "username": "example_user",
+  "password_hash": "example_password_hash",
+  "email": "user@example.com",
+  "full_name": "Example User",
+  "address": "123 Example St, City",
+}).content
+```
+
+## Login User
+
+To login with a new user, you can use the following API endpoint
+
+```python
+import requests
+response = requests.post('http://127.0.0.1:8100/users/login', json={
+  "username": "example_user",
+  "password_hash": "example_password_hash"
+}).content
+```
+## Get All Active User
+To Fetch all  the active User, you can use the following API endpoint:-
+
+```python
+import requests
+
+response = requests.get('http://127.0.0.1:8100/users')
+```
+
+## Get User by ID
+To Fetch the User by ID, you can use the following API endpoint:-
+Replace {user_id} with the actual ID of the user you want to delete.
+
+```python
+import requests
+
+response = requests.get('http://127.0.0.1:8100/users/{user_id}')
+```
+
+## Update User by ID
+To Update the User, you can use the following API endpoint:-
+Replace {user_id} with the actual ID of the user you want to delete.
+
+```python
+import requests
+
+response = requests.put('http://127.0.0.1:8100/users/{user_id}', json={
+  "username": "new_username",
+  "password_hash": "new_password_hash",
+  "email": "new_email@example.com",
+  "full_name": "New Name",
+  "address": "456 New St, City",
+}).content
+```
+
+## Delete User by ID
+To delete a user by user ID, you can use the following API endpoint:
+Replace {user_id} with the actual ID of the user you want to delete.
+```python
+import requests
+
+response = requests.delete('http://127.0.0.1:8100/users/{user_id}')
+
+```
+
 ## Create an Assistant
 
 First, let's use the API to create an assistant. 

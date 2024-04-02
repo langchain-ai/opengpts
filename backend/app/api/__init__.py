@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.api.assistants import router as assistants_router
 from app.api.runs import router as runs_router
 from app.api.threads import router as threads_router
-
+from app.api.users import router as users_router
 router = APIRouter()
 
 
@@ -26,4 +26,10 @@ router.include_router(
     threads_router,
     prefix="/threads",
     tags=["threads"],
+)
+
+router.include_router(
+    users_router,
+    prefix="/users",
+    tags=["users"],
 )

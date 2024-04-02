@@ -25,7 +25,10 @@
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.2.3",
     "tailwind-merge": "^2.0.0",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "react-router-dom": "^6.22.3",
+    "@material-ui/core": "^4.12.3",
+    "react-spring": "^9.7.3"
   },
   "devDependencies": {
     "@types/dompurify": "^3.0.4",

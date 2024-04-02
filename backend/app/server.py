@@ -5,6 +5,7 @@ from pathlib import Path
 import orjson
 from fastapi import FastAPI, Form, UploadFile
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import router as api_router
 from app.lifespan import lifespan
@@ -13,6 +14,19 @@ from app.upload import ingest_runnable
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="OpenGPTs API", lifespan=lifespan)
+
+# CORS settings
+origins = [
+    "http://localhost:5173",     # Add additional URLs if needed
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
+)
 
 
 # Get root of app, used to point to directory containing static files

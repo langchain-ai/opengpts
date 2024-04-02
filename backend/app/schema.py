@@ -1,9 +1,11 @@
 from datetime import datetime
 from typing import Annotated, Optional
 from uuid import UUID
-
 from fastapi import Cookie
 from typing_extensions import TypedDict
+
+from pydantic import BaseModel
+from datetime import datetime
 
 
 class Assistant(TypedDict):
@@ -34,6 +36,30 @@ class Thread(TypedDict):
     """The name of the thread."""
     updated_at: datetime
     """The last time the thread was updated."""
+
+class User(BaseModel):
+    """User model"""
+
+    user_id: UUID
+    """The ID of the user."""
+    username: str
+    """The username of the user."""
+    password_hash: str
+    """The hashed password of the user."""
+    email: str
+    """The email address of the user."""
+    full_name: str
+    """The full name of the user."""
+    address: str
+    """The address of the user."""
+    creation_date: datetime
+    """The date and time when the user account was created."""
+    last_login_date: Optional[datetime] = None
+    """The date and time when the user last logged in. Can be None initially."""
+    is_active: bool
+    """Boolean flag indicating whether the user account is active."""
+    is_deleted: bool = False
+    """indicate if the user is deleted"""
 
 
 OpengptsUserId = Annotated[

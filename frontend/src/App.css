@@ -1,0 +1,170 @@
+/* Reset styles */
+html,
+body,
+body * {
+  box-sizing: border-box;
+  font-family: "Open Sans", sans-serif;
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  background-color: inherit;
+  /* border:2px solid orange; */
+}
+
+#loginBtn{
+    margin-right: 10px;
+}
+
+.style {
+    /* background-color: red; */
+  background-image: url("ai.jpg");
+
+}
+body {
+  /* background-image: url(pic3.jpeg); */
+  background-size: cover;
+  background-position: center center;
+  height: min-content;
+
+}
+.container {
+  width: 100%;
+  padding-top: 60px;
+  padding-bottom: 100px;
+}
+
+.login-register-wrapper {
+  height: 684px;
+  width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 2em;
+  border-radius: 5px;
+  box-shadow: 0px 2px 7px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  color: #ffffff;
+  background: linear-gradient(
+    180deg,
+    rgba(19, 38, 79, 1) 0%,
+    rgba(22, 147, 198, 1) 52%,
+    rgba(255, 255, 255, 0) 82%
+  );
+}
+
+/* Nav buttons */
+.nav-buttons {
+  width: 100%;
+  height: 100px;
+  padding-top: 40px;
+  opacity: 1;
+  margin-bottom: 3em;
+}
+button {
+  font-size: 1.5em;
+  margin-right: 1em;
+  border: 0px;
+  cursor: pointer;
+  
+}
+button:focus {
+  outline: 0px;
+}
+button.active {
+  padding-bottom: 10px;
+  border-bottom: solid 2px #1059ff;
+}
+
+
+
+/* footer: forgot section */
+.forgot-panel {
+  position: relative;
+  height: 100px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  padding-top: 24px;
+  border-top: solid 1px rgba(255, 255, 255, 0.3);
+}
+
+/* form styling */
+.form-group input {
+  width: 90%;
+  height: 35px;
+  padding-left: 15px;
+  border: none;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.5);
+}
+.form-group label {
+  text-transform: uppercase;
+}
+
+.form-group select {
+  width: 100%;
+  height: 35px;
+  padding-left: 15px;
+  border: none;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.5);
+  color: #000; /* Set the text color for the select options */
+}
+
+input.submit {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 1em;
+  text-align: center;
+  color: rgba(255, 255, 255, 1);
+  padding: 8px 0px;
+  width: 60%;
+  height: 35px;
+  border: none;
+  border-radius: 20px;
+  margin-top: 23px;
+  margin-left: 60px;
+  background-color: rgba(16, 89, 255, 1);
+}
+
+/*Form positioning and animation */
+
+form#registerform {
+  left: 500px;
+  top: -280px;
+  position: relative;
+}
+
+.forgot-panel {
+  margin-top: -300px;
+  color: gray;
+}
+
+form,
+.forgot-panel {
+  position: relative;
+  transition: all 0.5s ease;
+}
+#loginBtn,
+#registerBtn {
+  transition: all 0.5s ease;
+}
+
+/* Positioning and animation for select field */
+form#registerform select {
+  /* Adjust the positioning as needed */
+  width: calc(96% - 30px);
+  margin-right: 5px;
+}
+
+/* Add a margin-top to create space between the select field and the following input field */
+.form-group select + input {
+  margin-top: 10px;
+}
+
+/* Add styles for the options in the select field */
+.form-group select option {
+  background-color: #fff;
+  color: #000;
+}
