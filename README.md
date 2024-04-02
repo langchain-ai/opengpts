@@ -38,11 +38,11 @@ This project supports a Docker-based setup, streamlining installation and execut
 
 ### Quick Start
 
-0.  **Prerequisites:**  
+1. **Prerequisites:**  
     Ensure you have Docker and docker-compose installed on your system.
 
 
-1. **Clone the Repository:**  
+2. **Clone the Repository:**  
    Obtain the project files by cloning the repository.
 
    ```
@@ -50,19 +50,25 @@ This project supports a Docker-based setup, streamlining installation and execut
    cd opengpts
    ```
 
-2. **Set Up Environment Variables:**  
+3. **Set Up Environment Variables:**  
    Create a `.env` file in the root directory of the project by copying `.env.example` as a template, and add the following environment variables:
    ```shell
    # At least one language model API key is required
    OPENAI_API_KEY=sk-...
    # LANGCHAIN_TRACING_V2=true
    # LANGCHAIN_API_KEY=...
+   
+   # Setup for Postgres. Docker compose will use these values to set up the database.
+   POSTGRES_PORT=5432
+   POSTGRES_DB=opengpts
+   POSTGRES_USER=postgres
+   POSTGRES_PASSWORD=...
    ```
 
    Replace `sk-...` with your OpenAI API key and `...` with your LangChain API key.
 
 
-3. **Run with Docker Compose:**  
+4. **Run with Docker Compose:**  
    In the root directory of the project, execute:
 
    ```
@@ -71,11 +77,11 @@ This project supports a Docker-based setup, streamlining installation and execut
 
    This command builds the Docker images for the frontend and backend from their respective Dockerfiles and starts all necessary services, including Postgres.
 
-4. **Access the Application:**  
+5. **Access the Application:**  
    With the services running, access the frontend at [http://localhost:5173](http://localhost:5173), substituting `5173` with the designated port number.
 
 
-5. **Rebuilding After Changes:**  
+6. **Rebuilding After Changes:**  
    If you make changes to either the frontend or backend, rebuild the Docker images to reflect these changes. Run:
    ```
    docker compose up --build
@@ -165,6 +171,10 @@ yarn dev
 ```
 
 Navigate to [http://localhost:5173/](http://localhost:5173/) and enjoy!
+
+## Migrating data from Redis to Postgres
+
+Refer to this [guide](tools/redis_to_postgres/README.md) for migrating data from Redis to Postgres.
 
 ## Features
 
@@ -261,7 +271,7 @@ We have exposed four agent types by default:
 
 We will work to add more when we have confidence they can work well.
 
-If you want to add your own LLM or agent configuration, or want to edit the existing ones, you can find them in `backend/packages/gizmo-agent/gizmo_agent/agent_types`
+If you want to add your own LLM or agent configuration, or want to edit the existing ones, you can find them in `backend/app/agent_types`
 
 #### Claude 2
 

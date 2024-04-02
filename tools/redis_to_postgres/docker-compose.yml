@@ -1,0 +1,23 @@
+version: "3"
+
+services:
+  redis:
+    image: redis/redis-stack-server:latest
+    ports:
+      - "6380:6379"
+    volumes:
+      - ./../../redis-volume:/data
+  data-migrator:
+    build:
+      context: .
+    depends_on:
+      - redis
+    network_mode: "host"
+    environment:
+      REDIS_URL: "redis://localhost:6380"
+      POSTGRES_HOST: "localhost"
+      POSTGRES_PORT: 5433
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      OPENAI_API_KEY: ...

@@ -34,7 +34,7 @@ class PostgresCheckpoint(BaseCheckpointSaver):
         raise NotImplementedError
 
     async def alist(self, config: RunnableConfig) -> AsyncIterator[CheckpointTuple]:
-        async with get_pg_pool().acquire() as db:
+        async with get_pg_pool().acquire() as db, db.transaction():
             thread_id = config["configurable"]["thread_id"]
             async for value in db.cursor(
                 "SELECT checkpoint, thread_ts, parent_ts FROM checkpoints WHERE thread_id = $1 ORDER BY thread_ts DESC",

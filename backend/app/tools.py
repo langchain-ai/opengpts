@@ -191,7 +191,7 @@ If the user asks a vague question, they are likely meaning to look up info from 
 
 def get_retriever(assistant_id: str, thread_id: str):
     return vstore.as_retriever(
-        search_kwargs={"filter": {"namespace": {"in": [assistant_id, thread_id]}}}
+        search_kwargs={"filter": {"namespace": {"$in": [assistant_id, thread_id]}}}
     )
 
 
