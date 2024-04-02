@@ -1,4 +1,4 @@
-from typing import Annotated, List, Optional
+from typing import Annotated, List, Literal, Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path, Query
@@ -12,6 +12,7 @@ router = APIRouter()
 
 FEATURED_PUBLIC_ASSISTANTS = []
 LANGSMITH_CLIENT = LangSmithClient()
+LANGSMITH_SESSION_ID = "37f535e9-22c4-4267-9d36-522930e59cb7"
 
 
 class AssistantPayload(BaseModel):
@@ -70,6 +71,33 @@ async def create_assistant(
     )
 
 
+def _create_few_shot_dataset_and_rule(
+    aid: AssistantID, assistant_type: Literal["agent", "chatbot"]
+) -> None:
+    dataset = LANGSMITH_CLIENT.create_dataset(aid)
+    user_liked_filter = f'and(eq(feedback_key, "user_score"), eq(feedback_score, 1), eq(metadata_key, "assistant_id"), eq(metadata_value, "{aid}"))'
+    payload = {
+        "display_name": f"few shot {aid}",
+        "session_id": LANGSMITH_SESSION_ID,
+        "sampling_rate": 1,
+        "add_to_dataset_id": str(dataset.id),
+    }
+    if assistant_type == "agent":
+        payload["filter"] = user_liked_filter
+    elif assistant_type == "chatbot":
+        payload["filter"] = 'eq(name, "chatbot")'
+        payload["trace_filter"] = user_liked_filter
+    else:
+        raise ValueError(
+            f"Unknown assistant_type {assistant_type}. Expected 'agent' or 'chatbot'."
+        )
+    LANGSMITH_CLIENT.request_with_retries(
+        "POST",
+        LANGSMITH_CLIENT.api_url + "/runs/rules",
+        {"json": payload, "headers": LANGSMITH_CLIENT._headers},
+    )
+
+
 @router.put("/{aid}")
 async def upsert_assistant(
     opengpts_user_id: OpengptsUserId,
@@ -78,43 +106,8 @@ async def upsert_assistant(
 ) -> Assistant:
     """Create or update an assistant."""
     assistant_type = payload.config["configurable"]["type"]
-    if assistant_type == "agent":
-        dataset = LANGSMITH_CLIENT.create_dataset(aid)
-        filter = f'and(and(eq(feedback_key, "user_score"), eq(feedback_score, 1)), and(eq(metadata_key, "assistant_id"), eq(metadata_value, "{aid}")))'
-        LANGSMITH_CLIENT.request_with_retries(
-            "POST",
-            LANGSMITH_CLIENT.api_url + "/runs/rules",
-            {
-                "json": {
-                    "display_name": f"few shot {aid}",
-                    "session_id": "37f535e9-22c4-4267-9d36-522930e59cb7",
-                    "sampling_rate": 1,
-                    "filter": filter,
-                    "add_to_dataset_id": str(dataset.id),
-                },
-                "headers": LANGSMITH_CLIENT._headers,
-            },
-        )
-    elif assistant_type == "chatbot":
-        dataset = LANGSMITH_CLIENT.create_dataset(aid)
-        trace_filter = f'and(and(eq(feedback_key, "user_score"), eq(feedback_score, 1)), and(eq(metadata_key, "assistant_id"), eq(metadata_value, "{aid}")))'
-        LANGSMITH_CLIENT.request_with_retries(
-            "POST",
-            LANGSMITH_CLIENT.api_url + "/runs/rules",
-            {
-                "json": {
-                    "display_name": f"few shot {aid}",
-                    "session_id": "37f535e9-22c4-4267-9d36-522930e59cb7",
-                    "sampling_rate": 1,
-                    "filter": 'eq(name, "chatbot")',
-                    "trace_filter": trace_filter,
-                    "add_to_dataset_id": str(dataset.id),
-                },
-                "headers": LANGSMITH_CLIENT._headers,
-            },
-        )
-    else:
-        pass
+    if payload.config["configurable"]["type"] in ("chatbot", "agent"):
+        _create_few_shot_dataset_and_rule(aid, assistant_type)
     return await storage.put_assistant(
         opengpts_user_id,
         aid,

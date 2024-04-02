@@ -119,7 +119,7 @@ def few_shot_examples(assistant_id: str, *, agent: bool = False) -> str:
             learnings = _get_learnings(examples)
             e_str += (
                 "\n\nHere are some of the comments that lead to these examples. Keep "
-                "these comments in mind as you generate a new tweet!"
+                "these comments in mind as you generate a new response!"
                 + "\n".join(learnings)
             )
         return f"""
