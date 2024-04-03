@@ -46,7 +46,7 @@ async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
             f"/assistants/{aid}",
             json={
                 "name": "bobby",
-                "config": {"configurable": {"type": "agent"}},
+                "config": {"configurable": {"type": "agent", "self_learning": False}},
                 "public": False,
             },
             headers=headers,
@@ -54,7 +54,7 @@ async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
         assert response.status_code == 200
         assert _project(response.json(), exclude_keys=["updated_at"]) == {
             "assistant_id": aid,
-            "config": {"configurable": {"type": "agent"}},
+            "config": {"configurable": {"type": "agent", "self_learning": False}},
             "name": "bobby",
             "public": False,
             "user_id": "1",
@@ -66,7 +66,7 @@ async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
         assert [_project(d, exclude_keys=["updated_at"]) for d in response.json()] == [
             {
                 "assistant_id": aid,
-                "config": {"configurable": {"type": "agent"}},
+                "config": {"configurable": {"type": "agent", "self_learning": False}},
                 "name": "bobby",
                 "public": False,
                 "user_id": "1",
@@ -80,6 +80,7 @@ async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
                 "config": {
                     "configurable": {
                         "type": "chatbot",
+                        "self_learning": False,
                     }
                 },
                 "public": False,
@@ -89,7 +90,7 @@ async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
 
         assert _project(response.json(), exclude_keys=["updated_at"]) == {
             "assistant_id": aid,
-            "config": {"configurable": {"type": "chatbot"}},
+            "config": {"configurable": {"type": "chatbot", "self_learning": False}},
             "name": "bobby",
             "public": False,
             "user_id": "1",
