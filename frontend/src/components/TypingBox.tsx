@@ -7,10 +7,12 @@ import {
   DocumentIcon,
 } from "@heroicons/react/20/solid";
 import { cn } from "../utils/cn";
-import { Fragment, useCallback, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { MessageWithFiles } from "../utils/formTypes.ts";
-import { DROPZONE_CONFIG } from "../constants.ts";
+import { DROPZONE_CONFIG, TYPE_NAME } from "../constants.ts";
+import { Config } from "../hooks/useConfigList.ts";
+import { Chat } from "../hooks/useChatList.ts";
 
 function getFileTypeIcon(fileType: string) {
   switch (fileType) {
@@ -43,14 +45,38 @@ function convertBytesToReadableSize(bytes: number) {
 }
 
 export default function TypingBox(props: {
-  onSubmit: (data: MessageWithFiles) => Promise<void>;
+  onSubmit: (data: MessageWithFiles) => void;
   onInterrupt?: () => void;
   inflight?: boolean;
-  isDocumentRetrievalActive: boolean;
+  currentConfig: Config;
+  currentChat: Chat | null;
 }) {
   const [inflight, setInflight] = useState(false);
   const isInflight = props.inflight || inflight;
   const [files, setFiles] = useState<File[]>([]);
+  const [isDocumentRetrievalActive, setIsDocumentRetrievalActive] =
+    useState(false);
+
+  const { currentConfig, currentChat } = props;
+
+  useEffect(() => {
+    let configurable = null;
+    if (currentConfig) {
+      configurable = currentConfig.config?.configurable;
+    }
+    const agent_type = configurable?.["type"] as TYPE_NAME | null;
+    if (agent_type === null || agent_type === "chatbot") {
+      setIsDocumentRetrievalActive(false);
+      return;
+    }
+    if (agent_type === "chat_retrieval") {
+      setIsDocumentRetrievalActive(true);
+      return;
+    }
+    const tools =
+      (configurable?.["type==agent/tools"] as { name: string }[]) ?? [];
+    setIsDocumentRetrievalActive(tools.some((t) => t.name === "Retrieval"));
+  }, [currentConfig, currentChat]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles((prevFiles) => {
@@ -146,7 +172,7 @@ export default function TypingBox(props: {
             placeholder="Send a message"
             readOnly={isInflight}
           />
-          {props.isDocumentRetrievalActive && (
+          {isDocumentRetrievalActive && (
             <div className="cursor-pointer absolute m-1 p-3 inset-y-0 right-0 flex items-center pr-3 hover:bg-gray-50">
               <DocumentPlusIcon
                 className="h-5 w-5 text-gray-400"

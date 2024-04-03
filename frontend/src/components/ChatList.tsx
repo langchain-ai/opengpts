@@ -1,22 +1,22 @@
 import { PlusIcon } from "@heroicons/react/24/outline";
 
 import { ChatListProps } from "../hooks/useChatList";
-import { ConfigListProps } from "../hooks/useConfigList";
 import { cn } from "../utils/cn";
+import { useThreadAndAssistant } from "../hooks/useThreadAndAssistant.ts";
 
 export function ChatList(props: {
   chats: ChatListProps["chats"];
-  currentChat: ChatListProps["currentChat"];
-  enterChat: ChatListProps["enterChat"];
-  currentConfig: ConfigListProps["currentConfig"];
-  enterConfig: ConfigListProps["enterConfig"];
+  enterChat: (id: string | null) => void;
+  enterConfig: (id: string | null) => void;
 }) {
+  const { currentChat, assistantConfig } = useThreadAndAssistant();
+
   return (
     <>
       <div
         onClick={() => props.enterChat(null)}
         className={cn(
-          props.currentChat === null && props.currentConfig !== null
+          !currentChat && assistantConfig
             ? "bg-gray-50 text-indigo-600"
             : "text-gray-700 hover:text-indigo-600 hover:bg-gray-50",
           "group flex gap-x-3 rounded-md -mx-2 p-2 leading-6 font-semibold cursor-pointer",
@@ -24,7 +24,7 @@ export function ChatList(props: {
       >
         <span
           className={cn(
-            props.currentChat === null && props.currentConfig !== null
+            !currentChat && assistantConfig
               ? "text-indigo-600 border-indigo-600"
               : "text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600",
             "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white",
@@ -38,7 +38,7 @@ export function ChatList(props: {
       <div
         onClick={() => props.enterConfig(null)}
         className={cn(
-          props.currentConfig === null
+          !assistantConfig
             ? "bg-gray-50 text-indigo-600"
             : "text-gray-700 hover:text-indigo-600 hover:bg-gray-50",
           "mt-1 group flex gap-x-3 rounded-md -mx-2 p-2 leading-6 font-semibold cursor-pointer",
@@ -46,7 +46,7 @@ export function ChatList(props: {
       >
         <span
           className={cn(
-            props.currentConfig === null
+            !assistantConfig
               ? "text-indigo-600 border-indigo-600"
               : "text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600",
             "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white",
@@ -66,7 +66,7 @@ export function ChatList(props: {
             <div
               onClick={() => props.enterChat(chat.thread_id)}
               className={cn(
-                chat === props.currentChat
+                chat.thread_id === currentChat?.thread_id
                   ? "bg-gray-50 text-indigo-600"
                   : "text-gray-700 hover:text-indigo-600 hover:bg-gray-50",
                 "group flex gap-x-3 rounded-md p-2 leading-6 cursor-pointer",
@@ -74,7 +74,7 @@ export function ChatList(props: {
             >
               <span
                 className={cn(
-                  chat === props.currentChat
+                  chat.thread_id === currentChat?.thread_id
                     ? "text-indigo-600 border-indigo-600"
                     : "text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600",
                   "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white",
