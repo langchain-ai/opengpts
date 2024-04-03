@@ -4,15 +4,15 @@ import { cn } from "../utils/cn";
 
 function ConfigItem(props: {
   config: Config;
-  currentConfig: ConfigListProps["currentConfig"];
-  enterConfig: ConfigListProps["enterConfig"];
+  currentConfig: Config | null;
+  enterConfig: (id: string | null) => void;
 }) {
   return (
     <li key={props.config.assistant_id}>
       <div
         onClick={() => props.enterConfig(props.config.assistant_id)}
         className={cn(
-          props.config === props.currentConfig
+          props.config.assistant_id === props.currentConfig?.assistant_id
             ? "bg-gray-50 text-indigo-600"
             : "text-gray-700 hover:text-indigo-600 hover:bg-gray-50",
           "group flex gap-x-3 rounded-md p-2 leading-6 cursor-pointer",
@@ -20,7 +20,7 @@ function ConfigItem(props: {
       >
         <span
           className={cn(
-            props.config === props.currentConfig
+            props.config.assistant_id === props.currentConfig?.assistant_id
               ? "text-indigo-600 border-indigo-600"
               : "text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600",
             "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white",
@@ -48,8 +48,8 @@ function ConfigItem(props: {
 
 export function ConfigList(props: {
   configs: ConfigListProps["configs"];
-  currentConfig: ConfigListProps["currentConfig"];
-  enterConfig: ConfigListProps["enterConfig"];
+  currentConfig: Config | null;
+  enterConfig: (id: string | null) => void;
 }) {
   return (
     <>
