@@ -44,13 +44,17 @@ async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
         # Create an assistant
         response = await client.put(
             f"/assistants/{aid}",
-            json={"name": "bobby", "config": {}, "public": False},
+            json={
+                "name": "bobby",
+                "config": {"configurable": {"type": "agent", "self_learning": False}},
+                "public": False,
+            },
             headers=headers,
         )
         assert response.status_code == 200
         assert _project(response.json(), exclude_keys=["updated_at"]) == {
             "assistant_id": aid,
-            "config": {},
+            "config": {"configurable": {"type": "agent", "self_learning": False}},
             "name": "bobby",
             "public": False,
             "user_id": "1",
@@ -62,7 +66,7 @@ async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
         assert [_project(d, exclude_keys=["updated_at"]) for d in response.json()] == [
             {
                 "assistant_id": aid,
-                "config": {},
+                "config": {"configurable": {"type": "agent", "self_learning": False}},
                 "name": "bobby",
                 "public": False,
                 "user_id": "1",
@@ -71,13 +75,22 @@ async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
 
         response = await client.put(
             f"/assistants/{aid}",
-            json={"name": "bobby", "config": {}, "public": False},
+            json={
+                "name": "bobby",
+                "config": {
+                    "configurable": {
+                        "type": "chatbot",
+                        "self_learning": False,
+                    }
+                },
+                "public": False,
+            },
             headers=headers,
         )
 
         assert _project(response.json(), exclude_keys=["updated_at"]) == {
             "assistant_id": aid,
-            "config": {},
+            "config": {"configurable": {"type": "chatbot", "self_learning": False}},
             "name": "bobby",
             "public": False,
             "user_id": "1",
@@ -99,7 +112,11 @@ async def test_threads() -> None:
     async with get_client() as client:
         response = await client.put(
             f"/assistants/{aid}",
-            json={"name": "assistant", "config": {}, "public": False},
+            json={
+                "name": "assistant",
+                "config": {"configurable": {"type": "agent", "self_learning": False}},
+                "public": False,
+            },
             headers=headers,
         )
 

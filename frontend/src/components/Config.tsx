@@ -29,7 +29,9 @@ function Types(props: {
   alwaysExpanded?: boolean;
 }) {
   const options =
-    props.field.enum?.map((id) => TYPES[id as keyof typeof TYPES]) ?? [];
+    props.field.enum
+      ?.map((id) => TYPES[id as keyof typeof TYPES])
+      .filter(Boolean) ?? [];
   return (
     <div className="-mx-8 mt-6 pt-4 border-t-2 border-dotted mb-8">
       <div className="mx-8 sm:hidden">
@@ -472,6 +474,7 @@ const ORDER = [
   "tools",
   "llm_type",
   "agent_type",
+  "self_learning",
 ];
 
 export function Config(props: {

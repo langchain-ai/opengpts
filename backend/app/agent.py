@@ -1,3 +1,4 @@
+import random
 from enum import Enum
 from typing import Any, Mapping, Optional, Sequence, Union
 
@@ -7,6 +8,8 @@ from langchain_core.runnables import (
     RunnableBinding,
 )
 from langgraph.checkpoint import CheckpointAt
+from langsmith import Client as LangSmithClient
+from langsmith.schemas import Example
 
 from app.agent_types.google_agent import get_google_agent_executor
 from app.agent_types.openai_agent import get_openai_agent_executor
@@ -70,12 +73,65 @@ DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 CHECKPOINTER = PostgresCheckpoint(at=CheckpointAt.END_OF_STEP)
 
 
+def _format_chat_example(example: Example) -> str:
+    feedback = ""
+    for i in example.inputs["input"][1:]:
+        if i["type"] == "human":
+            feedback += "<human_feedback>\n" + i["content"] + "\n</human_feedback>\n"
+    return f"""<original_input>
+{example.inputs['input'][0]['content']}
+</original_input>
+{feedback}<output>
+{example.outputs['output']['content']}
+</output>"""
+
+
+def _format_agent_example(example: Example) -> str:
+    new_messages = []
+    for o in example.outputs["output"][1:][::-1]:
+        if o["type"] == "human":
+            break
+        new_messages.append(o)
+    return f"""<trajectory>
+{[example.outputs['output'][0]] + new_messages[::-1]}
+</trajectory>"""
+
+
+def get_few_shot_str(assistant_id: str, *, agent: bool = False) -> str:
+    client = LangSmithClient()
+    if client.has_dataset(dataset_name=assistant_id):
+        examples = list(client.list_examples(dataset_name=assistant_id))
+        if not examples:
+            return ""
+        # TODO: Make this not random. Could be latest, could use some similarity
+        #   measure.
+        examples = random.sample(examples, min(len(examples), 5))
+        if agent:
+            example_str = "\n".join([_format_agent_example(e) for e in examples])
+        else:
+            example_str = "\n".join([_format_chat_example(e) for e in examples])
+        return f"""Here are some previous interactions with a user trying to accomplish a similar task. \
+You should assume that the final output is the desired one, and any \
+intermediate steps were wrong in some way, and the human then tried to improve upon \
+them in specific ways. Learn from these previous interactions and do not repeat past \
+mistakes!
+
+{example_str}
+"""
+
+
 def get_agent_executor(
     tools: list,
     agent: AgentType,
     system_message: str,
     interrupt_before_action: bool,
+    *,
+    assistant_id: Optional[str] = None,
+    self_learning: bool = False,
 ):
+    if self_learning and assistant_id is not None:
+        system_message += "\n\n" + get_few_shot_str(assistant_id, agent=True)
+
     if agent == AgentType.GPT_35_TURBO:
         llm = get_openai_llm()
         return get_openai_agent_executor(
@@ -119,6 +175,7 @@ class ConfigurableAgent(RunnableBinding):
     assistant_id: Optional[str] = None
     thread_id: Optional[str] = None
     user_id: Optional[str] = None
+    self_learning: bool = False
 
     def __init__(
         self,
@@ -130,6 +187,7 @@ class ConfigurableAgent(RunnableBinding):
         thread_id: Optional[str] = None,
         retrieval_description: str = RETRIEVAL_DESCRIPTION,
         interrupt_before_action: bool = False,
+        self_learning: bool = False,
         kwargs: Optional[Mapping[str, Any]] = None,
         config: Optional[Mapping[str, Any]] = None,
         **others: Any,
@@ -153,7 +211,12 @@ class ConfigurableAgent(RunnableBinding):
                 else:
                     _tools.append(_returned_tools)
         _agent = get_agent_executor(
-            _tools, agent, system_message, interrupt_before_action
+            _tools,
+            agent,
+            system_message,
+            interrupt_before_action,
+            assistant_id=assistant_id,
+            self_learning=self_learning,
         )
         agent_executor = _agent.with_config({"recursion_limit": 50})
         super().__init__(
@@ -180,6 +243,9 @@ class LLMType(str, Enum):
 def get_chatbot(
     llm_type: LLMType,
     system_message: str,
+    *,
+    assistant_id: Optional[str] = None,
+    self_learning: bool = False,
 ):
     if llm_type == LLMType.GPT_35_TURBO:
         llm = get_openai_llm()
@@ -197,6 +263,10 @@ def get_chatbot(
         llm = get_mixtral_fireworks()
     else:
         raise ValueError("Unexpected llm type")
+
+    if self_learning and assistant_id:
+        system_message += "\n\n" + get_few_shot_str(assistant_id)
+
     return get_chatbot_executor(llm, system_message, CHECKPOINTER)
 
 
@@ -204,19 +274,25 @@ class ConfigurableChatBot(RunnableBinding):
     llm: LLMType
     system_message: str = DEFAULT_SYSTEM_MESSAGE
     user_id: Optional[str] = None
+    assistant_id: Optional[str] = None
+    self_learning: bool = False
 
     def __init__(
         self,
         *,
         llm: LLMType = LLMType.GPT_35_TURBO,
         system_message: str = DEFAULT_SYSTEM_MESSAGE,
+        assistant_id: Optional[str] = None,
+        self_learning: bool = False,
         kwargs: Optional[Mapping[str, Any]] = None,
         config: Optional[Mapping[str, Any]] = None,
         **others: Any,
     ) -> None:
         others.pop("bound", None)
 
-        chatbot = get_chatbot(llm, system_message)
+        chatbot = get_chatbot(
+            llm, system_message, assistant_id=assistant_id, self_learning=self_learning
+        )
         super().__init__(
             llm=llm,
             system_message=system_message,
@@ -231,6 +307,14 @@ chatbot = (
     .configurable_fields(
         llm=ConfigurableField(id="llm_type", name="LLM Type"),
         system_message=ConfigurableField(id="system_message", name="Instructions"),
+        assistant_id=ConfigurableField(
+            id="assistant_id", name="Assistant ID", is_shared=True
+        ),
+        self_learning=ConfigurableField(
+            id="self_learning",
+            name="Self-learning",
+            description="A self-learning GPT is one that will learn use user feedback to improve over time.",
+        ),
     )
     .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
 )
@@ -291,12 +375,14 @@ chat_retrieval = (
             id="assistant_id", name="Assistant ID", is_shared=True
         ),
         thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
+        # TODO: Add support
+        # self_learning=ConfigurableField(id="self_learning", name="Self-learning")
     )
     .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
 )
 
 
-agent = (
+agent_w_tools = (
     ConfigurableAgent(
         agent=AgentType.GPT_35_TURBO,
         tools=[],
@@ -321,16 +407,23 @@ agent = (
         retrieval_description=ConfigurableField(
             id="retrieval_description", name="Retrieval Description"
         ),
-    )
-    .configurable_alternatives(
-        ConfigurableField(id="type", name="Bot Type"),
-        default_key="agent",
-        prefix_keys=True,
-        chatbot=chatbot,
-        chat_retrieval=chat_retrieval,
+        self_learning=ConfigurableField(
+            id="self_learning",
+            name="Self-learning",
+            description="A self-learning GPT is one that will learn use user feedback to improve over time.",
+        ),
     )
     .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
 )
+
+
+agent = agent_w_tools.configurable_alternatives(
+    ConfigurableField(id="type", name="Bot Type"),
+    default_key="agent",
+    prefix_keys=True,
+    chatbot=chatbot,
+    chat_retrieval=chat_retrieval,
+).with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
 
 if __name__ == "__main__":
     import asyncio

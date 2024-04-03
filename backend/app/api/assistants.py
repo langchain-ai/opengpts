@@ -1,7 +1,9 @@
-from typing import Annotated, List, Optional
+import os
+from typing import Annotated, List, Literal, Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path, Query
+from langsmith import Client as LangSmithClient
 from pydantic import BaseModel, Field
 
 import app.storage as storage
@@ -68,6 +70,42 @@ async def create_assistant(
     )
 
 
+def _create_few_shot_dataset_and_rule(
+    aid: AssistantID, assistant_type: Literal["agent", "chatbot"]
+) -> None:
+    client = LangSmithClient()
+    dataset = client.create_dataset(aid)
+    eq_filters = [
+        ("feedback_key", '"user_score"'),
+        ("feedback_score", 1),
+        ("metadata_key", '"assistant_id"'),
+        ("metadata_value", f'"{aid}"'),
+    ]
+    formatted_eq_filters = ", ".join(f"eq({attr}, {val})" for attr, val in eq_filters)
+    user_liked_filter = f"and({formatted_eq_filters})"
+    session_id = client.read_project(project_name=os.environ["LANGCHAIN_PROJECT"]).id
+    payload = {
+        "display_name": f"few shot {aid}",
+        "session_id": str(session_id),
+        "sampling_rate": 1,
+        "add_to_dataset_id": str(dataset.id),
+    }
+    if assistant_type == "agent":
+        payload["filter"] = user_liked_filter
+    elif assistant_type == "chatbot":
+        payload["filter"] = 'eq(name, "chatbot")'
+        payload["trace_filter"] = user_liked_filter
+    else:
+        raise ValueError(
+            f"Unknown assistant_type {assistant_type}. Expected 'agent' or 'chatbot'."
+        )
+    client.request_with_retries(
+        "POST",
+        client.api_url + "/runs/rules",
+        {"json": payload, "headers": client._headers},
+    )
+
+
 @router.put("/{aid}")
 async def upsert_assistant(
     opengpts_user_id: OpengptsUserId,
@@ -75,6 +113,9 @@ async def upsert_assistant(
     payload: AssistantPayload,
 ) -> Assistant:
     """Create or update an assistant."""
+    assistant_type = payload.config["configurable"]["type"]
+    if payload.config["configurable"][f"type=={assistant_type}/self_learning"]:
+        _create_few_shot_dataset_and_rule(aid, payload.config["configurable"]["type"])
     return await storage.put_assistant(
         opengpts_user_id,
         aid,

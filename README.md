@@ -76,6 +76,9 @@ This project supports a Docker-based setup, streamlining installation and execut
    ```
 
    This command builds the Docker images for the frontend and backend from their respective Dockerfiles and starts all necessary services, including Postgres.
+    
+   **NOTE**: Make sure your `docker compose version` is greater than or equal v2.24.6. If you're using Docker Desktop you can just upgrade your Docker Desktop version. See here for more on [installing Docker Compose](https://docs.docker.com/compose/install/).
+
 
 5. **Access the Application:**  
    With the services running, access the frontend at [http://localhost:5173](http://localhost:5173), substituting `5173` with the designated port number.
