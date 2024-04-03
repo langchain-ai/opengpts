@@ -42,8 +42,8 @@ export function useStreamState(): StreamStateProps {
           if (msg.event === "data") {
             const messages = JSON.parse(msg.data);
             setCurrent((current) => ({
-              status: "inflight",
-              messages: [...(current?.messages || []), ...messages],
+              status: "inflight" as StreamState["status"],
+              messages: mergeMessagesById(current?.messages, messages),
               run_id: current?.run_id,
             }));
           } else if (msg.event === "metadata") {
@@ -108,4 +108,20 @@ export function useStreamState(): StreamStateProps {
     stopStream,
     stream: current,
   };
+}
+
+export function mergeMessagesById(
+  left: Message[] | null | undefined,
+  right: Message[] | null | undefined,
+): Message[] {
+  const merged = (left ?? [])?.slice();
+  for (const msg of right ?? []) {
+    const foundIdx = merged.findIndex((m) => m.id === msg.id);
+    if (foundIdx === -1) {
+      merged.push(msg);
+    } else {
+      merged[foundIdx] = msg;
+    }
+  }
+  return merged;
 }
