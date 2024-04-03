@@ -113,7 +113,8 @@ async def upsert_assistant(
     payload: AssistantPayload,
 ) -> Assistant:
     """Create or update an assistant."""
-    if payload.config["configurable"]["self_learning"]:
+    assistant_type = payload.config["configurable"]["type"]
+    if payload.config["configurable"][f"type=={assistant_type}/self_learning"]:
         _create_few_shot_dataset_and_rule(aid, payload.config["configurable"]["type"])
     return await storage.put_assistant(
         opengpts_user_id,
