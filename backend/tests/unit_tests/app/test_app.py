@@ -114,7 +114,7 @@ async def test_threads() -> None:
             f"/assistants/{aid}",
             json={
                 "name": "assistant",
-                "config": {"configurable": {"type": "agent"}},
+                "config": {"configurable": {"type": "agent", "self_learning": False}},
                 "public": False,
             },
             headers=headers,
