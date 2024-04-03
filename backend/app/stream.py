@@ -2,19 +2,7 @@ import logging
 from typing import AsyncIterator, Optional, Sequence, Union
 
 import orjson
-from langchain_core.messages import (
-    AIMessage,
-    AIMessageChunk,
-    AnyMessage,
-    BaseMessage,
-    BaseMessageChunk,
-    ChatMessage,
-    ChatMessageChunk,
-    FunctionMessage,
-    FunctionMessageChunk,
-    HumanMessage,
-    HumanMessageChunk,
-)
+from langchain_core.messages import AnyMessage, BaseMessage, message_chunk_to_message
 from langchain_core.runnables import Runnable, RunnableConfig
 from langserve.serialization import WellKnownLCSerializer
 
@@ -28,46 +16,31 @@ async def astream_messages(
 ) -> MessagesStream:
     """Stream messages from the runnable."""
     root_run_id: Optional[str] = None
-    last_message: Optional[AnyMessage] = None
-    last_stream_run_id: Optional[str] = None
+    messages: dict[str, BaseMessage] = {}
 
     async for event in app.astream_events(
-        input, config, version="v1", output_keys="__root__"
+        input, config, version="v1", stream_mode="values"
     ):
         if event["event"] == "on_chain_start" and not root_run_id:
             root_run_id = event["run_id"]
             yield root_run_id
         elif event["event"] == "on_chain_stream" and event["run_id"] == root_run_id:
-            yield event["data"]["chunk"]
+            new_messages: list[BaseMessage] = []
+            for msg in event["data"]["chunk"]:
+                if msg.id in messages and msg == messages[msg.id]:
+                    continue
+                else:
+                    messages[msg.id] = msg
+                    new_messages.append(msg)
+            if new_messages:
+                yield new_messages
         elif event["event"] == "on_chat_model_stream":
-            is_new_stream_run = (
-                last_stream_run_id is None or last_stream_run_id != event["run_id"]
-            )
-            is_diff_msg_type = not last_message or type(  # noqa: E721
-                last_message
-            ) != type(event["data"]["chunk"])
-            if is_new_stream_run or is_diff_msg_type:
-                last_stream_run_id = event["run_id"]
-                last_message = event["data"]["chunk"]
+            message: BaseMessage = event["data"]["chunk"]
+            if message.id not in messages:
+                messages[message.id] = message
             else:
-                last_message = last_message + event["data"]["chunk"]
-            yield [last_message]
-
-
-def map_chunk_to_msg(chunk: BaseMessageChunk) -> BaseMessage:
-    if not isinstance(chunk, BaseMessageChunk):
-        return chunk
-    args = {k: v for k, v in chunk.__dict__.items() if k != "type"}
-    if isinstance(chunk, HumanMessageChunk):
-        return HumanMessage(**args)
-    elif isinstance(chunk, AIMessageChunk):
-        return AIMessage(**args)
-    elif isinstance(chunk, FunctionMessageChunk):
-        return FunctionMessage(**args)
-    elif isinstance(chunk, ChatMessageChunk):
-        return ChatMessage(**args)
-    else:
-        raise ValueError(f"Unknown chunk type: {chunk}")
+                messages[message.id] += message
+            yield [messages[message.id]]
 
 
 _serializer = WellKnownLCSerializer()
@@ -89,7 +62,7 @@ async def to_sse(messages_stream: MessagesStream) -> AsyncIterator[dict]:
                 yield {
                     "event": "data",
                     "data": _serializer.dumps(
-                        [map_chunk_to_msg(msg) for msg in chunk]
+                        [message_chunk_to_message(msg) for msg in chunk]
                     ).decode(),
                 }
     except Exception:
