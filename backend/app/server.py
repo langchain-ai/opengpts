@@ -39,7 +39,7 @@ ui_dir = str(ROOT / "ui")
 if os.path.exists(ui_dir):
     app.mount("", StaticFiles(directory=ui_dir, html=True), name="ui")
 else:
-    logger.warn("No UI directory found, serving API only.")
+    logger.warning("No UI directory found, serving API only.")
 
 if __name__ == "__main__":
     import uvicorn

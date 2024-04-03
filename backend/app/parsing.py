@@ -1,8 +1,8 @@
 """Module contains logic for parsing binary blobs into text."""
-from langchain.document_loaders.parsers import BS4HTMLParser, PDFMinerParser
-from langchain.document_loaders.parsers.generic import MimeTypeBasedParser
-from langchain.document_loaders.parsers.msword import MsWordParser
-from langchain.document_loaders.parsers.txt import TextParser
+from langchain_community.document_loaders.parsers import BS4HTMLParser, PDFMinerParser
+from langchain_community.document_loaders.parsers.generic import MimeTypeBasedParser
+from langchain_community.document_loaders.parsers.msword import MsWordParser
+from langchain_community.document_loaders.parsers.txt import TextParser
 
 HANDLERS = {
     "application/pdf": PDFMinerParser(),
