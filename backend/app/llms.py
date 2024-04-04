@@ -36,7 +36,7 @@ def get_openai_llm(gpt_4: bool = False, azure: bool = False):
             http_client=http_client,
             temperature=0,
             deployment_name=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
-            openai_api_base=os.environ["AZURE_OPENAI_API_BASE"],
+            azure_endpoint=os.environ["AZURE_OPENAI_API_BASE"],
             openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
             openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],
             streaming=True,
