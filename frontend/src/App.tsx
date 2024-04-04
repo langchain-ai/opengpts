@@ -51,6 +51,7 @@ function App() {
                 additional_kwargs: {},
                 type: "human",
                 example: false,
+                id: `human-${Math.random()}`,
               },
             ]
           : null,

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useReducer } from "react";
 import orderBy from "lodash/orderBy";
 
 export interface Message {
+  id: string;
   type: string;
   content:
     | string
@@ -15,6 +16,7 @@ export interface Message {
       arguments?: string;
     };
     tool_calls?: {
+      id: string;
       function?: {
         name?: string;
         arguments?: string;
