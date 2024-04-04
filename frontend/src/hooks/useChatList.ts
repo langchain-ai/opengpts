@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useReducer } from "react";
 import orderBy from "lodash/orderBy";
-import { v4 as uuidv4 } from "uuid";
 
 export interface Message {
   type: string;
@@ -72,26 +71,19 @@ export function useChatList(): ChatListProps {
     fetchChats();
   }, []);
 
-  const createChat = useCallback(
-    async (
-      name: string,
-      assistant_id: string,
-      thread_id: string = uuidv4(),
-    ) => {
-      const response = await fetch(`/threads/${thread_id}`, {
-        method: "PUT",
-        body: JSON.stringify({ assistant_id, name }),
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      });
-      const saved = await response.json();
-      setChats(saved);
-      return saved;
-    },
-    [],
-  );
+  const createChat = useCallback(async (name: string, assistant_id: string) => {
+    const response = await fetch(`/threads`, {
+      method: "POST",
+      body: JSON.stringify({ assistant_id, name }),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+    const saved = await response.json();
+    setChats(saved);
+    return saved;
+  }, []);
 
   return {
     chats,
