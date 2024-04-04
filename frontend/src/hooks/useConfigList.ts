@@ -65,16 +65,15 @@ export function useConfigList(): ConfigListProps {
       files: File[],
       isPublic: boolean,
     ): Promise<string> => {
-
       const confResponse = await fetch(`/assistants`, {
-          method: "POST",
-          body: JSON.stringify({ name, config, public: isPublic }),
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        });
-      const savedConfig = await confResponse.json() as Config;
+        method: "POST",
+        body: JSON.stringify({ name, config, public: isPublic }),
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      });
+      const savedConfig = (await confResponse.json()) as Config;
       if (files.length) {
         const assistant_id = savedConfig.assistant_id;
         const formData = files.reduce((formData, file) => {
@@ -82,12 +81,12 @@ export function useConfigList(): ConfigListProps {
           return formData;
         }, new FormData());
         formData.append(
-            "config",
-            JSON.stringify({configurable: {assistant_id}}),
+          "config",
+          JSON.stringify({ configurable: { assistant_id } }),
         );
         await fetch(`/ingest`, {
-              method: "POST",
-              body: formData,
+          method: "POST",
+          body: formData,
         });
       }
       setConfigs({ ...savedConfig, mine: true });
