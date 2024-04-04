@@ -11,7 +11,6 @@ from __future__ import annotations
 import os
 from typing import Any, BinaryIO, List, Optional
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter, TextSplitter
 from langchain_community.document_loaders.blob_loaders.schema import Blob
 from langchain_community.vectorstores.pgvector import PGVector
 from langchain_core.runnables import (
@@ -21,6 +20,7 @@ from langchain_core.runnables import (
 )
 from langchain_core.vectorstores import VectorStore
 from langchain_openai import OpenAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter, TextSplitter
 
 from app.ingest import ingest_blob
 from app.parsing import MIMETYPE_BASED_PARSER

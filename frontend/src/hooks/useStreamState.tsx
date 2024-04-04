@@ -11,11 +11,7 @@ export interface StreamState {
 
 export interface StreamStateProps {
   stream: StreamState | null;
-  startStream: (
-    input: Message[] | null,
-    assistant_id: string,
-    thread_id: string,
-  ) => Promise<void>;
+  startStream: (input: Message[] | null, thread_id: string) => Promise<void>;
   stopStream?: (clear?: boolean) => void;
 }
 
@@ -24,11 +20,7 @@ export function useStreamState(): StreamStateProps {
   const [controller, setController] = useState<AbortController | null>(null);
 
   const startStream = useCallback(
-    async (
-      input: Message[] | null,
-      assistant_id: string,
-      thread_id: string,
-    ) => {
+    async (input: Message[] | null, thread_id: string) => {
       const controller = new AbortController();
       setController(controller);
       setCurrent({ status: "inflight", messages: input || [], merge: true });
@@ -37,7 +29,7 @@ export function useStreamState(): StreamStateProps {
         signal: controller.signal,
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input, assistant_id, thread_id }),
+        body: JSON.stringify({ input, thread_id }),
         openWhenHidden: true,
         onmessage(msg) {
           if (msg.event === "data") {
