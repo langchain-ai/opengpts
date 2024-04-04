@@ -1,8 +1,7 @@
-import json
 from typing import Optional, Sequence
 
 import langsmith.client
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.exceptions import RequestValidationError
 from langchain.pydantic_v1 import ValidationError
 from langchain_core.messages import AnyMessage
@@ -15,7 +14,7 @@ from sse_starlette import EventSourceResponse
 
 from app.agent import agent
 from app.schema import OpengptsUserId
-from app.storage import get_assistant
+from app.storage import get_assistant, get_thread
 from app.stream import astream_messages, to_sse
 
 router = APIRouter()
@@ -24,63 +23,64 @@ router = APIRouter()
 class CreateRunPayload(BaseModel):
     """Payload for creating a run."""
 
-    assistant_id: str
     thread_id: str
     input: Optional[Sequence[AnyMessage]] = Field(default_factory=list)
     config: Optional[RunnableConfig] = None
 
 
-async def _run_input_and_config(request: Request, opengpts_user_id: OpengptsUserId):
-    try:
-        body = await request.json()
-    except json.JSONDecodeError:
-        raise RequestValidationError(errors=["Invalid JSON body"])
-    assistant = await get_assistant(opengpts_user_id, body["assistant_id"])
+async def _run_input_and_config(
+    payload: CreateRunPayload, opengpts_user_id: OpengptsUserId
+):
+    thread = await get_thread(opengpts_user_id, payload.thread_id)
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found")
+
+    assistant = await get_assistant(opengpts_user_id, str(thread["assistant_id"]))
     if not assistant:
         raise HTTPException(status_code=404, detail="Assistant not found")
+
     config: RunnableConfig = {
         **assistant["config"],
         "configurable": {
             **assistant["config"]["configurable"],
-            **(body.get("config", {}).get("configurable") or {}),
+            **((payload.config or {}).get("configurable") or {}),
             "user_id": opengpts_user_id,
-            "thread_id": body["thread_id"],
-            "assistant_id": body["assistant_id"],
+            "thread_id": str(thread["thread_id"]),
+            "assistant_id": str(assistant["assistant_id"]),
         },
     }
+
     try:
         input_ = (
-            _unpack_input(agent.get_input_schema(config).validate(body["input"]))
-            if body["input"] is not None
+            _unpack_input(agent.get_input_schema(config).validate(payload.input))
+            if payload.input is not None
             else None
         )
     except ValidationError as e:
-        raise RequestValidationError(e.errors(), body=body)
+        raise RequestValidationError(e.errors(), body=payload)
 
     return input_, config
 
 
 @router.post("")
 async def create_run(
-    payload: CreateRunPayload,  # for openapi docs
-    request: Request,
+    payload: CreateRunPayload,
     opengpts_user_id: OpengptsUserId,
     background_tasks: BackgroundTasks,
 ):
     """Create a run."""
-    input_, config = await _run_input_and_config(request, opengpts_user_id)
+    input_, config = await _run_input_and_config(payload, opengpts_user_id)
     background_tasks.add_task(agent.ainvoke, input_, config)
     return {"status": "ok"}  # TODO add a run id
 
 
 @router.post("/stream")
 async def stream_run(
-    payload: CreateRunPayload,  # for openapi docs
-    request: Request,
+    payload: CreateRunPayload,
     opengpts_user_id: OpengptsUserId,
 ):
     """Create a run."""
-    input_, config = await _run_input_and_config(request, opengpts_user_id)
+    input_, config = await _run_input_and_config(payload, opengpts_user_id)
 
     return EventSourceResponse(to_sse(astream_messages(agent, input_, config)))
 
