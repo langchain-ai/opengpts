@@ -1,6 +1,8 @@
 import { TYPES } from "../constants";
 import { Config, ConfigListProps } from "../hooks/useConfigList";
 import { cn } from "../utils/cn";
+import { PencilSquareIcon } from "@heroicons/react/24/outline";
+import { Link } from "react-router-dom";
 
 function ConfigItem(props: {
   config: Config;
@@ -41,6 +43,13 @@ function ConfigItem(props: {
             }
           </span>
         </div>
+        <Link
+          className="ml-auto w-5"
+          to={`/assistant/${props.config.assistant_id}/edit`}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <PencilSquareIcon />
+        </Link>
       </div>
     </li>
   );

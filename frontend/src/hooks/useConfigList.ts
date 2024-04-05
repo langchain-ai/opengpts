@@ -22,6 +22,7 @@ export interface ConfigListProps {
     config: Config["config"],
     files: File[],
     isPublic: boolean,
+    assistantId?: string,
   ) => Promise<string>;
 }
 
@@ -64,15 +65,19 @@ export function useConfigList(): ConfigListProps {
       config: Config["config"],
       files: File[],
       isPublic: boolean,
+      assistantId?: string,
     ): Promise<string> => {
-      const confResponse = await fetch(`/assistants`, {
-        method: "POST",
-        body: JSON.stringify({ name, config, public: isPublic }),
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
+      const confResponse = await fetch(
+        assistantId ? `/assistants/${assistantId}` : "/assistants",
+        {
+          method: assistantId ? "PUT" : "POST",
+          body: JSON.stringify({ name, config, public: isPublic }),
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
         },
-      });
+      );
       const savedConfig = (await confResponse.json()) as Config;
       if (files.length) {
         const assistant_id = savedConfig.assistant_id;
