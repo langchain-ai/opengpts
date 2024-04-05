@@ -502,7 +502,9 @@ export function Config(props: {
     if (!values) return;
     if (!values.configurable) return;
     const tools = (values.configurable["type==agent/tools"] as Tool[]) ?? [];
-    setSelectedTools((oldTools) => [...oldTools, ...tools]);
+    setSelectedTools((oldTools) =>
+      oldTools !== tools ? [...tools] : oldTools,
+    );
   }, [values]);
 
   const handleAddTool = (tool: Tool) => {
