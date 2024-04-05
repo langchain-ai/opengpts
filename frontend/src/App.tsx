@@ -27,11 +27,7 @@ function App() {
   const { currentChat, assistantConfig, isLoading } = useThreadAndAssistant();
 
   const startTurn = useCallback(
-    async (
-      message: MessageWithFiles | null,
-      thread_id: string,
-      assistant_id: string,
-    ) => {
+    async (message: MessageWithFiles | null, thread_id: string) => {
       const files = message?.files || [];
       if (files.length > 0) {
         const formData = files.reduce((formData, file) => {
@@ -55,10 +51,10 @@ function App() {
                 additional_kwargs: {},
                 type: "human",
                 example: false,
+                id: `human-${Math.random()}`,
               },
             ]
           : null,
-        assistant_id,
         thread_id,
       );
     },
@@ -69,7 +65,7 @@ function App() {
     async (config: ConfigInterface, message: MessageWithFiles) => {
       const chat = await createChat(message.message, config.assistant_id);
       navigate(`/thread/${chat.thread_id}`);
-      return startTurn(message, chat.thread_id, chat.assistant_id);
+      return startTurn(message, chat.thread_id);
     },
     [createChat, navigate, startTurn],
   );

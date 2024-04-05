@@ -80,6 +80,7 @@ jobs:
           POSTGRES_DB: postgres
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
+          SCARF_NO_ANALYTICS: true
         run: make test
 
   frontend-lint-and-build:
