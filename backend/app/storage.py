@@ -6,7 +6,6 @@ from langchain_core.messages import AnyMessage
 from app.agent import AgentType, get_agent_executor
 from app.lifespan import get_pg_pool
 from app.schema import Assistant, Thread
-from app.stream import map_chunk_to_msg
 
 
 async def list_assistants(user_id: str) -> List[Assistant]:
@@ -104,7 +103,7 @@ async def get_thread_messages(user_id: str, thread_id: str):
     app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
     state = await app.aget_state({"configurable": {"thread_id": thread_id}})
     return {
-        "messages": [map_chunk_to_msg(msg) for msg in state.values],
+        "messages": state.values,
         "resumeable": bool(state.next),
     }
 
@@ -122,7 +121,7 @@ async def get_thread_history(user_id: str, thread_id: str):
     app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
     return [
         {
-            "values": [map_chunk_to_msg(msg) for msg in c.values],
+            "values": c.values,
             "resumeable": bool(c.next),
             "config": c.config,
             "parent": c.parent_config,
