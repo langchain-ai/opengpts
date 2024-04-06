@@ -6,6 +6,7 @@ The details here might change in the future.
 
 For the time being, upload and ingestion are coupled
 """
+
 from __future__ import annotations
 
 import os
@@ -19,7 +20,7 @@ from langchain_core.runnables import (
     RunnableSerializable,
 )
 from langchain_core.vectorstores import VectorStore
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings, AzureOpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter, TextSplitter
 
 from app.ingest import ingest_blob
@@ -49,6 +50,24 @@ def _convert_ingestion_input_to_blob(data: BinaryIO) -> Blob:
         data=file_data,
         path=file_name,
         mime_type=mimetype,
+    )
+
+
+def _determine_azure_or_openai_embeddings() -> PGVector:
+    if os.environ.get("OPENAI_API_KEY"):
+        return PGVector(
+            connection_string=PG_CONNECTION_STRING,
+            embedding_function=OpenAIEmbeddings(),
+            use_jsonb=True,
+        )
+    if os.environ.get("AZURE_OPENAI_API_KEY"):
+        return PGVector(
+            connection_string=PG_CONNECTION_STRING,
+            embedding_function=AzureOpenAIEmbeddings(),
+            use_jsonb=True,
+        )
+    raise ValueError(
+        "Either OPENAI_API_KEY or AZURE_OPENAI_API_KEY needs to be set for embeddings to work."
     )
 
 
@@ -116,11 +135,7 @@ PG_CONNECTION_STRING = PGVector.connection_string_from_db_params(
     user=os.environ["POSTGRES_USER"],
     password=os.environ["POSTGRES_PASSWORD"],
 )
-vstore = PGVector(
-    connection_string=PG_CONNECTION_STRING,
-    embedding_function=OpenAIEmbeddings(),
-    use_jsonb=True,
-)
+vstore = _determine_azure_or_openai_embeddings()
 
 
 ingest_runnable = IngestRunnable(

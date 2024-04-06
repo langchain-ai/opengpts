@@ -24,18 +24,31 @@ def get_openai_llm(gpt_4: bool = False, azure: bool = False):
             logger.warn("Invalid proxy URL provided. Proceeding without proxy.")
 
     if not azure:
-        openai_model = "gpt-4-turbo-preview" if gpt_4 else "gpt-3.5-turbo"
-        llm = ChatOpenAI(
-            http_client=http_client,
-            model=openai_model,
-            temperature=0,
-        )
+        try:
+            openai_model = "gpt-4-turbo-preview" if gpt_4 else "gpt-3.5-turbo"
+            llm = ChatOpenAI(
+                http_client=http_client,
+                model=openai_model,
+                temperature=0,
+            )
+        except Exception as e:
+            logger.error(
+                f"Failed to instantiate ChatOpenAI due to: {str(e)}. Falling back to AzureChatOpenAI."
+            )
+            llm = AzureChatOpenAI(
+                http_client=http_client,
+                temperature=0,
+                deployment_name=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
+                azure_endpoint=os.environ["AZURE_OPENAI_API_BASE"],
+                openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
+                openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],
+            )
     else:
         llm = AzureChatOpenAI(
             http_client=http_client,
             temperature=0,
             deployment_name=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
-            openai_api_base=os.environ["AZURE_OPENAI_API_BASE"],
+            azure_endpoint=os.environ["AZURE_OPENAI_API_BASE"],
             openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
             openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],
         )
