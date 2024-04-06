@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Message } from "./useChatList";
-import { StreamState } from "./useStreamState";
+import { StreamState, mergeMessagesById } from "./useStreamState";
 
 async function getMessages(threadId: string) {
   const { messages, resumeable } = await fetch(
@@ -67,11 +67,9 @@ export function useChatMessages(
 
   return useMemo(
     () => ({
-      messages: stream?.merge
-        ? [...(messages ?? []), ...(stream.messages ?? [])]
-        : stream?.messages ?? messages,
+      messages: mergeMessagesById(messages, stream?.messages),
       resumeable,
     }),
-    [messages, stream?.merge, stream?.messages, resumeable],
+    [messages, stream?.messages, resumeable],
   );
 }

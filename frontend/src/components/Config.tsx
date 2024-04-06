@@ -484,6 +484,7 @@ export function Config(props: {
   config: ConfigInterface | null;
   saveConfig: ConfigListProps["saveConfig"];
   enterConfig: (id: string | null) => void;
+  edit?: boolean;
 }) {
   const [values, setValues] = useState(
     props.config?.config ?? props.configDefaults,
@@ -502,7 +503,9 @@ export function Config(props: {
     if (!values) return;
     if (!values.configurable) return;
     const tools = (values.configurable["type==agent/tools"] as Tool[]) ?? [];
-    setSelectedTools((oldTools) => [...oldTools, ...tools]);
+    setSelectedTools((oldTools) =>
+      oldTools !== tools ? [...tools] : oldTools,
+    );
   }, [values]);
 
   const handleAddTool = (tool: Tool) => {
@@ -535,9 +538,9 @@ export function Config(props: {
     }
   }, [dropzone.acceptedFiles, setFiles]);
   const [inflight, setInflight] = useState(false);
-  const readonly = !!props.config && !inflight;
+  const readonly = !!props.config && !props.edit && !inflight;
 
-  const settings = !props.config ? (
+  const settings = !readonly ? (
     <div className="flex flex-row gap-4">
       <div className="flex flex-row flex-1">
         <div className="relative flex flex-grow items-stretch focus-within:z-10">
@@ -548,6 +551,7 @@ export function Config(props: {
             autoComplete="off"
             className="block w-full rounded-none rounded-l-md border-0 py-1.5 pl-4 text-gray-900 ring-1 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 ring-inset ring-gray-300"
             placeholder="Name your bot"
+            defaultValue={props.config?.name}
           />
         </div>
         <button
@@ -562,7 +566,7 @@ export function Config(props: {
     </div>
   ) : (
     <>
-      {props.config.public && (
+      {props.config?.public && (
         <PublicLink assistantId={props.config?.assistant_id} />
       )}
     </>
@@ -583,7 +587,13 @@ export function Config(props: {
           vals.configurable["type==agent/tools"] = [...selectedTools];
           setSelectedTools([]);
         }
-        const assistantId = await props.saveConfig(key, vals!, files, isPublic);
+        const assistantId = await props.saveConfig(
+          key,
+          vals!,
+          files,
+          isPublic,
+          props.config?.assistant_id,
+        );
         props.enterConfig(assistantId);
         setInflight(false);
       }}
