@@ -1,0 +1,9 @@
+ALTER TABLE assistant
+    DROP COLUMN user_id,
+    ADD COLUMN user_id VARCHAR(255) NOT NULL;
+
+ALTER TABLE thread
+    DROP COLUMN user_id,
+    ADD COLUMN user_id VARCHAR(255) NOT NULL;
+
+DROP TABLE IF EXISTS "user";

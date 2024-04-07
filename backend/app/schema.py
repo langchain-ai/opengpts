@@ -5,6 +5,13 @@ from fastapi import Cookie
 from typing_extensions import TypedDict
 
 
+class User(TypedDict):
+    user_id: str
+    """The ID of the user."""
+    sub: str
+    """The sub of the user (from a JWT token)."""
+
+
 class Assistant(TypedDict):
     """Assistant model."""
 
