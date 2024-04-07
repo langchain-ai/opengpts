@@ -16,7 +16,7 @@ import { MessageWithFiles } from "./utils/formTypes.ts";
 import { useNavigate } from "react-router-dom";
 import { useThreadAndAssistant } from "./hooks/useThreadAndAssistant.ts";
 
-function App() {
+function App(props: { edit?: boolean }) {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { chats, createChat } = useChatList();
@@ -124,7 +124,7 @@ function App() {
       {currentChat && assistantConfig && (
         <Chat startStream={startTurn} stopStream={stopStream} stream={stream} />
       )}
-      {!currentChat && assistantConfig && (
+      {!currentChat && assistantConfig && !props.edit && (
         <NewChat
           startChat={startChat}
           configSchema={configSchema}
@@ -132,6 +132,17 @@ function App() {
           configs={configs}
           saveConfig={saveConfig}
           enterConfig={selectConfig}
+        />
+      )}
+      {!currentChat && assistantConfig && props.edit && (
+        <Config
+          className="mb-6"
+          config={assistantConfig}
+          configSchema={configSchema}
+          configDefaults={configDefaults}
+          saveConfig={saveConfig}
+          enterConfig={selectConfig}
+          edit={props.edit}
         />
       )}
       {!currentChat && !assistantConfig && !isLoading && (

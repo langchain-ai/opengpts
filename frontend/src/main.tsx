@@ -19,6 +19,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <Routes>
           <Route path="/thread/:chatId" element={<App />} />
+          <Route
+            path="/assistant/:assistantId/edit"
+            element={<App edit={true} />}
+          />
           <Route path="/assistant/:assistantId" element={<App />} />
           <Route path="/" element={<App />} />
           <Route path="*" element={<NotFound />} />
