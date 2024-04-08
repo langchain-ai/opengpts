@@ -92,4 +92,4 @@ def get_ollama_llm():
     if not ollama_base_url:
         ollama_base_url = "http://localhost:11434"
 
-    return ChatOllama(model_name=model_name, ollama_base_url=ollama_base_url)
+    return ChatOllama(model=model_name, ollama_base_url=ollama_base_url)
