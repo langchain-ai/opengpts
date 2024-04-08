@@ -1,12 +1,12 @@
 import os
 from base64 import b64decode
-from enum import StrEnum
+from enum import Enum
 from typing import Optional
 
 from pydantic import BaseSettings, root_validator, validator
 
 
-class AuthType(StrEnum):
+class AuthType(Enum):
     NOOP = "noop"
     JWT_BASIC = "jwt_basic"
     JWT_OIDC = "jwt_oidc"
@@ -57,7 +57,7 @@ class Settings(BaseSettings):
         return values
 
 
-auth_type = AuthType(os.getenv("AUTH_TYPE", AuthType.NOOP).lower())
+auth_type = AuthType(os.getenv("AUTH_TYPE", AuthType.NOOP.value).lower())
 kwargs = {"auth_type": auth_type}
 if auth_type == AuthType.JWT_BASIC:
     kwargs["jwt_basic"] = JWTSettingsBasic()
