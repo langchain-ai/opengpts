@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from typing import Annotated
-from uuid import uuid4
 
 import jwt
 import requests
@@ -20,8 +19,7 @@ class AuthHandler(ABC):
 
 
 class NOOPAuth(AuthHandler):
-    def __init__(self):
-        self._default_sub: str = str(uuid4())
+    _default_sub = "static-default-user-id"
 
     async def __call__(self, request: Request) -> User:
         sub = request.cookies.get("opengpts_user_id") or self._default_sub
