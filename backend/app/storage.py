@@ -5,7 +5,7 @@ from langchain_core.messages import AnyMessage
 
 from app.agent import AgentType, get_agent_executor
 from app.lifespan import get_pg_pool
-from app.schema import Assistant, Thread
+from app.schema import Assistant, Thread, User
 
 
 async def list_assistants(user_id: str) -> List[Assistant]:
@@ -160,3 +160,15 @@ async def put_thread(
             "name": name,
             "updated_at": updated_at,
         }
+
+
+async def get_or_create_user(sub: str) -> tuple[User, bool]:
+    """Returns a tuple of the user and a boolean indicating whether the user was created."""
+    async with get_pg_pool().acquire() as conn, conn.transaction():
+        user = await conn.fetchrow('SELECT * FROM "user" WHERE sub = $1', sub)
+        if user:
+            return user, False
+        else:
+            await conn.execute('INSERT INTO "user" (sub) VALUES ($1)', sub)
+            user = await conn.fetchrow('SELECT * FROM "user" WHERE sub = $1', sub)
+            return user, True
