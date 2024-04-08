@@ -1,7 +1,6 @@
 from datetime import datetime
-from typing import Annotated, Optional
+from typing import Optional
 
-from fastapi import Cookie
 from typing_extensions import TypedDict
 
 
@@ -40,15 +39,3 @@ class Thread(TypedDict):
     """The name of the thread."""
     updated_at: datetime
     """The last time the thread was updated."""
-
-
-OpengptsUserId = Annotated[
-    str,
-    Cookie(
-        description=(
-            "A cookie that identifies the user. This is not an authentication "
-            "mechanism that should be used in an actual production environment that "
-            "contains sensitive information."
-        )
-    ),
-]

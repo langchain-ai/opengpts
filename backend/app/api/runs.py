@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
 
 from app.agent import agent
-from app.schema import OpengptsUserId
+from app.auth.handlers import AuthedUser
 from app.storage import get_assistant, get_thread
 from app.stream import astream_messages, to_sse
 
@@ -28,14 +28,12 @@ class CreateRunPayload(BaseModel):
     config: Optional[RunnableConfig] = None
 
 
-async def _run_input_and_config(
-    payload: CreateRunPayload, opengpts_user_id: OpengptsUserId
-):
-    thread = await get_thread(opengpts_user_id, payload.thread_id)
+async def _run_input_and_config(payload: CreateRunPayload, user_id: str):
+    thread = await get_thread(user_id, payload.thread_id)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
 
-    assistant = await get_assistant(opengpts_user_id, str(thread["assistant_id"]))
+    assistant = await get_assistant(user_id, str(thread["assistant_id"]))
     if not assistant:
         raise HTTPException(status_code=404, detail="Assistant not found")
 
@@ -44,7 +42,7 @@ async def _run_input_and_config(
         "configurable": {
             **assistant["config"]["configurable"],
             **((payload.config or {}).get("configurable") or {}),
-            "user_id": opengpts_user_id,
+            "user_id": user_id,
             "thread_id": str(thread["thread_id"]),
             "assistant_id": str(assistant["assistant_id"]),
         },
@@ -65,11 +63,11 @@ async def _run_input_and_config(
 @router.post("")
 async def create_run(
     payload: CreateRunPayload,
-    opengpts_user_id: OpengptsUserId,
+    user: AuthedUser,
     background_tasks: BackgroundTasks,
 ):
     """Create a run."""
-    input_, config = await _run_input_and_config(payload, opengpts_user_id)
+    input_, config = await _run_input_and_config(payload, user["user_id"])
     background_tasks.add_task(agent.ainvoke, input_, config)
     return {"status": "ok"}  # TODO add a run id
 
@@ -77,10 +75,10 @@ async def create_run(
 @router.post("/stream")
 async def stream_run(
     payload: CreateRunPayload,
-    opengpts_user_id: OpengptsUserId,
+    user: AuthedUser,
 ):
     """Create a run."""
-    input_, config = await _run_input_and_config(payload, opengpts_user_id)
+    input_, config = await _run_input_and_config(payload, user["user_id"])
 
     return EventSourceResponse(to_sse(astream_messages(agent, input_, config)))
 
