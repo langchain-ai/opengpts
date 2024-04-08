@@ -3,10 +3,22 @@ CREATE TABLE IF NOT EXISTS "user" (
     sub VARCHAR(255) UNIQUE NOT NULL
 );
 
+INSERT INTO "user" (user_id, sub)
+SELECT DISTINCT user_id::uuid, user_id
+FROM assistant
+WHERE user_id IS NOT NULL
+ON CONFLICT (user_id) DO NOTHING;
+
+INSERT INTO "user" (user_id, sub)
+SELECT DISTINCT user_id::uuid, user_id
+FROM thread
+WHERE user_id IS NOT NULL
+ON CONFLICT (user_id) DO NOTHING;
+
 ALTER TABLE assistant
-    DROP COLUMN user_id,
-    ADD COLUMN user_id UUID REFERENCES "user"(user_id);
+  ALTER COLUMN user_id TYPE UUID USING (user_id::UUID),
+  ADD CONSTRAINT fk_assistant_user_id FOREIGN KEY (user_id) REFERENCES "user"(user_id);
 
 ALTER TABLE thread
-    DROP COLUMN user_id,
-    ADD COLUMN user_id UUID REFERENCES "user"(user_id);
+  ALTER COLUMN user_id TYPE UUID USING (user_id::UUID),
+  ADD CONSTRAINT fk_thread_user_id FOREIGN KEY (user_id) REFERENCES "user"(user_id);

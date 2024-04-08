@@ -1,9 +1,9 @@
 ALTER TABLE assistant
-    DROP COLUMN user_id,
-    ADD COLUMN user_id VARCHAR(255) NOT NULL;
+  DROP CONSTRAINT fk_assistant_user_id,
+  ALTER COLUMN user_id TYPE VARCHAR USING (user_id::text);
 
 ALTER TABLE thread
-    DROP COLUMN user_id,
-    ADD COLUMN user_id VARCHAR(255) NOT NULL;
+    DROP CONSTRAINT fk_thread_user_id,
+    ALTER COLUMN user_id TYPE VARCHAR USING (user_id::text);
 
 DROP TABLE IF EXISTS "user";
