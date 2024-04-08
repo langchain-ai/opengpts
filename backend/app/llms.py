@@ -82,6 +82,7 @@ def get_google_llm():
 def get_mixtral_fireworks():
     return ChatFireworks(model="accounts/fireworks/models/mixtral-8x7b-instruct")
 
+
 @lru_cache(maxsize=1)
 def get_ollama_llm():
     model_name = os.environ.get("OLLAMA_MODEL")

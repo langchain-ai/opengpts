@@ -17,8 +17,8 @@ from app.llms import (
     get_anthropic_llm,
     get_google_llm,
     get_mixtral_fireworks,
-    get_openai_llm,
     get_ollama_llm,
+    get_openai_llm,
 )
 from app.retrieval import get_retrieval_executor
 from app.tools import (
