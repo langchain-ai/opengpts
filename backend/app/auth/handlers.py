@@ -70,22 +70,25 @@ class JWTAuthOIDC(JWTAuthBase):
     """Auth handler that uses OIDC discovery to get the decode key."""
 
     def decode_token(self, token: str, decode_key: str) -> dict:
+        alg = self._decode_complete_unverified(token)["header"]["alg"]
         return jwt.decode(
             token,
             decode_key,
             issuer=settings.jwt_oidc.iss,
             audience=settings.jwt_oidc.aud,
-            algorithms=["HS256", "RS256"],
+            algorithms=[alg.upper()],
             options={"require": ["exp", "iss", "aud", "sub"]},
         )
 
     def get_decode_key(self, token: str) -> str:
-        unverified = jwt.api_jwt.decode_complete(
-            token, options={"verify_signature": False}
-        )
+        unverified = self._decode_complete_unverified(token)
         issuer = unverified["payload"].get("iss")
         kid = unverified["header"].get("kid")
         return self._get_jwk_client(issuer).get_signing_key(kid).key
+
+    @lru_cache
+    def _decode_complete_unverified(self, token: str) -> dict:
+        return jwt.api_jwt.decode_complete(token, options={"verify_signature": False})
 
     @lru_cache
     def _get_jwk_client(self, issuer: str) -> jwt.PyJWKClient:
