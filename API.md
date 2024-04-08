@@ -20,7 +20,7 @@ requests.post('http://127.0.0.1:8100/assistants', json={
   "public": True
 }, cookies= {"opengpts_user_id": "foo"}).content
 ```
-This is creating an assistant with name `"bar"`, with default configuration, that is public, and is associated with user `"foo"` (we are using cookies as a mock auth method).
+This is creating an assistant with name `"bar"`, with default configuration, that is public, and is associated with user `"foo"`. We are using cookies as a mock auth method (refer to the [auth guide](auth.md) for more information).
 
 This should return something like:
 
