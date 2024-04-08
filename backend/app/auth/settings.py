@@ -1,7 +1,7 @@
 import os
 from base64 import b64decode
 from enum import Enum
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import BaseSettings, root_validator, validator
 
@@ -14,7 +14,11 @@ class AuthType(Enum):
 
 class JWTSettingsBase(BaseSettings):
     iss: str
-    aud: str
+    aud: Union[str, list[str]]
+
+    @validator("aud", pre=True, always=True)
+    def set_aud(cls, v, values) -> Union[str, list[str]]:
+        return v.split(",") if "," in v else v
 
     class Config:
         env_prefix = "jwt_"
