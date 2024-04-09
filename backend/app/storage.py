@@ -164,11 +164,10 @@ async def put_thread(
 
 async def get_or_create_user(sub: str) -> tuple[User, bool]:
     """Returns a tuple of the user and a boolean indicating whether the user was created."""
-    async with get_pg_pool().acquire() as conn, conn.transaction():
-        user = await conn.fetchrow('SELECT * FROM "user" WHERE sub = $1', sub)
-        if user:
+    async with get_pg_pool().acquire() as conn:
+        if user := await conn.fetchrow('SELECT * FROM "user" WHERE sub = $1', sub):
             return user, False
-        else:
-            await conn.execute('INSERT INTO "user" (sub) VALUES ($1)', sub)
-            user = await conn.fetchrow('SELECT * FROM "user" WHERE sub = $1', sub)
-            return user, True
+        user = await conn.fetchrow(
+            'INSERT INTO "user" (sub) VALUES ($1) RETURNING *', sub
+        )
+        return user, True
