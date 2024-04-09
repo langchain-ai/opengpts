@@ -10,30 +10,31 @@ used to decode the JWT is obtained. For the Local method, you'll provide the dec
 key as a Base64-encoded string in an environment variable. For the OIDC method, the
 key is obtained from the OIDC provider automatically.
 
+### JWT OIDC
+
+If you're looking to integrate with an identity provider, OIDC is the way to go.
+It will figure out the decode key for you, so you don't have to worry about it.
+Just set `AUTH_TYPE=jwt_oidc` along with the issuer and audience. Audience can
+be one or many - just separate them with commas.
+
+```bash
+export AUTH_TYPE=jwt_oidc
+export JWT_ISS=<issuer>
+export JWT_AUD=<audience>  # or <audience1>,<audience2>,...
+```
+
 ### JWT Local
 
 To use JWT Local, set `AUTH_TYPE=jwt_local`. Then, set the issuer, audience, and
-the decode key in Base64 format. Audience can be one or many - just separate them
-with commas.
+the decode key in Base64 format.
 
 ```bash
 export AUTH_TYPE=jwt_local
 export JWT_DECODE_KEY_B64=<base64_decode_key>
 export JWT_ISS=<issuer>
-export JWT_AUD=<audience>  # or <audience1>,<audience2>,...
+export JWT_AUD=<audience>
 ```
 
 Base64 is used for the decode key because handling multiline strings in environment
 variables is error-prone. Base64 makes it a one-liner, easy to paste in and use.
 
-### JWT OIDC
-
-If you're looking to integrate with an identity provider, OIDC is the way to go.
-It will figure out the decode key for you, so you don't have to worry about it.
-Just set `AUTH_TYPE=jwt_oidc` along with the issuer and audience.
-
-```bash
-export AUTH_TYPE=jwt_oidc
-export JWT_ISS=<issuer>
-export JWT_AUD=<audience>
-```
