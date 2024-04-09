@@ -27,6 +27,9 @@ RUN poetry config virtualenvs.create false \
 # Copy the rest of application code
 COPY . .
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --start-interval=1s --retries=3 CMD [ "curl", "-f", "http://localhost:8000/health" ]
+# --start-interval is unsupported and removed since 4.21.1
+# see https://github.com/docker/for-mac/issues/6938,
+# see https://github.com/docker/cli/issues/4486
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD [ "curl", "-f", "http://localhost:8000/health" ]
 
 ENTRYPOINT [ "uvicorn", "app.server:app", "--host", "0.0.0.0" ]
