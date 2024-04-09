@@ -49,21 +49,21 @@ class JWTAuthBase(AuthHandler):
         ...
 
 
-class JWTAuthBasic(JWTAuthBase):
+class JWTAuthLocal(JWTAuthBase):
     """Auth handler that uses a hardcoded decode key from env."""
 
     def decode_token(self, token: str, decode_key: str) -> dict:
         return jwt.decode(
             token,
             decode_key,
-            issuer=settings.jwt_basic.iss,
-            audience=settings.jwt_basic.aud,
+            issuer=settings.jwt_local.iss,
+            audience=settings.jwt_local.aud,
             algorithms=["HS256", "RS256"],
             options={"require": ["exp", "iss", "aud", "sub"]},
         )
 
     def get_decode_key(self, token: str) -> str:
-        return settings.jwt_basic.decode_key
+        return settings.jwt_local.decode_key
 
 
 class JWTAuthOIDC(JWTAuthBase):
@@ -104,8 +104,8 @@ class JWTAuthOIDC(JWTAuthBase):
 
 @lru_cache(maxsize=1)
 def get_auth_handler() -> AuthHandler:
-    if settings.auth_type == AuthType.JWT_BASIC:
-        return JWTAuthBasic()
+    if settings.auth_type == AuthType.JWT_LOCAL:
+        return JWTAuthLocal()
     elif settings.auth_type == AuthType.JWT_OIDC:
         return JWTAuthOIDC()
     return NOOPAuth()

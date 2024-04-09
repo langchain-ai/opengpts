@@ -5,19 +5,19 @@ For production, we recommend using JWT auth, outlined below.
 
 ## JWT Auth: Options
 
-There are two ways to use JWT: Basic and OIDC. The main difference is in how the key
-used to decode the JWT is obtained. For the Basic method, you'll provide the decode
+There are two ways to use JWT: Local and OIDC. The main difference is in how the key
+used to decode the JWT is obtained. For the Local method, you'll provide the decode
 key as a Base64-encoded string in an environment variable. For the OIDC method, the
 key is obtained from the OIDC provider automatically.
 
-### JWT Basic
+### JWT Local
 
-To use JWT Basic, set `AUTH_TYPE=jwt_basic`. Then, set the issuer, audience, and
+To use JWT Local, set `AUTH_TYPE=jwt_local`. Then, set the issuer, audience, and
 the decode key in Base64 format. Audience can be one or many - just separate them
 with commas.
 
 ```bash
-export AUTH_TYPE=jwt_basic
+export AUTH_TYPE=jwt_local
 export JWT_DECODE_KEY_B64=<base64_decode_key>
 export JWT_ISS=<issuer>
 export JWT_AUD=<audience>  # or <audience1>,<audience2>,...

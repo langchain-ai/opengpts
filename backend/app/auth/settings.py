@@ -8,7 +8,7 @@ from pydantic import BaseSettings, root_validator, validator
 
 class AuthType(Enum):
     NOOP = "noop"
-    JWT_BASIC = "jwt_basic"
+    JWT_LOCAL = "jwt_local"
     JWT_OIDC = "jwt_oidc"
 
 
@@ -24,7 +24,7 @@ class JWTSettingsBase(BaseSettings):
         env_prefix = "jwt_"
 
 
-class JWTSettingsBasic(JWTSettingsBase):
+class JWTSettingsLocal(JWTSettingsBase):
     decode_key_b64: str
     decode_key: str = None
 
@@ -44,15 +44,15 @@ class JWTSettingsOIDC(JWTSettingsBase):
 
 class Settings(BaseSettings):
     auth_type: AuthType
-    jwt_basic: Optional[JWTSettingsBasic] = None
+    jwt_local: Optional[JWTSettingsLocal] = None
     jwt_oidc: Optional[JWTSettingsOIDC] = None
 
     @root_validator(pre=True)
     def check_jwt_settings(cls, values):
         auth_type = values.get("auth_type")
-        if auth_type == AuthType.JWT_BASIC and values.get("jwt_basic") is None:
+        if auth_type == AuthType.JWT_LOCAL and values.get("jwt_local") is None:
             raise ValueError(
-                "jwt basic settings must be set when auth type is jwt_basic."
+                "jwt local settings must be set when auth type is jwt_local."
             )
         if auth_type == AuthType.JWT_OIDC and values.get("jwt_oidc") is None:
             raise ValueError(
@@ -63,8 +63,8 @@ class Settings(BaseSettings):
 
 auth_type = AuthType(os.getenv("AUTH_TYPE", AuthType.NOOP.value).lower())
 kwargs = {"auth_type": auth_type}
-if auth_type == AuthType.JWT_BASIC:
-    kwargs["jwt_basic"] = JWTSettingsBasic()
+if auth_type == AuthType.JWT_LOCAL:
+    kwargs["jwt_local"] = JWTSettingsLocal()
 elif auth_type == AuthType.JWT_OIDC:
     kwargs["jwt_oidc"] = JWTSettingsOIDC()
 settings = Settings(**kwargs)
