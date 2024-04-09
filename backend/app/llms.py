@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 import boto3
 import httpx
 from langchain_community.chat_models import BedrockChat, ChatAnthropic, ChatFireworks
+from langchain_community.chat_models.ollama import ChatOllama
 from langchain_google_vertexai import ChatVertexAI
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
@@ -80,3 +81,15 @@ def get_google_llm():
 @lru_cache(maxsize=1)
 def get_mixtral_fireworks():
     return ChatFireworks(model="accounts/fireworks/models/mixtral-8x7b-instruct")
+
+
+@lru_cache(maxsize=1)
+def get_ollama_llm():
+    model_name = os.environ.get("OLLAMA_MODEL")
+    if not model_name:
+        model_name = "llama2"
+    ollama_base_url = os.environ.get("OLLAMA_BASE_URL")
+    if not ollama_base_url:
+        ollama_base_url = "http://localhost:11434"
+
+    return ChatOllama(model=model_name, base_url=ollama_base_url)

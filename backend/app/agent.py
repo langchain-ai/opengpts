@@ -17,6 +17,7 @@ from app.llms import (
     get_anthropic_llm,
     get_google_llm,
     get_mixtral_fireworks,
+    get_ollama_llm,
     get_openai_llm,
 )
 from app.retrieval import get_retrieval_executor
@@ -63,6 +64,7 @@ class AgentType(str, Enum):
     CLAUDE2 = "Claude 2"
     BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
     GEMINI = "GEMINI"
+    OLLAMA = "Ollama"
 
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
@@ -106,6 +108,12 @@ def get_agent_executor(
         return get_google_agent_executor(
             tools, llm, system_message, interrupt_before_action, CHECKPOINTER
         )
+    elif agent == AgentType.OLLAMA:
+        llm = get_ollama_llm()
+        return get_openai_agent_executor(
+            tools, llm, system_message, interrupt_before_action, CHECKPOINTER
+        )
+
     else:
         raise ValueError("Unexpected agent type")
 
@@ -175,6 +183,7 @@ class LLMType(str, Enum):
     BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
     GEMINI = "GEMINI"
     MIXTRAL = "Mixtral"
+    OLLAMA = "Ollama"
 
 
 def get_chatbot(
@@ -195,6 +204,8 @@ def get_chatbot(
         llm = get_google_llm()
     elif llm_type == LLMType.MIXTRAL:
         llm = get_mixtral_fireworks()
+    elif llm_type == LLMType.OLLAMA:
+        llm = get_ollama_llm()
     else:
         raise ValueError("Unexpected llm type")
     return get_chatbot_executor(llm, system_message, CHECKPOINTER)
@@ -270,6 +281,8 @@ class ConfigurableRetrieval(RunnableBinding):
             llm = get_google_llm()
         elif llm_type == LLMType.MIXTRAL:
             llm = get_mixtral_fireworks()
+        elif llm_type == LLMType.OLLAMA:
+            llm = get_ollama_llm()
         else:
             raise ValueError("Unexpected llm type")
         chatbot = get_retrieval_executor(llm, retriever, system_message, CHECKPOINTER)
