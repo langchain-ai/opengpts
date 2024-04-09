@@ -58,7 +58,7 @@ class JWTAuthLocal(JWTAuthBase):
             decode_key,
             issuer=settings.jwt_local.iss,
             audience=settings.jwt_local.aud,
-            algorithms=["HS256", "RS256"],
+            algorithms=[settings.jwt_local.alg.upper()],
             options={"require": ["exp", "iss", "aud", "sub"]},
         )
 

@@ -25,14 +25,15 @@ export JWT_AUD=<audience>  # or <audience1>,<audience2>,...
 
 ### JWT Local
 
-To use JWT Local, set `AUTH_TYPE=jwt_local`. Then, set the issuer, audience, and
-the decode key in Base64 format.
+To use JWT Local, set `AUTH_TYPE=jwt_local`. Then, set the issuer, audience,
+algorithm used to sign the JWT, and the decode key in Base64 format.
 
 ```bash
 export AUTH_TYPE=jwt_local
-export JWT_DECODE_KEY_B64=<base64_decode_key>
 export JWT_ISS=<issuer>
 export JWT_AUD=<audience>
+export JWT_ALG=<algorithm>  # e.g. ES256
+export JWT_DECODE_KEY_B64=<base64_decode_key>
 ```
 
 Base64 is used for the decode key because handling multiline strings in environment
