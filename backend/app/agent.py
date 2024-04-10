@@ -67,6 +67,7 @@ class AgentType(str, Enum):
     MIXTRAL = "Mixtral"
     OLLAMA = "Ollama"
 
+
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
 CHECKPOINTER = PostgresCheckpoint(at=CheckpointAt.END_OF_STEP)
