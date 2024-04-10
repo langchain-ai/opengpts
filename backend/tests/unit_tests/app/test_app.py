@@ -1,21 +1,11 @@
 """Test the server and client together."""
 
-from contextlib import asynccontextmanager
 from typing import Optional, Sequence
 from uuid import uuid4
 
 import asyncpg
-from httpx import AsyncClient
-from typing_extensions import AsyncGenerator
 
-
-@asynccontextmanager
-async def get_client() -> AsyncGenerator[AsyncClient, None]:
-    """Get the app."""
-    from app.server import app
-
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        yield ac
+from tests.unit_tests.app.helpers import get_client
 
 
 def _project(d: dict, *, exclude_keys: Optional[Sequence[str]]) -> dict:
