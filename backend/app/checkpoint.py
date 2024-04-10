@@ -1,12 +1,31 @@
 import pickle
 from datetime import datetime
-from typing import AsyncIterator, Optional
+from enum import Enum
+from io import BytesIO
+from typing import Any, AsyncIterator, Optional
 
 from langchain_core.runnables import ConfigurableFieldSpec, RunnableConfig
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.checkpoint.base import Checkpoint, CheckpointThreadTs, CheckpointTuple
 
 from app.lifespan import get_pg_pool
+
+
+class PostgresUnpickler(pickle.Unpickler):
+    def find_class(self, module_name: str, global_name: str) -> Any:
+        # backwards compatibility for threads prior to langgraph 0.0.31
+        print(module_name, global_name)
+        if (
+            module_name == "langgraph.pregel.reserved"
+            and global_name == "ReservedChannels"
+        ):
+
+            class ReservedChannels(str, Enum):
+                is_last_step = "is_last_step"
+
+            return ReservedChannels
+
+        return super().find_class(module_name, global_name)
 
 
 class PostgresCheckpoint(BaseCheckpointSaver):
@@ -47,7 +66,7 @@ class PostgresCheckpoint(BaseCheckpointSaver):
                             "thread_ts": value[1],
                         }
                     },
-                    pickle.loads(value[0]),
+                    PostgresUnpickler(BytesIO(value[0])).load(),
                     {
                         "configurable": {
                             "thread_id": thread_id,
@@ -70,7 +89,7 @@ class PostgresCheckpoint(BaseCheckpointSaver):
                 ):
                     return CheckpointTuple(
                         config,
-                        pickle.loads(value[0]),
+                        PostgresUnpickler(BytesIO(value[0])).load(),
                         {
                             "configurable": {
                                 "thread_id": thread_id,
@@ -92,7 +111,7 @@ class PostgresCheckpoint(BaseCheckpointSaver):
                                 "thread_ts": value[1],
                             }
                         },
-                        pickle.loads(value[0]),
+                        PostgresUnpickler(BytesIO(value[0])).load(),
                         {
                             "configurable": {
                                 "thread_id": thread_id,
