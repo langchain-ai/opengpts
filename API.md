@@ -7,6 +7,9 @@ For full API documentation, see [localhost:8100/docs](localhost:8100/docs) after
 
 If you want to see the API docs before deployment, check out the [hosted docs here](https://opengpts-example-vz4y4ooboq-uc.a.run.app/docs).
 
+In the examples below, cookies are used as a mock auth method. For production, we recommend using JWT auth. Refer to the [auth guide for production](auth.md) for more information.
+When using JWT auth, you will need to include the JWT in the `Authorization` header as a Bearer token.
+
 ## Create an Assistant
 
 First, let's use the API to create an assistant. 
@@ -20,7 +23,7 @@ requests.post('http://127.0.0.1:8100/assistants', json={
   "public": True
 }, cookies= {"opengpts_user_id": "foo"}).content
 ```
-This is creating an assistant with name `"bar"`, with default configuration, that is public, and is associated with user `"foo"`. We are using cookies as a mock auth method (refer to the [auth guide](auth.md) for more information).
+This is creating an assistant with name `"bar"`, with default configuration, that is public, and is associated with user `"foo"`.
 
 This should return something like:
 

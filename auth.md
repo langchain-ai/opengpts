@@ -39,3 +39,13 @@ export JWT_DECODE_KEY_B64=<base64_decode_key>
 Base64 is used for the decode key because handling multiline strings in environment
 variables is error-prone. Base64 makes it a one-liner, easy to paste in and use.
 
+
+## Making Requests
+
+To make authenticated requests, include the JWT in the `Authorization` header as a Bearer token:
+
+```
+Authorization: Bearer <JWT>
+```
+
+
