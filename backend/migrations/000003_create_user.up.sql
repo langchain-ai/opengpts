@@ -16,9 +16,9 @@ WHERE user_id IS NOT NULL
 ON CONFLICT (user_id) DO NOTHING;
 
 ALTER TABLE assistant
-  ALTER COLUMN user_id TYPE UUID USING (user_id::UUID),
-  ADD CONSTRAINT fk_assistant_user_id FOREIGN KEY (user_id) REFERENCES "user"(user_id);
+    ALTER COLUMN user_id TYPE UUID USING (user_id::UUID),
+    ADD CONSTRAINT fk_assistant_user_id FOREIGN KEY (user_id) REFERENCES "user"(user_id);
 
 ALTER TABLE thread
-  ALTER COLUMN user_id TYPE UUID USING (user_id::UUID),
-  ADD CONSTRAINT fk_thread_user_id FOREIGN KEY (user_id) REFERENCES "user"(user_id);
+    ALTER COLUMN user_id TYPE UUID USING (user_id::UUID),
+    ADD CONSTRAINT fk_thread_user_id FOREIGN KEY (user_id) REFERENCES "user"(user_id);
