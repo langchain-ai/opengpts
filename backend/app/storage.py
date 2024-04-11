@@ -1,101 +1,116 @@
+import json
+import sqlite3
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Sequence, Union
+from uuid import UUID
 
 from langchain_core.messages import AnyMessage
 
 from app.agent import AgentType, get_agent_executor
-from app.lifespan import get_pg_pool
 from app.schema import Assistant, Thread, User
 
 
-async def list_assistants(user_id: str) -> List[Assistant]:
+@contextmanager
+def _connect():
+    conn = sqlite3.connect("opengpts.db")
+    conn.row_factory = sqlite3.Row  # Enable dictionary access to row items.
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+
+def list_assistants(user_id: str) -> List[Assistant]:
     """List all assistants for the current user."""
-    async with get_pg_pool().acquire() as conn:
-        return await conn.fetch("SELECT * FROM assistant WHERE user_id = $1", user_id)
+    with _connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM assistant WHERE user_id = ?", (user_id,))
+        rows = cursor.fetchall()
+        return [Assistant(**dict(row)) for row in rows]
 
 
-async def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
+def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
     """Get an assistant by ID."""
-    async with get_pg_pool().acquire() as conn:
-        return await conn.fetchrow(
-            "SELECT * FROM assistant WHERE assistant_id = $1 AND (user_id = $2 OR public = true)",
-            assistant_id,
-            user_id,
+    with _connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM assistant WHERE assistant_id = ? AND (user_id = ? OR public = 1)",
+            (assistant_id, user_id),
         )
+        row = cursor.fetchone()
+        return Assistant(**dict(row)) if row else None
 
 
-async def list_public_assistants(assistant_ids: Sequence[str]) -> List[Assistant]:
+def list_public_assistants(assistant_ids: Sequence[str]) -> List[Assistant]:
     """List all the public assistants."""
-    async with get_pg_pool().acquire() as conn:
-        return await conn.fetch(
-            (
-                "SELECT * FROM assistant "
-                "WHERE assistant_id = ANY($1::uuid[]) "
-                "AND public = true;"
-            ),
-            assistant_ids,
+    assistant_ids_tuple = tuple(
+        assistant_ids
+    )  # SQL requires a tuple for the IN operator.
+    placeholders = ", ".join("?" for _ in assistant_ids)
+    with _connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            f"SELECT * FROM assistant WHERE assistant_id IN ({placeholders}) AND public = 1",
+            assistant_ids_tuple,
         )
+        rows = cursor.fetchall()
+        return [Assistant(**dict(row)) for row in rows]
 
 
-async def put_assistant(
+def put_assistant(
     user_id: str, assistant_id: str, *, name: str, config: dict, public: bool = False
 ) -> Assistant:
-    """Modify an assistant.
-
-    Args:
-        user_id: The user ID.
-        assistant_id: The assistant ID.
-        name: The assistant name.
-        config: The assistant config.
-        public: Whether the assistant is public.
-
-    Returns:
-        return the assistant model if no exception is raised.
-    """
+    """Modify an assistant."""
     updated_at = datetime.now(timezone.utc)
-    async with get_pg_pool().acquire() as conn:
-        async with conn.transaction():
-            await conn.execute(
-                (
-                    "INSERT INTO assistant (assistant_id, user_id, name, config, updated_at, public) VALUES ($1, $2, $3, $4, $5, $6) "
-                    "ON CONFLICT (assistant_id) DO UPDATE SET "
-                    "user_id = EXCLUDED.user_id, "
-                    "name = EXCLUDED.name, "
-                    "config = EXCLUDED.config, "
-                    "updated_at = EXCLUDED.updated_at, "
-                    "public = EXCLUDED.public;"
-                ),
-                assistant_id,
-                user_id,
-                name,
-                config,
-                updated_at,
-                public,
-            )
-    return {
-        "assistant_id": assistant_id,
-        "user_id": user_id,
-        "name": name,
-        "config": config,
-        "updated_at": updated_at,
-        "public": public,
-    }
-
-
-async def list_threads(user_id: str) -> List[Thread]:
-    """List all threads for the current user."""
-    async with get_pg_pool().acquire() as conn:
-        return await conn.fetch("SELECT * FROM thread WHERE user_id = $1", user_id)
-
-
-async def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
-    """Get a thread by ID."""
-    async with get_pg_pool().acquire() as conn:
-        return await conn.fetchrow(
-            "SELECT * FROM thread WHERE thread_id = $1 AND user_id = $2",
-            thread_id,
-            user_id,
+    with _connect() as conn:
+        cursor = conn.cursor()
+        # Convert the config dict to a JSON string for storage.
+        config_str = json.dumps(config)
+        cursor.execute(
+            """
+            INSERT INTO assistant (assistant_id, user_id, name, config, updated_at, public) 
+            VALUES (?, ?, ?, ?, ?, ?) 
+            ON CONFLICT(assistant_id) 
+            DO UPDATE SET 
+                user_id = EXCLUDED.user_id, 
+                name = EXCLUDED.name, 
+                config = EXCLUDED.config, 
+                updated_at = EXCLUDED.updated_at, 
+                public = EXCLUDED.public
+            """,
+            (assistant_id, user_id, name, config_str, updated_at.isoformat(), public),
         )
+        conn.commit()
+        return Assistant(
+            assistant_id=UUID(assistant_id),
+            user_id=user_id,
+            name=name,
+            config=config,
+            updated_at=updated_at,
+            public=public,
+        )
+
+
+def list_threads(user_id: str) -> List[Thread]:
+    """List all threads for the current user."""
+    with _connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM thread WHERE user_id = ?", (user_id,))
+        rows = cursor.fetchall()
+        return [Thread(**dict(row)) for row in rows]
+
+
+def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
+    """Get a thread by ID."""
+    with _connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM thread WHERE thread_id = ? AND user_id = ?",
+            (thread_id, user_id),
+        )
+        row = cursor.fetchone()
+        return Thread(**dict(row)) if row else None
 
 
 async def get_thread_state(user_id: str, thread_id: str):
@@ -132,26 +147,23 @@ async def get_thread_history(user_id: str, thread_id: str):
     ]
 
 
-async def put_thread(
-    user_id: str, thread_id: str, *, assistant_id: str, name: str
-) -> Thread:
+def put_thread(user_id: str, thread_id: str, *, assistant_id: str, name: str) -> Thread:
     """Modify a thread."""
     updated_at = datetime.now(timezone.utc)
-    async with get_pg_pool().acquire() as conn:
-        await conn.execute(
-            (
-                "INSERT INTO thread (thread_id, user_id, assistant_id, name, updated_at) VALUES ($1, $2, $3, $4, $5) "
-                "ON CONFLICT (thread_id) DO UPDATE SET "
-                "user_id = EXCLUDED.user_id,"
-                "assistant_id = EXCLUDED.assistant_id, "
-                "name = EXCLUDED.name, "
-                "updated_at = EXCLUDED.updated_at;"
-            ),
-            thread_id,
-            user_id,
-            assistant_id,
-            name,
-            updated_at,
+    with _connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO thread (thread_id, user_id, assistant_id, name, updated_at) 
+            VALUES (?, ?, ?, ?, ?) 
+            ON CONFLICT(thread_id) 
+            DO UPDATE SET 
+                user_id = EXCLUDED.user_id,
+                assistant_id = EXCLUDED.assistant_id, 
+                name = EXCLUDED.name, 
+                updated_at = EXCLUDED.updated_at
+            """,
+            (thread_id, user_id, assistant_id, name, updated_at),
         )
         return {
             "thread_id": thread_id,
@@ -162,14 +174,13 @@ async def put_thread(
         }
 
 
-async def get_or_create_user(sub: str) -> tuple[User, bool]:
+def get_or_create_user(sub: str) -> tuple[User, bool]:
     """Returns a tuple of the user and a boolean indicating whether the user was created."""
-    async with get_pg_pool().acquire() as conn:
-        if user := await conn.fetchrow('SELECT * FROM "user" WHERE sub = $1', sub):
+    with _connect() as conn:
+        cursor = conn.cursor()
+        if user := cursor.execute('SELECT * FROM "user" WHERE sub = ?', sub):
             return user, False
-        user = await conn.fetchrow(
-            'INSERT INTO "user" (sub) VALUES ($1) RETURNING *', sub
-        )
+        user = conn.execute('INSERT INTO "user" (sub) VALUES (?) RETURNING *', sub)
         return user, True
 
 

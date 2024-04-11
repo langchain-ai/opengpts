@@ -1,13 +1,23 @@
 import pickle
+import sqlite3
+from contextlib import contextmanager
 from datetime import datetime
-from typing import AsyncIterator, Optional
+from typing import Iterator, Optional
 
 from langchain_core.messages import BaseMessage
 from langchain_core.runnables import ConfigurableFieldSpec, RunnableConfig
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.checkpoint.base import Checkpoint, CheckpointThreadTs, CheckpointTuple
 
-from app.lifespan import get_pg_pool
+
+@contextmanager
+def _connect():
+    conn = sqlite3.connect("opengpts.db")
+    conn.row_factory = sqlite3.Row  # Enable dictionary access to row items.
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 
 def loads(value: bytes) -> Checkpoint:
@@ -18,7 +28,7 @@ def loads(value: bytes) -> Checkpoint:
     return loaded
 
 
-class PostgresCheckpoint(BaseCheckpointSaver):
+class SQLiteCheckpoint(BaseCheckpointSaver):
     class Config:
         arbitrary_types_allowed = True
 
@@ -36,19 +46,26 @@ class PostgresCheckpoint(BaseCheckpointSaver):
             CheckpointThreadTs,
         ]
 
+    # Adapting the get method
     def get(self, config: RunnableConfig) -> Optional[Checkpoint]:
+        # Implementation adapted for SQLite
         raise NotImplementedError
 
+    # Adapting the put method
     def put(self, config: RunnableConfig, checkpoint: Checkpoint) -> RunnableConfig:
+        # Implementation adapted for SQLite
         raise NotImplementedError
 
-    async def alist(self, config: RunnableConfig) -> AsyncIterator[CheckpointTuple]:
-        async with get_pg_pool().acquire() as db, db.transaction():
-            thread_id = config["configurable"]["thread_id"]
-            async for value in db.cursor(
-                "SELECT checkpoint, thread_ts, parent_ts FROM checkpoints WHERE thread_id = $1 ORDER BY thread_ts DESC",
-                thread_id,
-            ):
+    # Adapting the alist method
+    def alist(self, config: RunnableConfig) -> Iterator[CheckpointTuple]:
+        thread_id = config["configurable"]["thread_id"]
+        with _connect() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT checkpoint, thread_ts, parent_ts FROM checkpoints WHERE thread_id = ? ORDER BY thread_ts DESC",
+                (thread_id,),
+            )
+            for value in cursor.fetchall():
                 yield CheckpointTuple(
                     {
                         "configurable": {
@@ -67,67 +84,58 @@ class PostgresCheckpoint(BaseCheckpointSaver):
                     else None,
                 )
 
-    async def aget_tuple(self, config: RunnableConfig) -> Optional[CheckpointTuple]:
+    # Adapting the aget_tuple method
+    def aget_tuple(self, config: RunnableConfig) -> Optional[CheckpointTuple]:
         thread_id = config["configurable"]["thread_id"]
         thread_ts = config["configurable"].get("thread_ts")
-        async with get_pg_pool().acquire() as conn:
+        with _connect() as conn:
+            cursor = conn.cursor()
             if thread_ts:
-                if value := await conn.fetchrow(
-                    "SELECT checkpoint, parent_ts FROM checkpoints WHERE thread_id = $1 AND thread_ts = $2",
-                    thread_id,
-                    datetime.fromisoformat(thread_ts),
-                ):
-                    return CheckpointTuple(
-                        config,
-                        loads(value[0]),
-                        {
-                            "configurable": {
-                                "thread_id": thread_id,
-                                "thread_ts": value[1],
-                            }
-                        }
-                        if value[1]
-                        else None,
-                    )
+                cursor.execute(
+                    "SELECT checkpoint, parent_ts FROM checkpoints WHERE thread_id = ? AND thread_ts = ?",
+                    (thread_id, datetime.fromisoformat(thread_ts)),
+                )
             else:
-                if value := await conn.fetchrow(
-                    "SELECT checkpoint, thread_ts, parent_ts FROM checkpoints WHERE thread_id = $1 ORDER BY thread_ts DESC LIMIT 1",
-                    thread_id,
-                ):
-                    return CheckpointTuple(
-                        {
-                            "configurable": {
-                                "thread_id": thread_id,
-                                "thread_ts": value[1],
-                            }
-                        },
-                        loads(value[0]),
-                        {
-                            "configurable": {
-                                "thread_id": thread_id,
-                                "thread_ts": value[2],
-                            }
+                cursor.execute(
+                    "SELECT checkpoint, thread_ts, parent_ts FROM checkpoints WHERE thread_id = ? ORDER BY thread_ts DESC LIMIT 1",
+                    (thread_id,),
+                )
+            value = cursor.fetchone()
+            if value:
+                return CheckpointTuple(
+                    config,
+                    loads(value[0]),
+                    {
+                        "configurable": {
+                            "thread_id": thread_id,
+                            "thread_ts": value[1],
                         }
-                        if value[2]
-                        else None,
-                    )
+                    }
+                    if value[1]
+                    else None,
+                )
+            return None
 
-    async def aput(self, config: RunnableConfig, checkpoint: Checkpoint) -> None:
+    # Adapting the aput method
+    def aput(self, config: RunnableConfig, checkpoint: Checkpoint) -> None:
         thread_id = config["configurable"]["thread_id"]
-        async with get_pg_pool().acquire() as conn:
-            await conn.execute(
+        with _connect() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
                 """
                 INSERT INTO checkpoints (thread_id, thread_ts, parent_ts, checkpoint)
-                VALUES ($1, $2, $3, $4) 
+                VALUES (?, ?, ?, ?) 
                 ON CONFLICT (thread_id, thread_ts) 
-                DO UPDATE SET checkpoint = EXCLUDED.checkpoint;""",
-                thread_id,
-                datetime.fromisoformat(checkpoint["ts"]),
-                datetime.fromisoformat(checkpoint.get("parent_ts"))
-                if checkpoint.get("parent_ts")
-                else None,
-                pickle.dumps(checkpoint),
+                DO UPDATE SET checkpoint = EXCLUDED.checkpoint;
+                """,
+                (
+                    thread_id,
+                    datetime.fromisoformat(checkpoint["ts"]),
+                    datetime.fromisoformat(checkpoint.get("parent_ts", "")),
+                    pickle.dumps(checkpoint),
+                ),
             )
+            conn.commit()
         return {
             "configurable": {
                 "thread_id": thread_id,

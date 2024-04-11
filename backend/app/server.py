@@ -10,12 +10,11 @@ from fastapi.staticfiles import StaticFiles
 import app.storage as storage
 from app.api import router as api_router
 from app.auth.handlers import AuthedUser
-from app.lifespan import lifespan
 from app.upload import ingest_runnable
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="OpenGPTs API", lifespan=lifespan)
+app = FastAPI(title="OpenGPTs API")
 
 
 # Get root of app, used to point to directory containing static files
