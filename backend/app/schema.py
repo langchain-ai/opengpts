@@ -9,6 +9,8 @@ class User(TypedDict):
     """The ID of the user."""
     sub: str
     """The sub of the user (from a JWT token)."""
+    created_at: datetime
+    """The time the user was created."""
 
 
 class Assistant(TypedDict):
