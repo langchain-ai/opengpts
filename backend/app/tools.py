@@ -271,7 +271,6 @@ def _get_tavily_answer():
     return _TavilyAnswer(api_wrapper=tavily_search)
 
 
-@lru_cache(maxsize=1)
 def _get_action_server(**kwargs: ActionServerConfig):
     toolkit = ActionServerToolkit(url=kwargs["url"], api_key=kwargs["api_key"])
     tools = toolkit.get_tools()
