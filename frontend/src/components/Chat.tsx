@@ -25,7 +25,7 @@ function usePrevious<T>(value: T): T | undefined {
 
 export function Chat(props: ChatProps) {
   const { chatId } = useParams();
-  const { messages, resumeable } = useChatMessages(
+  const { messages, next } = useChatMessages(
     chatId ?? null,
     props.stream,
     props.stopStream,
@@ -71,7 +71,7 @@ export function Chat(props: ChatProps) {
           An error has occurred. Please try again.
         </div>
       )}
-      {resumeable && props.stream?.status !== "inflight" && (
+      {next.length > 0 && props.stream?.status !== "inflight" && (
         <div
           className="flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 ring-1 ring-inset ring-yellow-600/20 cursor-pointer"
           onClick={() => props.startStream(null, currentChat.thread_id)}

@@ -1,4 +1,4 @@
-from typing import Annotated, List, Sequence
+from typing import Annotated, Any, Dict, List, Sequence, Union
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path
@@ -21,10 +21,10 @@ class ThreadPutRequest(BaseModel):
     assistant_id: str = Field(..., description="The ID of the assistant to use.")
 
 
-class ThreadMessagesPostRequest(BaseModel):
-    """Payload for adding messages to a thread."""
+class ThreadPostRequest(BaseModel):
+    """Payload for adding state to a thread."""
 
-    messages: Sequence[AnyMessage]
+    values: Union[Sequence[AnyMessage], Dict[str, Any]]
 
 
 @router.get("/")
@@ -33,23 +33,23 @@ async def list_threads(opengpts_user_id: OpengptsUserId) -> List[Thread]:
     return await storage.list_threads(opengpts_user_id)
 
 
-@router.get("/{tid}/messages")
-async def get_thread_messages(
+@router.get("/{tid}/state")
+async def get_thread_state(
     opengpts_user_id: OpengptsUserId,
     tid: ThreadID,
 ):
-    """Get all messages for a thread."""
-    return await storage.get_thread_messages(opengpts_user_id, tid)
+    """Get state for a thread."""
+    return await storage.get_thread_state(opengpts_user_id, tid)
 
 
-@router.post("/{tid}/messages")
-async def add_thread_messages(
+@router.post("/{tid}/state")
+async def add_thread_state(
     opengpts_user_id: OpengptsUserId,
     tid: ThreadID,
-    payload: ThreadMessagesPostRequest,
+    payload: ThreadPostRequest,
 ):
-    """Add messages to a thread."""
-    return await storage.post_thread_messages(opengpts_user_id, tid, payload.messages)
+    """Add state to a thread."""
+    return await storage.update_thread_state(opengpts_user_id, tid, payload.values)
 
 
 @router.get("/{tid}/history")
