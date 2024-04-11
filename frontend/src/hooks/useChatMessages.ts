@@ -3,14 +3,11 @@ import { Message } from "./useChatList";
 import { StreamState, mergeMessagesById } from "./useStreamState";
 
 async function getState(threadId: string) {
-  const { values, next } = await fetch(
-    `/threads/${threadId}/state`,
-    {
-      headers: {
-        Accept: "application/json",
-      },
+  const { values, next } = await fetch(`/threads/${threadId}/state`, {
+    headers: {
+      Accept: "application/json",
     },
-  ).then((r) => r.json());
+  }).then((r) => r.json());
   return { values, next };
 }
 
