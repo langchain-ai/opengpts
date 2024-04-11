@@ -112,7 +112,7 @@ async def test_threads() -> None:
 
         response = await client.get(f"/threads/{tid}/state", headers=headers)
         assert response.status_code == 200
-        assert response.json() == {"values": {}, "next": ()}
+        assert response.json() == {"values": [], "next": []}
 
         response = await client.get("/threads/", headers=headers)
 

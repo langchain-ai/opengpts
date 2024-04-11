@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 from langchain_core.messages import AnyMessage
-from langchain_core.runnables import RunnableConfig
 
 from app.agent import AgentType, get_agent_executor
 from app.lifespan import get_pg_pool

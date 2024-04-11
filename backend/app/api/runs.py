@@ -24,7 +24,9 @@ class CreateRunPayload(BaseModel):
     """Payload for creating a run."""
 
     thread_id: str
-    input: Optional[Union[Sequence[AnyMessage], Dict[str, Any]]] = Field(default_factory=dict)
+    input: Optional[Union[Sequence[AnyMessage], Dict[str, Any]]] = Field(
+        default_factory=dict
+    )
     config: Optional[RunnableConfig] = None
 
 
