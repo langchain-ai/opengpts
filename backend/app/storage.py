@@ -21,7 +21,7 @@ def _connect():
         conn.close()
 
 
-def list_assistants(user_id: str) -> List[Assistant]:
+async def list_assistants(user_id: str) -> List[Assistant]:
     """List all assistants for the current user."""
     with _connect() as conn:
         cursor = conn.cursor()
@@ -30,7 +30,7 @@ def list_assistants(user_id: str) -> List[Assistant]:
         return [Assistant(**dict(row)) for row in rows]
 
 
-def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
+async def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
     """Get an assistant by ID."""
     with _connect() as conn:
         cursor = conn.cursor()
@@ -42,7 +42,7 @@ def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
         return Assistant(**dict(row)) if row else None
 
 
-def list_public_assistants(assistant_ids: Sequence[str]) -> List[Assistant]:
+async def list_public_assistants(assistant_ids: Sequence[str]) -> List[Assistant]:
     """List all the public assistants."""
     assistant_ids_tuple = tuple(
         assistant_ids
@@ -58,7 +58,7 @@ def list_public_assistants(assistant_ids: Sequence[str]) -> List[Assistant]:
         return [Assistant(**dict(row)) for row in rows]
 
 
-def put_assistant(
+async def put_assistant(
     user_id: str, assistant_id: str, *, name: str, config: dict, public: bool = False
 ) -> Assistant:
     """Modify an assistant."""
@@ -92,7 +92,7 @@ def put_assistant(
         )
 
 
-def list_threads(user_id: str) -> List[Thread]:
+async def list_threads(user_id: str) -> List[Thread]:
     """List all threads for the current user."""
     with _connect() as conn:
         cursor = conn.cursor()
@@ -101,7 +101,7 @@ def list_threads(user_id: str) -> List[Thread]:
         return [Thread(**dict(row)) for row in rows]
 
 
-def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
+async def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
     """Get a thread by ID."""
     with _connect() as conn:
         cursor = conn.cursor()
@@ -147,7 +147,7 @@ async def get_thread_history(user_id: str, thread_id: str):
     ]
 
 
-def put_thread(user_id: str, thread_id: str, *, assistant_id: str, name: str) -> Thread:
+async def put_thread(user_id: str, thread_id: str, *, assistant_id: str, name: str) -> Thread:
     """Modify a thread."""
     updated_at = datetime.now(timezone.utc)
     with _connect() as conn:
