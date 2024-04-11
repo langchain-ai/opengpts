@@ -63,7 +63,13 @@ def _determine_azure_or_openai_embeddings() -> PGVector:
     if os.environ.get("AZURE_OPENAI_API_KEY"):
         return PGVector(
             connection_string=PG_CONNECTION_STRING,
-            embedding_function=AzureOpenAIEmbeddings(),
+            embedding_function=AzureOpenAIEmbeddings(
+                azure_endpoint=os.environ.get("AZURE_OPENAI_API_BASE"),
+                azure_deployment=os.environ.get(
+                    "AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT_NAME"
+                ),
+                openai_api_version=os.environ.get("AZURE_OPENAI_API_VERSION"),
+            ),
             use_jsonb=True,
         )
     raise ValueError(
