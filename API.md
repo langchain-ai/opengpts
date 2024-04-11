@@ -77,7 +77,7 @@ We can check the thread, and see that it is currently empty:
 ```python
 import requests
 requests.get(
-    'http://127.0.0.1:8100/threads/231dc7f3-33ee-4040-98fe-27f6e2aa8b2b/messages', 
+    'http://127.0.0.1:8100/threads/231dc7f3-33ee-4040-98fe-27f6e2aa8b2b/state', 
     cookies= {"opengpts_user_id": "foo"}
 ).content
 ```
@@ -90,9 +90,9 @@ Let's add a message to the thread!
 ```python
 import requests
 requests.post(
-    'http://127.0.0.1:8100/threads/231dc7f3-33ee-4040-98fe-27f6e2aa8b2b/messages', 
+    'http://127.0.0.1:8100/threads/231dc7f3-33ee-4040-98fe-27f6e2aa8b2b/state', 
     cookies= {"opengpts_user_id": "foo"}, json={
-        "messages": [{
+        "values": [{
             "content": "hi! my name is bob",
             "type": "human",
         }]
@@ -105,12 +105,12 @@ If we now run the command to see the thread, we can see that there is now a mess
 ```python
 import requests
 requests.get(
-    'http://127.0.0.1:8100/threads/231dc7f3-33ee-4040-98fe-27f6e2aa8b2b/messages', 
+    'http://127.0.0.1:8100/threads/231dc7f3-33ee-4040-98fe-27f6e2aa8b2b/state', 
     cookies= {"opengpts_user_id": "foo"}
 ).content
 ```
 ```shell
-b'{"messages":[{"content":"hi! my name is bob","additional_kwargs":{},"type":"human","example":false}]}'
+b'{"values":[{"content":"hi! my name is bob","additional_kwargs":{},"type":"human","example":false}],"next":[]}'
 ```
 
 ## Run the assistant on that thread
@@ -133,10 +133,10 @@ If we now check the thread, we can see (after a bit) that there is a message fro
 
 ```python
 import requests
-requests.get('http://127.0.0.1:8100/threads/231dc7f3-33ee-4040-98fe-27f6e2aa8b2b/messages', cookies= {"opengpts_user_id": "foo"}).content
+requests.get('http://127.0.0.1:8100/threads/231dc7f3-33ee-4040-98fe-27f6e2aa8b2b/state', cookies= {"opengpts_user_id": "foo"}).content
 ```
 ```shell
-b'{"messages":[{"content":"hi! my name is bob","additional_kwargs":{},"type":"human","example":false},{"content":"Hello, Bob! How can I assist you today?","additional_kwargs":{"agent":{"return_values":{"output":"Hello, Bob! How can I assist you today?"},"log":"Hello, Bob! How can I assist you today?","type":"AgentFinish"}},"type":"ai","example":false}]}'
+b'{"values":[{"content":"hi! my name is bob","additional_kwargs":{},"type":"human","example":false},{"content":"Hello, Bob! How can I assist you today?","additional_kwargs":{"agent":{"return_values":{"output":"Hello, Bob! How can I assist you today?"},"log":"Hello, Bob! How can I assist you today?","type":"AgentFinish"}},"type":"ai","example":false}],"next":[]}'
 ```
 
 ## Run the assistant on the thread with new messages
@@ -153,8 +153,7 @@ requests.post('http://127.0.0.1:8100/runs', cookies= {"opengpts_user_id": "foo"}
         "messages": [{
             "content": "whats my name? respond in spanish",
             "type": "human",
-        }
-        ]
+        }]
     }
 }).content
 ```
@@ -163,11 +162,11 @@ Then, if we call the threads endpoint after a bit we can see the human message -
 
 ```python
 import requests
-requests.get('http://127.0.0.1:8100/threads/231dc7f3-33ee-4040-98fe-27f6e2aa8b2b/messages', cookies= {"opengpts_user_id": "foo"}).content
+requests.get('http://127.0.0.1:8100/threads/231dc7f3-33ee-4040-98fe-27f6e2aa8b2b/state', cookies= {"opengpts_user_id": "foo"}).content
 ```
 
 ```shell
-b'{"messages":[{"content":"hi! my name is bob","additional_kwargs":{},"type":"human","example":false},{"content":"Hello, Bob! How can I assist you today?","additional_kwargs":{"agent":{"return_values":{"output":"Hello, Bob! How can I assist you today?"},"log":"Hello, Bob! How can I assist you today?","type":"AgentFinish"}},"type":"ai","example":false},{"content":"whats my name? respond in spanish","additional_kwargs":{},"type":"human","example":false},{"content":"Tu nombre es Bob.","additional_kwargs":{"agent":{"return_values":{"output":"Tu nombre es Bob."},"log":"Tu nombre es Bob.","type":"AgentFinish"}},"type":"ai","example":false}]}'
+b'{"values":[{"content":"hi! my name is bob","additional_kwargs":{},"type":"human","example":false},{"content":"Hello, Bob! How can I assist you today?","additional_kwargs":{"agent":{"return_values":{"output":"Hello, Bob! How can I assist you today?"},"log":"Hello, Bob! How can I assist you today?","type":"AgentFinish"}},"type":"ai","example":false},{"content":"whats my name? respond in spanish","additional_kwargs":{},"type":"human","example":false},{"content":"Tu nombre es Bob.","additional_kwargs":{"agent":{"return_values":{"output":"Tu nombre es Bob."},"log":"Tu nombre es Bob.","type":"AgentFinish"}},"type":"ai","example":false}],"next":[]}'
 ```
 
 ## Stream

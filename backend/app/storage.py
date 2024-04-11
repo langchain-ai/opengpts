@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 from langchain_core.messages import AnyMessage
 
@@ -98,22 +98,22 @@ async def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
         )
 
 
-async def get_thread_messages(user_id: str, thread_id: str):
-    """Get all messages for a thread."""
+async def get_thread_state(user_id: str, thread_id: str):
+    """Get state for a thread."""
     app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
     state = await app.aget_state({"configurable": {"thread_id": thread_id}})
     return {
-        "messages": state.values,
-        "resumeable": bool(state.next),
+        "values": state.values,
+        "next": state.next,
     }
 
 
-async def post_thread_messages(
-    user_id: str, thread_id: str, messages: Sequence[AnyMessage]
+async def update_thread_state(
+    user_id: str, thread_id: str, values: Union[Sequence[AnyMessage], Dict[str, Any]]
 ):
-    """Add messages to a thread."""
+    """Add state to a thread."""
     app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
-    await app.aupdate_state({"configurable": {"thread_id": thread_id}}, messages)
+    await app.aupdate_state({"configurable": {"thread_id": thread_id}}, values)
 
 
 async def get_thread_history(user_id: str, thread_id: str):
@@ -122,7 +122,7 @@ async def get_thread_history(user_id: str, thread_id: str):
     return [
         {
             "values": c.values,
-            "resumeable": bool(c.next),
+            "next": c.next,
             "config": c.config,
             "parent": c.parent_config,
         }

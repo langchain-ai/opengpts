@@ -2,16 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Message } from "./useChatList";
 import { StreamState, mergeMessagesById } from "./useStreamState";
 
-async function getMessages(threadId: string) {
-  const { messages, resumeable } = await fetch(
-    `/threads/${threadId}/messages`,
-    {
-      headers: {
-        Accept: "application/json",
-      },
+async function getState(threadId: string) {
+  const { values, next } = await fetch(`/threads/${threadId}/state`, {
+    headers: {
+      Accept: "application/json",
     },
-  ).then((r) => r.json());
-  return { messages, resumeable };
+  }).then((r) => r.json());
+  return { values, next };
 }
 
 function usePrevious<T>(value: T): T | undefined {
@@ -26,17 +23,17 @@ export function useChatMessages(
   threadId: string | null,
   stream: StreamState | null,
   stopStream?: (clear?: boolean) => void,
-): { messages: Message[] | null; resumeable: boolean } {
+): { messages: Message[] | null; next: string[] } {
   const [messages, setMessages] = useState<Message[] | null>(null);
-  const [resumeable, setResumeable] = useState(false);
+  const [next, setNext] = useState<string[]>([]);
   const prevStreamStatus = usePrevious(stream?.status);
 
   useEffect(() => {
     async function fetchMessages() {
       if (threadId) {
-        const { messages, resumeable } = await getMessages(threadId);
-        setMessages(messages);
-        setResumeable(resumeable);
+        const { values, next } = await getState(threadId);
+        setMessages(values);
+        setNext(next);
       }
     }
 
@@ -50,15 +47,15 @@ export function useChatMessages(
   useEffect(() => {
     async function fetchMessages() {
       if (threadId) {
-        const { messages, resumeable } = await getMessages(threadId);
-        setMessages(messages);
-        setResumeable(resumeable);
+        const { values, next } = await getState(threadId);
+        setMessages(values);
+        setNext(next);
         stopStream?.(true);
       }
     }
 
     if (prevStreamStatus === "inflight" && stream?.status !== "inflight") {
-      setResumeable(false);
+      setNext([]);
       fetchMessages();
     }
 
@@ -68,8 +65,8 @@ export function useChatMessages(
   return useMemo(
     () => ({
       messages: mergeMessagesById(messages, stream?.messages),
-      resumeable,
+      next,
     }),
-    [messages, stream?.messages, resumeable],
+    [messages, stream?.messages, next],
   );
 }
