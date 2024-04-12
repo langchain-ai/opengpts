@@ -25,9 +25,9 @@ AssistantID = Annotated[str, Path(description="The ID of the assistant.")]
 
 
 @router.get("/")
-async def list_assistants(user: AuthedUser) -> List[Assistant]:
+def list_assistants(user: AuthedUser) -> List[Assistant]:
     """List all assistants for the current user."""
-    return await storage.list_assistants(user["user_id"])
+    return storage.list_assistants(user["user_id"])
 
 
 @router.get("/public/")

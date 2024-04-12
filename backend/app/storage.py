@@ -3,7 +3,7 @@ import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Sequence, Union
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from langchain_core.messages import AnyMessage
 
@@ -21,7 +21,7 @@ def _connect():
         conn.close()
 
 
-async def list_assistants(user_id: str) -> List[Assistant]:
+def list_assistants(user_id: str) -> List[Assistant]:
     """List all assistants for the current user."""
     with _connect() as conn:
         cursor = conn.cursor()
@@ -30,7 +30,7 @@ async def list_assistants(user_id: str) -> List[Assistant]:
         return [Assistant(**dict(row)) for row in rows]
 
 
-async def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
+def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
     """Get an assistant by ID."""
     with _connect() as conn:
         cursor = conn.cursor()
@@ -178,17 +178,33 @@ def get_or_create_user(sub: str) -> tuple[User, bool]:
     """Returns a tuple of the user and a boolean indicating whether the user was created."""
     with _connect() as conn:
         cursor = conn.cursor()
-        if user := cursor.execute('SELECT * FROM "user" WHERE sub = ?', sub):
+        cursor.execute('SELECT * FROM "user" WHERE sub = ?', (sub,))
+        user_row = cursor.fetchone()
+
+        if user_row:
+            # Convert sqlite3.Row to a User object
+            user = User(user_id=user_row["user_id"], sub=user_row["sub"], created_at=user_row["created_at"])
             return user, False
-        user = conn.execute('INSERT INTO "user" (sub) VALUES (?) RETURNING *', sub)
-        return user, True
+
+        # SQLite doesn't support RETURNING *, so we need to manually fetch the created user.
+        cursor.execute('INSERT INTO "user" (user_id, sub, created_at) VALUES (?, ?, ?)', (str(uuid4()), sub, datetime.now()))
+        conn.commit()
+
+        # Fetch the newly created user
+        cursor.execute('SELECT * FROM "user" WHERE sub = ?', (sub,))
+        new_user_row = cursor.fetchone()
+
+        new_user = User(user_id=new_user_row["user_id"], sub=new_user_row["sub"],
+                            created_at=new_user_row["created_at"])
+        return new_user, True
 
 
 async def delete_thread(user_id: str, thread_id: str):
     """Delete a thread by ID."""
-    async with get_pg_pool().acquire() as conn:
-        await conn.execute(
-            "DELETE FROM thread WHERE thread_id = $1 AND user_id = $2",
-            thread_id,
-            user_id,
+    with _connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM thread WHERE thread_id = ? AND user_id = ?",
+            (thread_id, user_id),
         )
+        conn.commit()

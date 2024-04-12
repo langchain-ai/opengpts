@@ -33,7 +33,7 @@ async def ingest_files(
 
     assistant_id = config["configurable"].get("assistant_id")
     if assistant_id is not None:
-        assistant = await storage.get_assistant(user["user_id"], assistant_id)
+        assistant = storage.get_assistant(user["user_id"], assistant_id)
         if assistant is None:
             raise HTTPException(status_code=404, detail="Assistant not found.")
 

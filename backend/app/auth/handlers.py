@@ -23,7 +23,7 @@ class NOOPAuth(AuthHandler):
 
     async def __call__(self, request: Request) -> User:
         sub = request.cookies.get("opengpts_user_id") or self._default_sub
-        user, _ = await storage.get_or_create_user(sub)
+        user, _ = storage.get_or_create_user(sub)
         return user
 
 
@@ -37,7 +37,7 @@ class JWTAuthBase(AuthHandler):
         except jwt.PyJWTError as e:
             raise HTTPException(status_code=401, detail=str(e))
 
-        user, _ = await storage.get_or_create_user(payload["sub"])
+        user, _ = storage.get_or_create_user(payload["sub"])
         return user
 
     @abstractmethod

@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS assistant (
-    assistant_id TEXT PRIMARY KEY, -- Manually ensure this is a UUID v4
+    assistant_id TEXT PRIMARY KEY NOT NULL, -- Manually ensure this is a UUID v4
     user_id TEXT NOT NULL,
     name TEXT NOT NULL,
     config TEXT NOT NULL, -- Store JSON data as text
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS assistant (
 );
 
 CREATE TABLE IF NOT EXISTS thread (
-    thread_id TEXT PRIMARY KEY, -- Manually ensure this is a UUID v4
+    thread_id TEXT PRIMARY KEY NOT NULL, -- Manually ensure this is a UUID v4
     assistant_id TEXT, -- Store as text and ensure it's a UUID in your application
     user_id TEXT NOT NULL,
     name TEXT NOT NULL,
