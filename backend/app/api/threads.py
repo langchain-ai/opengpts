@@ -1,3 +1,4 @@
+import asyncio
 from typing import Annotated, List, Sequence
 from uuid import uuid4
 
@@ -40,10 +41,13 @@ async def get_thread_messages(
     tid: ThreadID,
 ):
     """Get all messages for a thread."""
-    thread = await storage.get_thread(user["user_id"], tid)
+    thread, messages = await asyncio.gather(
+        storage.get_thread(user["user_id"], tid),
+        storage.get_thread_messages(user["user_id"], tid),
+    )
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
-    return await storage.get_thread_messages(user["user_id"], thread["thread_id"])
+    return messages
 
 
 @router.post("/{tid}/messages")
@@ -67,10 +71,13 @@ async def get_thread_history(
     tid: ThreadID,
 ):
     """Get all past states for a thread."""
-    thread = await storage.get_thread(user["user_id"], tid)
+    thread, history = await asyncio.gather(
+        storage.get_thread(user["user_id"], tid),
+        storage.get_thread_history(user["user_id"], tid),
+    )
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
-    return await storage.get_thread_history(user["user_id"], thread["thread_id"])
+    return history
 
 
 @router.get("/{tid}")
