@@ -24,10 +24,21 @@ def _connect():
 def list_assistants(user_id: str) -> List[Assistant]:
     """List all assistants for the current user."""
     with _connect() as conn:
+        conn.row_factory = sqlite3.Row  # Enable dictionary-like row access
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM assistant WHERE user_id = ?", (user_id,))
         rows = cursor.fetchall()
-        return [Assistant(**dict(row)) for row in rows]
+
+        # Deserialize the 'config' field from a JSON string to a dict for each row
+        assistants = []
+        for row in rows:
+            assistant_data = dict(row)  # Convert sqlite3.Row to dict
+            assistant_data['config'] = json.loads(assistant_data['config']) if 'config' in assistant_data and \
+                                                                               assistant_data['config'] else {}
+            assistant = Assistant(**assistant_data)
+            assistants.append(assistant)
+
+        return assistants
 
 
 def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
@@ -39,7 +50,12 @@ def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
             (assistant_id, user_id),
         )
         row = cursor.fetchone()
-        return Assistant(**dict(row)) if row else None
+        if not row:
+            return None
+        assistant_data = dict(row)  # Convert sqlite3.Row to dict
+        assistant_data['config'] = json.loads(assistant_data['config']) if 'config' in assistant_data and \
+                                                                           assistant_data['config'] else {}
+        return Assistant(**assistant_data)
 
 
 async def list_public_assistants(assistant_ids: Sequence[str]) -> List[Assistant]:

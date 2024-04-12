@@ -48,7 +48,7 @@ async def get_assistant(
     aid: AssistantID,
 ) -> Assistant:
     """Get an assistant by ID."""
-    assistant = await storage.get_assistant(user["user_id"], aid)
+    assistant = storage.get_assistant(user["user_id"], aid)
     if not assistant:
         raise HTTPException(status_code=404, detail="Assistant not found")
     return assistant
