@@ -1,13 +1,15 @@
 import json
+from typing import Annotated, Sequence
 
 from langchain_core.language_models.base import LanguageModelLike
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.runnables import chain
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph import END
-from langgraph.graph.message import MessageGraph
+from langgraph.graph.message import add_messages
+from langgraph.graph.state import StateGraph
 
 from app.message_types import LiberalFunctionMessage
 
@@ -104,7 +106,7 @@ def get_retrieval_executor(
 
     response = _get_messages | llm
 
-    workflow = MessageGraph()
+    workflow = StateGraph(Annotated[Sequence[BaseMessage], add_messages])
     workflow.add_node("invoke_retrieval", invoke_retrieval)
     workflow.add_node("retrieve", retrieve)
     workflow.add_node("response", response)
