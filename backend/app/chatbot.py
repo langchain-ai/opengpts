@@ -1,8 +1,11 @@
+from typing import Annotated, Sequence
+
 from langchain_core.language_models.base import LanguageModelLike
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import BaseMessage, SystemMessage
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph import END
-from langgraph.graph.message import MessageGraph
+from langgraph.graph.message import add_messages
+from langgraph.graph.state import StateGraph
 
 
 def get_chatbot_executor(
@@ -15,7 +18,7 @@ def get_chatbot_executor(
 
     chatbot = _get_messages | llm
 
-    workflow = MessageGraph()
+    workflow = StateGraph(Annotated[Sequence[BaseMessage], add_messages])
     workflow.add_node("chatbot", chatbot)
     workflow.set_entry_point("chatbot")
     workflow.add_edge("chatbot", END)
