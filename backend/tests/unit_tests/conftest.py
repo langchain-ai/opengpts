@@ -5,8 +5,12 @@ import subprocess
 import asyncpg
 import pytest
 
+from app.auth.settings import AuthType
+from app.auth.settings import settings as auth_settings
 from app.lifespan import get_pg_pool, lifespan
 from app.server import app
+
+auth_settings.auth_type = AuthType.NOOP
 
 # Temporary handling of environment variables for testing
 os.environ["OPENAI_API_KEY"] = "test"
