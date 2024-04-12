@@ -56,6 +56,7 @@ async def add_thread_state(
     tid: ThreadID,
     payload: ThreadPostRequest,
 ):
+    """Add state to a thread."""
     thread = await storage.get_thread(user["user_id"], tid)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
