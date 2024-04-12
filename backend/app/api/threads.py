@@ -1,5 +1,5 @@
 import asyncio
-from typing import Annotated, List, Sequence
+from typing import Annotated, Any, Dict, List, Sequence, Union
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path
@@ -23,10 +23,10 @@ class ThreadPutRequest(BaseModel):
     assistant_id: str = Field(..., description="The ID of the assistant to use.")
 
 
-class ThreadMessagesPostRequest(BaseModel):
-    """Payload for adding messages to a thread."""
+class ThreadPostRequest(BaseModel):
+    """Payload for adding state to a thread."""
 
-    messages: Sequence[AnyMessage]
+    values: Union[Sequence[AnyMessage], Dict[str, Any]]
 
 
 @router.get("/")
@@ -35,34 +35,31 @@ async def list_threads(user: AuthedUser) -> List[Thread]:
     return await storage.list_threads(user["user_id"])
 
 
-@router.get("/{tid}/messages")
-async def get_thread_messages(
+@router.get("/{tid}/state")
+async def get_thread_state(
     user: AuthedUser,
     tid: ThreadID,
 ):
-    """Get all messages for a thread."""
-    thread, messages = await asyncio.gather(
+    """Get state for a thread."""
+    thread, state = await asyncio.gather(
         storage.get_thread(user["user_id"], tid),
-        storage.get_thread_messages(user["user_id"], tid),
+        storage.get_thread_state(user["user_id"], tid),
     )
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
-    return messages
+    return state
 
 
-@router.post("/{tid}/messages")
-async def add_thread_messages(
+@router.post("/{tid}/state")
+async def add_thread_state(
     user: AuthedUser,
     tid: ThreadID,
-    payload: ThreadMessagesPostRequest,
+    payload: ThreadPostRequest,
 ):
-    """Add messages to a thread."""
     thread = await storage.get_thread(user["user_id"], tid)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
-    return await storage.post_thread_messages(
-        user["user_id"], thread["thread_id"], payload.messages
-    )
+    return await storage.update_thread_state(user["user_id"], tid, payload.values)
 
 
 @router.get("/{tid}/history")

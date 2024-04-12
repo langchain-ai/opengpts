@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Any, Dict, Optional, Sequence, Union
 
 import langsmith.client
 from fastapi import APIRouter, BackgroundTasks, HTTPException
@@ -24,7 +24,9 @@ class CreateRunPayload(BaseModel):
     """Payload for creating a run."""
 
     thread_id: str
-    input: Optional[Sequence[AnyMessage]] = Field(default_factory=list)
+    input: Optional[Union[Sequence[AnyMessage], Dict[str, Any]]] = Field(
+        default_factory=dict
+    )
     config: Optional[RunnableConfig] = None
 
 

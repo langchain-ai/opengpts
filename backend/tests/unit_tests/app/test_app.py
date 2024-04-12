@@ -99,9 +99,9 @@ async def test_threads() -> None:
         )
         assert response.status_code == 200, response.text
 
-        response = await client.get(f"/threads/{tid}/messages", headers=headers)
+        response = await client.get(f"/threads/{tid}/state", headers=headers)
         assert response.status_code == 200
-        assert response.json() == {"messages": [], "resumeable": False}
+        assert response.json() == {"values": [], "next": []}
 
         response = await client.get("/threads/", headers=headers)
 
