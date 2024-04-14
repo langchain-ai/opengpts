@@ -88,15 +88,18 @@ export function useChatList(): ChatListProps {
     return saved;
   }, []);
 
-  const deleteChat = useCallback(async (thread_id: string) => {
-    await fetch(`/threads/${thread_id}`, {
-      method: "DELETE",
-      headers: {
-        Accept: "application/json",
-      },
-    });
-    setChats(chats.filter((c: Chat) => c.thread_id !== thread_id));
-  }, [chats]);
+  const deleteChat = useCallback(
+    async (thread_id: string) => {
+      await fetch(`/threads/${thread_id}`, {
+        method: "DELETE",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+      setChats(chats.filter((c: Chat) => c.thread_id !== thread_id));
+    },
+    [chats],
+  );
 
   return {
     chats,

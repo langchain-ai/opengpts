@@ -22,7 +22,7 @@ export function ChatList(props: {
     window.addEventListener("click", closeMenu);
     return () => window.removeEventListener("click", closeMenu);
   }, []);
-  
+
   return (
     <>
       <div
@@ -74,7 +74,10 @@ export function ChatList(props: {
       </div>
       <ul role="list" className="-mx-2 mt-2 space-y-1">
         {props.chats?.map((chat) => (
-          <li key={chat.thread_id} className="flex justify-between items-center p-2 rounded-md hover:bg-gray-50 cursor-pointer">
+          <li
+            key={chat.thread_id}
+            className="flex justify-between items-center p-2 rounded-md hover:bg-gray-50 cursor-pointer"
+          >
             <div
               onClick={() => props.enterChat(chat.thread_id)}
               className={cn(
@@ -100,7 +103,9 @@ export function ChatList(props: {
             <button
               onClick={(event) => {
                 event.stopPropagation(); // Prevent triggering click for the chat item
-                setVisibleMenu(visibleMenu === chat.thread_id ? null : chat.thread_id);
+                setVisibleMenu(
+                  visibleMenu === chat.thread_id ? null : chat.thread_id,
+                );
               }}
               className="p-1 rounded-full hover:bg-gray-200"
             >
