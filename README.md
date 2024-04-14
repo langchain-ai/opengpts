@@ -138,7 +138,7 @@ export POSTGRES_USER=postgres
 export POSTGRES_PASSWORD=...
 ```
 
-**Creeate the database**
+**Create the database**
 ```shell
 createdb opengpts
 ```
