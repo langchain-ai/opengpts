@@ -117,3 +117,13 @@ async def upsert_thread(
         assistant_id=thread_put_request.assistant_id,
         name=thread_put_request.name,
     )
+
+
+@router.delete("/{tid}")
+async def delete_thread(
+    user: AuthedUser,
+    tid: ThreadID,
+):
+    """Delete a thread by ID."""
+    await storage.delete_thread(user["user_id"], tid)
+    return {"status": "ok"}

@@ -40,6 +40,7 @@ export interface ChatListProps {
     assistant_id: string,
     thread_id?: string,
   ) => Promise<Chat>;
+  deleteChat: (thread_id: string) => Promise<void>;
 }
 
 function chatsReducer(
@@ -87,8 +88,22 @@ export function useChatList(): ChatListProps {
     return saved;
   }, []);
 
+  const deleteChat = useCallback(
+    async (thread_id: string) => {
+      await fetch(`/threads/${thread_id}`, {
+        method: "DELETE",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+      setChats((chats || []).filter((c: Chat) => c.thread_id !== thread_id));
+    },
+    [chats],
+  );
+
   return {
     chats,
     createChat,
+    deleteChat,
   };
 }
