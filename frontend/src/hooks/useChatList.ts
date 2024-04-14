@@ -96,7 +96,7 @@ export function useChatList(): ChatListProps {
           Accept: "application/json",
         },
       });
-      setChats(chats.filter((c: Chat) => c.thread_id !== thread_id));
+      setChats((chats || []).filter((c: Chat) => c.thread_id !== thread_id));
     },
     [chats],
   );
