@@ -10,6 +10,7 @@ from langgraph.graph.message import MessageGraph
 from langgraph.prebuilt import ToolExecutor, ToolInvocation
 
 from app.message_types import LiberalToolMessage
+from app.messages import select_conversation_messages
 
 
 def get_openai_agent_executor(
@@ -30,7 +31,7 @@ def get_openai_agent_executor(
             else:
                 msgs.append(m)
 
-        return [SystemMessage(content=system_message)] + msgs
+        return [SystemMessage(content=system_message)] + select_conversation_messages(msgs)
 
     if tools:
         llm_with_tools = llm.bind(tools=[format_tool_to_openai_tool(t) for t in tools])
