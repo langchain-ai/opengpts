@@ -477,6 +477,21 @@ const ORDER = [
   "agent_type",
 ];
 
+function assignDefaults(
+  config: ConfigInterface["config"] | undefined | null,
+  configDefaults: Schemas["configDefaults"],
+) {
+  return config
+    ? {
+        ...config,
+        configurable: {
+          ...configDefaults?.configurable,
+          ...config.configurable,
+        },
+      }
+    : configDefaults;
+}
+
 export function Config(props: {
   className?: string;
   configSchema: Schemas["configSchema"];
@@ -487,8 +502,9 @@ export function Config(props: {
   edit?: boolean;
 }) {
   const [values, setValues] = useState(
-    props.config?.config ?? props.configDefaults,
+    assignDefaults(props.config?.config, props.configDefaults),
   );
+  console.log(values, props);
   const [selectedTools, setSelectedTools] = useState<Tool[]>([]);
   const typeKey = "type";
   const typeField =
@@ -526,7 +542,7 @@ export function Config(props: {
   };
 
   useEffect(() => {
-    setValues(props.config?.config ?? props.configDefaults);
+    setValues(assignDefaults(props.config?.config, props.configDefaults));
   }, [props.config, props.configDefaults]);
   useEffect(() => {
     if (dropzone.acceptedFiles.length > 0) {
