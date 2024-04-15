@@ -31,6 +31,7 @@ from app.tools import (
     PressReleases,
     PubMed,
     Retrieval,
+    DallE,
     SecFilings,
     Tavily,
     TavilyAnswer,
@@ -53,6 +54,7 @@ Tool = Union[
     Tavily,
     TavilyAnswer,
     Retrieval,
+    DallE,
 ]
 
 
