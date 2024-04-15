@@ -7,9 +7,26 @@ import { StrictMode } from "react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { NotFound } from "./components/NotFound.tsx";
 
-if (document.cookie.indexOf("user_id") === -1) {
-  document.cookie = `opengpts_user_id=${uuidv4()}; path=/; SameSite=Lax`;
+function getCookie(name: string) {
+  const cookie = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${name}=`));
+  return cookie ? cookie.split("=")[1] : null;
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const userId =
+    localStorage.getItem("opengpts_user_id") ||
+    getCookie("opengpts_user_id") ||
+    uuidv4();
+
+  // Push the user id to localStorage in any case to make it stable
+  localStorage.setItem("opengpts_user_id", userId);
+  // Ensure the cookie is always set (for both new and returning users)
+  const weekInMilliseconds = 7 * 24 * 60 * 60 * 1000;
+  const expires = new Date(Date.now() + weekInMilliseconds).toUTCString();
+  document.cookie = `opengpts_user_id=${userId}; path=/; expires=${expires}; SameSite=Lax;`;
+});
 
 const queryClient = new QueryClient();
 

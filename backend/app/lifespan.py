@@ -19,6 +19,9 @@ async def _init_connection(conn) -> None:
         decoder=orjson.loads,
         schema="pg_catalog",
     )
+    await conn.set_type_codec(
+        "uuid", encoder=lambda v: str(v), decoder=lambda v: v, schema="pg_catalog"
+    )
 
 
 @asynccontextmanager

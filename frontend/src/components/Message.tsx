@@ -1,12 +1,12 @@
 import { memo, useState } from "react";
-import { Message as MessageType } from "../hooks/useChatList";
+import { MessageDocument, Message as MessageType } from "../types";
 import { str } from "../utils/str";
 import { cn } from "../utils/cn";
-import { marked } from "marked";
-import DOMPurify from "dompurify";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { LangSmithActions } from "./LangSmithActions";
 import { DocumentList } from "./Document";
+import { omit } from "lodash";
+import { StringViewer } from "./String";
 
 function tryJsonParse(value: string) {
   try {
@@ -88,14 +88,50 @@ function Function(props: {
   );
 }
 
-export const Message = memo(function Message(
+function isDocumentContent(
+  content: MessageType["content"],
+): content is MessageDocument[] {
+  return (
+    Array.isArray(content) &&
+    content.every((d) => typeof d === "object" && !!d && !!d.page_content)
+  );
+}
+
+export function MessageContent(props: { content: MessageType["content"] }) {
+  if (typeof props.content === "string") {
+    return <StringViewer value={props.content} />;
+  } else if (isDocumentContent(props.content)) {
+    return <DocumentList documents={props.content} />;
+  } else if (
+    Array.isArray(props.content) &&
+    props.content.every(
+      (it) => typeof it === "object" && !!it && typeof it.content === "string",
+    )
+  ) {
+    return (
+      <DocumentList
+        documents={props.content.map((it) => ({
+          page_content: it.content,
+          metadata: omit(it, "content"),
+        }))}
+      />
+    );
+  } else {
+    return <div className="text-gray-900 prose">{str(props.content)}</div>;
+  }
+}
+
+export const MessageViewer = memo(function (
   props: MessageType & { runId?: string },
 ) {
   const [open, setOpen] = useState(false);
   const contentIsDocuments =
     ["function", "tool"].includes(props.type) &&
-    Array.isArray(props.content) &&
-    props.content.every((d) => !!d.page_content);
+    isDocumentContent(props.content);
+  const showContent =
+    ["function", "tool"].includes(props.type) && !contentIsDocuments
+      ? open
+      : true;
   return (
     <div className="flex flex-col mb-8">
       <div className="leading-6 flex flex-row">
@@ -133,27 +169,7 @@ export const Message = memo(function Message(
                 args={call.function?.arguments}
               />
             ))}
-          {(
-            ["function", "tool"].includes(props.type) && !contentIsDocuments
-              ? open
-              : true
-          ) ? (
-            typeof props.content === "string" ? (
-              <div
-                className="text-gray-900 prose"
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(marked(props.content)).trim(),
-                }}
-              />
-            ) : contentIsDocuments ? (
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              <DocumentList documents={props.content as any} />
-            ) : (
-              <div className="text-gray-900 prose">{str(props.content)}</div>
-            )
-          ) : (
-            false
-          )}
+          {showContent && <MessageContent content={props.content} />}
         </div>
       </div>
       {props.runId && (

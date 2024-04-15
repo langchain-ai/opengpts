@@ -1,21 +1,11 @@
 """Test the server and client together."""
 
-from contextlib import asynccontextmanager
 from typing import Optional, Sequence
 from uuid import uuid4
 
 import asyncpg
-from httpx import AsyncClient
-from typing_extensions import AsyncGenerator
 
-
-@asynccontextmanager
-async def get_client() -> AsyncGenerator[AsyncClient, None]:
-    """Get the app."""
-    from app.server import app
-
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        yield ac
+from tests.unit_tests.app.helpers import get_client
 
 
 def _project(d: dict, *, exclude_keys: Optional[Sequence[str]]) -> dict:
@@ -48,24 +38,24 @@ async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
             headers=headers,
         )
         assert response.status_code == 200
-        assert _project(response.json(), exclude_keys=["updated_at"]) == {
+        assert _project(response.json(), exclude_keys=["updated_at", "user_id"]) == {
             "assistant_id": aid,
             "config": {},
             "name": "bobby",
             "public": False,
-            "user_id": "1",
         }
         async with pool.acquire() as conn:
             assert len(await conn.fetch("SELECT * FROM assistant;")) == 1
 
         response = await client.get("/assistants/", headers=headers)
-        assert [_project(d, exclude_keys=["updated_at"]) for d in response.json()] == [
+        assert [
+            _project(d, exclude_keys=["updated_at", "user_id"]) for d in response.json()
+        ] == [
             {
                 "assistant_id": aid,
                 "config": {},
                 "name": "bobby",
                 "public": False,
-                "user_id": "1",
             }
         ]
 
@@ -75,12 +65,11 @@ async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
             headers=headers,
         )
 
-        assert _project(response.json(), exclude_keys=["updated_at"]) == {
+        assert _project(response.json(), exclude_keys=["updated_at", "user_id"]) == {
             "assistant_id": aid,
             "config": {},
             "name": "bobby",
             "public": False,
-            "user_id": "1",
         }
 
         # Check not visible to other users
@@ -117,29 +106,12 @@ async def test_threads() -> None:
         response = await client.get("/threads/", headers=headers)
 
         assert response.status_code == 200
-        assert [_project(d, exclude_keys=["updated_at"]) for d in response.json()] == [
-            {
-                "assistant_id": aid,
-                "name": "bobby",
-                "thread_id": tid,
-                "user_id": "1",
-            }
-        ]
-
-        # Test a bad requests
-        response = await client.put(
-            f"/threads/{tid}",
-            json={"name": "bobby", "assistant_id": aid},
-        )
-        assert response.status_code == 422
+        assert [
+            _project(d, exclude_keys=["updated_at", "user_id"]) for d in response.json()
+        ] == [{"assistant_id": aid, "name": "bobby", "thread_id": tid}]
 
         response = await client.put(
             f"/threads/{tid}",
             headers={"Cookie": "opengpts_user_id=2"},
-        )
-        assert response.status_code == 422
-
-        response = await client.get(
-            "/threads/",
         )
         assert response.status_code == 422

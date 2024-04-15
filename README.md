@@ -31,6 +31,7 @@ Because this is open source, if you do not like those architectures or want to m
 
 - [GPTs: a simple hosted version](https://opengpts-example-vz4y4ooboq-uc.a.run.app/)
 - [Assistants API: a getting started guide](API.md)
+- [Auth: a guide for production](auth.md)
 
 ## Quickstart with Docker
 
@@ -137,7 +138,7 @@ export POSTGRES_USER=postgres
 export POSTGRES_PASSWORD=...
 ```
 
-**Creeate the database**
+**Create the database**
 ```shell
 createdb opengpts
 ```

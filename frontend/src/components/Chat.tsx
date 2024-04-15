@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { StreamStateProps } from "../hooks/useStreamState";
 import { useChatMessages } from "../hooks/useChatMessages";
 import TypingBox from "./TypingBox";
-import { Message } from "./Message";
+import { MessageViewer } from "./Message";
 import { ArrowDownCircleIcon } from "@heroicons/react/24/outline";
 import { MessageWithFiles } from "../utils/formTypes.ts";
 import { useParams } from "react-router-dom";
@@ -51,7 +51,7 @@ export function Chat(props: ChatProps) {
   return (
     <div className="flex-1 flex flex-col items-stretch pb-[76px] pt-2">
       {messages?.map((msg, i) => (
-        <Message
+        <MessageViewer
           {...msg}
           key={msg.id}
           runId={

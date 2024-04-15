@@ -19,7 +19,7 @@ import { useThreadAndAssistant } from "./hooks/useThreadAndAssistant.ts";
 function App(props: { edit?: boolean }) {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { chats, createChat } = useChatList();
+  const { chats, createChat, deleteChat } = useChatList();
   const { configs, saveConfig } = useConfigList();
   const { startStream, stopStream, stream } = useStreamState();
   const { configSchema, configDefaults } = useSchemas();
@@ -117,6 +117,7 @@ function App(props: { edit?: boolean }) {
         <ChatList
           chats={chats}
           enterChat={selectChat}
+          deleteChat={deleteChat}
           enterConfig={selectConfig}
         />
       }
