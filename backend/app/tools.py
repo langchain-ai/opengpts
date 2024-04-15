@@ -3,7 +3,6 @@ from functools import lru_cache
 from typing import Optional
 
 from langchain.pydantic_v1 import BaseModel, Field
-from langchain_core.tools import BaseTool as _BaseTool
 from langchain.tools.retriever import create_retriever_tool
 from langchain_community.agent_toolkits.connery import ConneryToolkit
 from langchain_core.tools import Tool
@@ -195,19 +194,6 @@ class DallE(BaseTool):
     type: AvailableTools = Field(AvailableTools.DALL_E, const=True)
     name: str = Field("Generate Image (Dall-E)", const=True)
     description: str = Field("Generates images from a text description using OpenAI's DALL-E model.", const=True)
-
-class DallETool(_BaseTool):
-    type: AvailableTools = Field(AvailableTools.DALL_E, const=True)
-    name: str = Field("Generate Image (Dall-E)", const=True)
-    description: str = Field("Generates images from a text description using OpenAI's DALL-E model.", const=True)
-    args_schema = DallEInput
-    def _run(
-        self,
-        run_manager = None,
-        **kwargs,
-    ):
-        return DallEAPIWrapper(size="1024x1024", quality="hd").run(kwargs["query"])
-
 
 
 RETRIEVAL_DESCRIPTION = """Can be used to look up information that was uploaded to this assistant.
