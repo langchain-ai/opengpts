@@ -41,10 +41,8 @@ async def get_thread_state(
     tid: ThreadID,
 ):
     """Get state for a thread."""
-    thread, state = await asyncio.gather(
-        storage.get_thread(user["user_id"], tid),
-        storage.get_thread_state(user["user_id"], tid),
-    )
+    thread = storage.get_thread(user["user_id"], tid)
+    state = await storage.get_thread_state(user["user_id"], tid)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
     return state
@@ -57,7 +55,7 @@ async def add_thread_state(
     payload: ThreadPostRequest,
 ):
     """Add state to a thread."""
-    thread = await storage.get_thread(user["user_id"], tid)
+    thread = storage.get_thread(user["user_id"], tid)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
     return await storage.update_thread_state(user["user_id"], tid, payload.values)
@@ -69,10 +67,8 @@ async def get_thread_history(
     tid: ThreadID,
 ):
     """Get all past states for a thread."""
-    thread, history = await asyncio.gather(
-        storage.get_thread(user["user_id"], tid),
-        storage.get_thread_history(user["user_id"], tid),
-    )
+    thread = storage.get_thread(user["user_id"], tid)
+    history = await storage.get_thread_history(user["user_id"], tid)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
     return history
@@ -84,7 +80,7 @@ async def get_thread(
     tid: ThreadID,
 ) -> Thread:
     """Get a thread by ID."""
-    thread = await storage.get_thread(user["user_id"], tid)
+    thread = storage.get_thread(user["user_id"], tid)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
     return thread
@@ -96,7 +92,7 @@ async def create_thread(
     thread_put_request: ThreadPutRequest,
 ) -> Thread:
     """Create a thread."""
-    return await storage.put_thread(
+    return storage.put_thread(
         user["user_id"],
         str(uuid4()),
         assistant_id=thread_put_request.assistant_id,
@@ -111,7 +107,7 @@ async def upsert_thread(
     thread_put_request: ThreadPutRequest,
 ) -> Thread:
     """Update a thread."""
-    return await storage.put_thread(
+    return storage.put_thread(
         user["user_id"],
         tid,
         assistant_id=thread_put_request.assistant_id,

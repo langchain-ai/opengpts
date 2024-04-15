@@ -74,7 +74,7 @@ async def list_public_assistants(assistant_ids: Sequence[str]) -> List[Assistant
         return [Assistant(**dict(row)) for row in rows]
 
 
-async def put_assistant(
+def put_assistant(
     user_id: str, assistant_id: str, *, name: str, config: dict, public: bool = False
 ) -> Assistant:
     """Modify an assistant."""
@@ -99,7 +99,7 @@ async def put_assistant(
         )
         conn.commit()
         return Assistant(
-            assistant_id=UUID(assistant_id),
+            assistant_id=assistant_id,
             user_id=user_id,
             name=name,
             config=config,
@@ -117,7 +117,7 @@ async def list_threads(user_id: str) -> List[Thread]:
         return [Thread(**dict(row)) for row in rows]
 
 
-async def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
+def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
     """Get a thread by ID."""
     with _connect() as conn:
         cursor = conn.cursor()
@@ -163,7 +163,7 @@ async def get_thread_history(user_id: str, thread_id: str):
     ]
 
 
-async def put_thread(user_id: str, thread_id: str, *, assistant_id: str, name: str) -> Thread:
+def put_thread(user_id: str, thread_id: str, *, assistant_id: str, name: str) -> Thread:
     """Modify a thread."""
     updated_at = datetime.now(timezone.utc)
     with _connect() as conn:
@@ -181,6 +181,7 @@ async def put_thread(user_id: str, thread_id: str, *, assistant_id: str, name: s
             """,
             (thread_id, user_id, assistant_id, name, updated_at),
         )
+        conn.commit()
         return {
             "thread_id": thread_id,
             "user_id": user_id,

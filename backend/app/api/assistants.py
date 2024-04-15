@@ -60,7 +60,7 @@ async def create_assistant(
     payload: AssistantPayload,
 ) -> Assistant:
     """Create an assistant."""
-    return await storage.put_assistant(
+    return storage.put_assistant(
         user["user_id"],
         str(uuid4()),
         name=payload.name,
