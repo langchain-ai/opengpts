@@ -1,7 +1,7 @@
 import json
 
 from langchain.tools import BaseTool
-from langchain.tools.render import format_tool_to_openai_tool
+from langchain_core.utils.function_calling import convert_to_openai_tool
 from langchain_core.language_models.base import LanguageModelLike
 from langchain_core.messages import SystemMessage, ToolMessage
 from langgraph.checkpoint import BaseCheckpointSaver
@@ -33,7 +33,7 @@ def get_openai_agent_executor(
         return [SystemMessage(content=system_message)] + msgs
 
     if tools:
-        llm_with_tools = llm.bind(tools=[format_tool_to_openai_tool(t) for t in tools])
+        llm_with_tools = llm.bind(tools=[convert_to_openai_tool(t) for t in tools])
     else:
         llm_with_tools = llm
     agent = _get_messages | llm_with_tools
