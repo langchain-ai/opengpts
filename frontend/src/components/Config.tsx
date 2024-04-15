@@ -504,7 +504,6 @@ export function Config(props: {
   const [values, setValues] = useState(
     assignDefaults(props.config?.config, props.configDefaults),
   );
-  console.log(values, props);
   const [selectedTools, setSelectedTools] = useState<Tool[]>([]);
   const typeKey = "type";
   const typeField =
