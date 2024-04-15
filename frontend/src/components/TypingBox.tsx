@@ -12,7 +12,7 @@ import { useDropzone } from "react-dropzone";
 import { MessageWithFiles } from "../utils/formTypes.ts";
 import { DROPZONE_CONFIG, TYPE_NAME } from "../constants.ts";
 import { Config } from "../hooks/useConfigList.ts";
-import { Chat } from "../hooks/useChatList.ts";
+import { Chat } from "../types";
 
 function getFileTypeIcon(fileType: string) {
   switch (fileType) {
