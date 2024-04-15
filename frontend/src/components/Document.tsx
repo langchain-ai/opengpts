@@ -1,13 +1,25 @@
 import { useMemo, useState } from "react";
-import { cn } from "../utils/cn";
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { cn } from "../utils/cn";
+import { MessageDocument } from "../types";
+import { StringViewer } from "./String";
 
-export interface PageDocument {
-  page_content: string;
-  metadata: Record<string, unknown>;
+function isValidHttpUrl(str: string) {
+  let url;
+
+  try {
+    url = new URL(str);
+  } catch (_) {
+    return false;
+  }
+
+  return url.protocol === "http:" || url.protocol === "https:";
 }
 
-function PageDocument(props: { document: PageDocument; className?: string }) {
+function DocumentViewer(props: {
+  document: MessageDocument;
+  className?: string;
+}) {
   const [open, setOpen] = useState(false);
 
   const metadata = useMemo(() => {
@@ -46,28 +58,28 @@ function PageDocument(props: { document: PageDocument; className?: string }) {
         )}
         onClick={() => setOpen(true)}
       >
-        <ChevronRightIcon className="mt-1 h-4 w-4 text-gray-500" />
-        <span className="min-w-0 flex-grow basis-0 overflow-hidden text-ellipsis whitespace-nowrap text-left">
-          {props.document.page_content.trim().replace(/\n/g, " ")}
-        </span>
+        <ChevronRightIcon className="mt-[6px] h-4 w-4 text-gray-500" />
+        <StringViewer
+          className="min-w-0 flex-grow basis-0 overflow-hidden text-ellipsis whitespace-nowrap text-left max-w-none"
+          value={props.document.page_content.trim().replace(/\n/g, " ")}
+        />
       </button>
     );
   }
 
   return (
-    <button
+    <div
       className={cn(
         "flex items-start gap-4 px-4 text-left transition-colors hover:bg-gray-50/50 active:bg-gray-50",
         props.className,
       )}
-      onClick={() => setOpen(false)}
     >
-      <ChevronDownIcon className="mt-1 h-4 w-4 text-gray-500" />
+      <button onClick={() => setOpen(false)}>
+        <ChevronDownIcon className="mt-[6px] h-4 w-4 text-gray-500" />
+      </button>
 
       <span className="flex flex-grow basis-0 flex-col gap-4">
-        <span className="whitespace-pre-line">
-          {props.document.page_content}
-        </span>
+        <StringViewer value={props.document.page_content} />
 
         <span className="flex flex-col flex-wrap items-start gap-2">
           {metadata.map(({ key, value }, idx) => {
@@ -77,22 +89,28 @@ function PageDocument(props: { document: PageDocument; className?: string }) {
                 key={idx}
               >
                 <span className="mr-1.5 font-mono font-bold">{key}</span>
-                <span className="whitespace-pre-wrap">{value}</span>
+                {isValidHttpUrl(value) ? (
+                  <a href={value} target="_blank" rel="noreferrer">
+                    {value}
+                  </a>
+                ) : (
+                  <span className="whitespace-pre-wrap">{value}</span>
+                )}
               </span>
             );
           })}
         </span>
       </span>
-    </button>
+    </div>
   );
 }
 
-export function DocumentList(props: { documents: PageDocument[] }) {
+export function DocumentList(props: { documents: MessageDocument[] }) {
   return (
     <div className="flex flex-col items-stretch gap-4 rounded-lg ring-1 ring-gray-300 overflow-hidden my-2">
       <div className="grid divide-y empty:hidden">
         {props.documents.map((document, idx) => (
-          <PageDocument document={document} key={idx} className="py-3" />
+          <DocumentViewer document={document} key={idx} className="py-3" />
         ))}
       </div>
     </div>

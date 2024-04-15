@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Message } from "./useChatList";
+import { Message } from "../types";
 import { StreamState, mergeMessagesById } from "./useStreamState";
 
 async function getState(threadId: string) {
