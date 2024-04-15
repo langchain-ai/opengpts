@@ -1,6 +1,7 @@
-export interface FunctionDefinition {
-  name?: string;
-  arguments?: string;
+export interface ToolCall {
+  id: string;
+  name: string;
+  args: Record<string, unknown>;
 }
 
 export interface MessageDocument {
@@ -13,14 +14,7 @@ export interface Message {
   type: string;
   content: string | MessageDocument[] | object;
   name?: string;
-  additional_kwargs?: {
-    name?: string;
-    function_call?: FunctionDefinition;
-    tool_calls?: {
-      id: string;
-      function?: FunctionDefinition;
-    }[];
-  };
+  tool_calls?: ToolCall[];
   example: boolean;
 }
 
