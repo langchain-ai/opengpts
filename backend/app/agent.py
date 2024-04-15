@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Mapping, Optional, Sequence, Union
+from typing import Any, Dict, Mapping, Optional, Sequence, Union
 
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import (
@@ -243,7 +243,10 @@ chatbot = (
         llm=ConfigurableField(id="llm_type", name="LLM Type"),
         system_message=ConfigurableField(id="system_message", name="Instructions"),
     )
-    .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
+    .with_types(
+        input_type=Union[Sequence[AnyMessage], Dict[str, Any]],
+        output_type=Union[Sequence[AnyMessage], Dict[str, Any]],
+    )
 )
 
 
@@ -305,7 +308,10 @@ chat_retrieval = (
         ),
         thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
     )
-    .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
+    .with_types(
+        input_type=Union[Sequence[AnyMessage], Dict[str, Any]],
+        output_type=Union[Sequence[AnyMessage], Dict[str, Any]],
+    )
 )
 
 
@@ -342,7 +348,10 @@ agent = (
         chatbot=chatbot,
         chat_retrieval=chat_retrieval,
     )
-    .with_types(input_type=Sequence[AnyMessage], output_type=Sequence[AnyMessage])
+    .with_types(
+        input_type=Union[Sequence[AnyMessage], Dict[str, Any]],
+        output_type=Union[Sequence[AnyMessage], Dict[str, Any]],
+    )
 )
 
 if __name__ == "__main__":

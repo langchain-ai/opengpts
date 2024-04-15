@@ -1,5 +1,5 @@
 import json
-from typing import Annotated, Sequence
+from typing import Annotated, Sequence, TypedDict
 
 from langchain_core.language_models.base import LanguageModelLike
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
@@ -41,6 +41,9 @@ def get_retrieval_executor(
     system_message: str,
     checkpoint: BaseCheckpointSaver,
 ):
+    class AgentState(TypedDict):
+        messages: Annotated[Sequence[BaseMessage], add_messages]
+
     def _get_messages(messages):
         chat_history = []
         for m in messages:
@@ -60,7 +63,7 @@ def get_retrieval_executor(
         ] + chat_history
 
     @chain
-    async def get_search_query(messages):
+    async def get_search_query(messages: Sequence[BaseMessage]):
         convo = []
         for m in messages:
             if isinstance(m, AIMessage):
@@ -73,43 +76,56 @@ def get_retrieval_executor(
         response = await llm.ainvoke(prompt)
         return response.content
 
-    async def invoke_retrieval(messages):
+    async def invoke_retrieval(state: AgentState):
+        messages = state["messages"]
         if len(messages) == 1:
             human_input = messages[-1].content
-            return AIMessage(
-                content="",
-                additional_kwargs={
-                    "function_call": {
-                        "name": "retrieval",
-                        "arguments": json.dumps({"query": human_input}),
-                    }
-                },
-            )
+            return {
+                "messages": [
+                    AIMessage(
+                        content="",
+                        additional_kwargs={
+                            "function_call": {
+                                "name": "retrieval",
+                                "arguments": json.dumps({"query": human_input}),
+                            }
+                        },
+                    )
+                ]
+            }
         else:
             search_query = await get_search_query.ainvoke(messages)
-            return AIMessage(
-                content="",
-                additional_kwargs={
-                    "function_call": {
-                        "name": "retrieval",
-                        "arguments": json.dumps({"query": search_query}),
-                    }
-                },
-            )
+            return {
+                "messages": [
+                    AIMessage(
+                        content="",
+                        additional_kwargs={
+                            "function_call": {
+                                "name": "retrieval",
+                                "arguments": json.dumps({"query": search_query}),
+                            }
+                        },
+                    )
+                ]
+            }
 
-    async def retrieve(messages):
+    async def retrieve(state: AgentState):
+        messages = state["messages"]
         params = messages[-1].additional_kwargs["function_call"]
         query = json.loads(params["arguments"])["query"]
         response = await retriever.ainvoke(query)
         msg = LiberalFunctionMessage(name="retrieval", content=response)
-        return msg
+        return {"messages": [msg]}
 
-    response = _get_messages | llm
+    def call_model(state: AgentState):
+        messages = state["messages"]
+        response = llm.invoke(_get_messages(messages))
+        return {"messages": [response]}
 
-    workflow = StateGraph(Annotated[Sequence[BaseMessage], add_messages])
+    workflow = StateGraph(AgentState)
     workflow.add_node("invoke_retrieval", invoke_retrieval)
     workflow.add_node("retrieve", retrieve)
-    workflow.add_node("response", response)
+    workflow.add_node("response", call_model)
     workflow.set_entry_point("invoke_retrieval")
     workflow.add_edge("invoke_retrieval", "retrieve")
     workflow.add_edge("retrieve", "response")

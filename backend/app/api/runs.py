@@ -15,7 +15,7 @@ from sse_starlette import EventSourceResponse
 from app.agent import agent
 from app.auth.handlers import AuthedUser
 from app.storage import get_assistant, get_thread
-from app.stream import astream_messages, to_sse
+from app.stream import astream_state, to_sse
 
 router = APIRouter()
 
@@ -82,7 +82,7 @@ async def stream_run(
     """Create a run."""
     input_, config = await _run_input_and_config(payload, user["user_id"])
 
-    return EventSourceResponse(to_sse(astream_messages(agent, input_, config)))
+    return EventSourceResponse(to_sse(astream_state(agent, input_, config)))
 
 
 @router.get("/input_schema")

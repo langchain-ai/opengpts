@@ -1,5 +1,5 @@
 import logging
-from typing import AsyncIterator, Optional, Sequence, Union
+from typing import Any, AsyncIterator, Dict, Optional, Sequence, Union
 
 import orjson
 from langchain_core.messages import AnyMessage, BaseMessage, message_chunk_to_message
@@ -11,8 +11,10 @@ logger = logging.getLogger(__name__)
 MessagesStream = AsyncIterator[Union[list[AnyMessage], str]]
 
 
-async def astream_messages(
-    app: Runnable, input: Sequence[AnyMessage], config: RunnableConfig
+async def astream_state(
+    app: Runnable,
+    input: Union[Sequence[AnyMessage], Dict[str, Any]],
+    config: RunnableConfig,
 ) -> MessagesStream:
     """Stream messages from the runnable."""
     root_run_id: Optional[str] = None
@@ -26,7 +28,13 @@ async def astream_messages(
             yield root_run_id
         elif event["event"] == "on_chain_stream" and event["run_id"] == root_run_id:
             new_messages: list[BaseMessage] = []
-            for msg in event["data"]["chunk"]:
+
+            # event["data"]["chunk"] is a Sequence[AnyMessage] or a Dict[str, Any]
+            state_chunk_msgs = event["data"]["chunk"]
+            if isinstance(state_chunk_msgs, Dict):
+                state_chunk_msgs = event["data"]["chunk"]["messages"]
+
+            for msg in state_chunk_msgs:
                 if msg.id in messages and msg == messages[msg.id]:
                     continue
                 else:
