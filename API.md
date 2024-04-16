@@ -52,6 +52,8 @@ This creates an assistant with the name `"bar"`, with GPT 3.5 Turbo, with a prom
 Available tools names can be found in the AvailableTools class in backend/packages/gizmo-agent/gizmo_agent/tools.py
 Available llms can be found in GizmoAgentType in backend/packages/gizmo-agent/gizmo_agent/agent_types/__init__.py
 
+Note: If a RAGBot assistant is created (`type` equals `chat_retrieval`), then subsequent API requests/responses for the threads APIs are slightly modified and noted below.
+
 ## Create a thread
 
 We can now create a thread.
@@ -85,7 +87,11 @@ requests.get(
 ).content
 ```
 ```shell
-b'{"messages":[]}'
+b'{"values":[]}'
+```
+For RAGBot:
+```shell
+b'{"values":{"messages":[]}}'
 ```
 
 Let's add a message to the thread!
@@ -102,6 +108,17 @@ requests.post(
     }
 ).content
 ```
+For RAGBot:
+```
+{
+    "values": {
+        "messages": [{
+            "content": "hi! my name is bob",
+            "type": "human",
+        }]
+    }
+}
+```
 
 If we now run the command to see the thread, we can see that there is now a message on that thread
 
@@ -114,6 +131,10 @@ requests.get(
 ```
 ```shell
 b'{"values":[{"content":"hi! my name is bob","additional_kwargs":{},"type":"human","example":false}],"next":[]}'
+```
+For RAGBot:
+```shell
+b'{"values":{"messages":[...]},"next":[]}'
 ```
 
 ## Run the assistant on that thread
@@ -140,6 +161,10 @@ requests.get('http://127.0.0.1:8100/threads/231dc7f3-33ee-4040-98fe-27f6e2aa8b2b
 ```
 ```shell
 b'{"values":[{"content":"hi! my name is bob","additional_kwargs":{},"type":"human","example":false},{"content":"Hello, Bob! How can I assist you today?","additional_kwargs":{"agent":{"return_values":{"output":"Hello, Bob! How can I assist you today?"},"log":"Hello, Bob! How can I assist you today?","type":"AgentFinish"}},"type":"ai","example":false}],"next":[]}'
+```
+For RAGBot:
+```shell
+b'{"values":{"messages":[...]},"next":[]}'
 ```
 
 ## Run the assistant on the thread with new messages
@@ -170,6 +195,10 @@ requests.get('http://127.0.0.1:8100/threads/231dc7f3-33ee-4040-98fe-27f6e2aa8b2b
 
 ```shell
 b'{"values":[{"content":"hi! my name is bob","additional_kwargs":{},"type":"human","example":false},{"content":"Hello, Bob! How can I assist you today?","additional_kwargs":{"agent":{"return_values":{"output":"Hello, Bob! How can I assist you today?"},"log":"Hello, Bob! How can I assist you today?","type":"AgentFinish"}},"type":"ai","example":false},{"content":"whats my name? respond in spanish","additional_kwargs":{},"type":"human","example":false},{"content":"Tu nombre es Bob.","additional_kwargs":{"agent":{"return_values":{"output":"Tu nombre es Bob."},"log":"Tu nombre es Bob.","type":"AgentFinish"}},"type":"ai","example":false}],"next":[]}'
+```
+For RAGBot:
+```shell
+b'{"values":{"messages":[...]},"next":[]}'
 ```
 
 ## Stream
