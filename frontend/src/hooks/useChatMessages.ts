@@ -33,13 +33,6 @@ export function useChatMessages(
       if (threadId) {
         const { values, next } = await getState(threadId);
         let messages = Array.isArray(values) ? values : values.messages;
-
-        // manually set message `role` to `type`
-        // messages = messages.map((msg: any) => {
-        //   msg.role = msg.type;
-        //   return msg;
-        // });
-
         setMessages(messages);
         setNext(next);
       }
@@ -57,13 +50,6 @@ export function useChatMessages(
       if (threadId) {
         const { values, next } = await getState(threadId);
         let messages = Array.isArray(values) ? values : values.messages;
-
-        // manually set message `role` to `type`
-        // messages = messages.map((msg: any) => {
-        //   msg.role = msg.type;
-        //   return msg;
-        // });
-
         setMessages(messages);
         setNext(next);
         stopStream?.(true);
