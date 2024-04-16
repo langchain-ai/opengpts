@@ -10,9 +10,19 @@ from langchain_community.chat_models.ollama import ChatOllama
 from langchain_google_vertexai import ChatVertexAI
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from langchain_anthropic import ChatAnthropic
+import huggingface_hub
+from langchain.llms import HuggingFaceTextGenInference
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain_community.chat_models.huggingface import ChatHuggingFace
 
 logger = logging.getLogger(__name__)
 
+def load_env_var(key: str) -> str:
+    """Load environment variable safely."""
+    value = os.getenv(key)
+    if value is None:
+        raise ValueError(f"Environment variable {key} is required.")
+    return value
 
 @lru_cache(maxsize=4)
 def get_openai_llm(gpt_4: bool = False, azure: bool = False):
