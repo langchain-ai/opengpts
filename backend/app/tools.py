@@ -60,7 +60,8 @@ class AvailableTools(str, Enum):
     DALL_E = "dall_e"
 
 
-class ToolConfig(TypedDict): ...
+class ToolConfig(TypedDict):
+    ...
 
 
 class BaseTool(BaseModel):
