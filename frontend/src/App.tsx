@@ -28,7 +28,11 @@ function App(props: { edit?: boolean }) {
   const { currentChat, assistantConfig, isLoading } = useThreadAndAssistant();
 
   const startTurn = useCallback(
-    async (message: MessageWithFiles | null, thread_id: string, assistantType: string) => {
+    async (
+      message: MessageWithFiles | null,
+      thread_id: string,
+      assistantType: string,
+    ) => {
       const files = message?.files || [];
       if (files.length > 0) {
         const formData = files.reduce((formData, file) => {
@@ -58,7 +62,7 @@ function App(props: { edit?: boolean }) {
             example: false,
             id: `human-${Math.random()}`,
           },
-        ]
+        ];
 
         if (assistantType === "chat_retrieval") {
           // The RAG assistant type requires an object with a `messages` field.
@@ -68,7 +72,7 @@ function App(props: { edit?: boolean }) {
               msg.role = "human";
               return msg;
             }),
-          }
+          };
         }
       }
 

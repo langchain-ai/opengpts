@@ -75,7 +75,13 @@ export function Chat(props: ChatProps) {
       {next.length > 0 && props.stream?.status !== "inflight" && (
         <div
           className="flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 ring-1 ring-inset ring-yellow-600/20 cursor-pointer"
-          onClick={() => props.startStream(null, currentChat.thread_id, assistantConfig.config.configurable?.type as string)}
+          onClick={() =>
+            props.startStream(
+              null,
+              currentChat.thread_id,
+              assistantConfig.config.configurable?.type as string,
+            )
+          }
         >
           <ArrowDownCircleIcon className="h-5 w-5 mr-1" />
           Click to continue.
@@ -83,7 +89,13 @@ export function Chat(props: ChatProps) {
       )}
       <div className="fixed left-0 lg:left-72 bottom-0 right-0 p-4">
         <TypingBox
-          onSubmit={(msg) => props.startStream(msg, currentChat.thread_id, assistantConfig.config.configurable?.type as string)}
+          onSubmit={(msg) =>
+            props.startStream(
+              msg,
+              currentChat.thread_id,
+              assistantConfig.config.configurable?.type as string,
+            )
+          }
           onInterrupt={
             props.stream?.status === "inflight" ? props.stopStream : undefined
           }

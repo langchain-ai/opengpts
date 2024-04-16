@@ -10,7 +10,10 @@ export interface StreamState {
 
 export interface StreamStateProps {
   stream: StreamState | null;
-  startStream: (input: Message[] | Record<string, any> | null, thread_id: string) => Promise<void>;
+  startStream: (
+    input: Message[] | Record<string, any> | null,
+    thread_id: string,
+  ) => Promise<void>;
   stopStream?: (clear?: boolean) => void;
 }
 
@@ -19,7 +22,10 @@ export function useStreamState(): StreamStateProps {
   const [controller, setController] = useState<AbortController | null>(null);
 
   const startStream = useCallback(
-    async (input: Message[] | Record<string, any> |null, thread_id: string) => {
+    async (
+      input: Message[] | Record<string, any> | null,
+      thread_id: string,
+    ) => {
       const controller = new AbortController();
       setController(controller);
       setCurrent({ status: "inflight", messages: input || [] });
