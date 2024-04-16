@@ -8,8 +8,7 @@ from langchain_core.runnables import (
 )
 from langgraph.checkpoint import CheckpointAt
 
-from app.agent_types.google_agent import get_google_agent_executor
-from app.agent_types.openai_agent import get_openai_agent_executor
+from app.agent_types.tools_agent import get_tools_agent_executor
 from app.agent_types.xml_agent import get_xml_agent_executor
 from app.chatbot import get_chatbot_executor
 from app.checkpoint import PostgresCheckpoint
@@ -80,22 +79,22 @@ def get_agent_executor(
 ):
     if agent == AgentType.GPT_35_TURBO:
         llm = get_openai_llm()
-        return get_openai_agent_executor(
+        return get_tools_agent_executor(
             tools, llm, system_message, interrupt_before_action, CHECKPOINTER
         )
     elif agent == AgentType.GPT_4:
         llm = get_openai_llm(gpt_4=True)
-        return get_openai_agent_executor(
+        return get_tools_agent_executor(
             tools, llm, system_message, interrupt_before_action, CHECKPOINTER
         )
     elif agent == AgentType.AZURE_OPENAI:
         llm = get_openai_llm(azure=True)
-        return get_openai_agent_executor(
+        return get_tools_agent_executor(
             tools, llm, system_message, interrupt_before_action, CHECKPOINTER
         )
     elif agent == AgentType.CLAUDE2:
         llm = get_anthropic_llm()
-        return get_xml_agent_executor(
+        return get_tools_agent_executor(
             tools, llm, system_message, interrupt_before_action, CHECKPOINTER
         )
     elif agent == AgentType.BEDROCK_CLAUDE2:
@@ -105,12 +104,12 @@ def get_agent_executor(
         )
     elif agent == AgentType.GEMINI:
         llm = get_google_llm()
-        return get_google_agent_executor(
+        return get_tools_agent_executor(
             tools, llm, system_message, interrupt_before_action, CHECKPOINTER
         )
     elif agent == AgentType.OLLAMA:
         llm = get_ollama_llm()
-        return get_openai_agent_executor(
+        return get_tools_agent_executor(
             tools, llm, system_message, interrupt_before_action, CHECKPOINTER
         )
 

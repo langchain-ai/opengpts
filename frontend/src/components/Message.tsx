@@ -1,5 +1,5 @@
 import { memo, useState } from "react";
-import { MessageDocument, Message as MessageType } from "../types";
+import { MessageDocument, Message as MessageType, ToolCall } from "../types";
 import { str } from "../utils/str";
 import { cn } from "../utils/cn";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
@@ -8,34 +8,69 @@ import { DocumentList } from "./Document";
 import { omit } from "lodash";
 import { StringViewer } from "./String";
 
-function tryJsonParse(value: string) {
-  try {
-    return JSON.parse(value);
-  } catch (e) {
-    return {};
-  }
-}
-
-function Function(props: {
-  call: boolean;
-  name?: string;
-  args?: string;
-  open?: boolean;
-  setOpen?: (open: boolean) => void;
-}) {
+function ToolRequest(
+  props: ToolCall & {
+    open?: boolean;
+    setOpen?: (open: boolean) => void;
+  },
+) {
   return (
     <>
-      {props.call && (
-        <span className="text-gray-900 whitespace-pre-wrap break-words mr-2">
-          Use
-        </span>
-      )}
+      <span className="text-gray-900 whitespace-pre-wrap break-words mr-2">
+        Use
+      </span>
       {props.name && (
         <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 relative -top-[1px] mr-2">
           {props.name}
         </span>
       )}
-      {!props.call && props.setOpen && (
+      {props.args && (
+        <div className="text-gray-900 my-2 whitespace-pre-wrap break-words">
+          <div className="ring-1 ring-gray-300 rounded">
+            <table className="divide-y divide-gray-300">
+              <tbody>
+                {Object.entries(props.args).map(([key, value], i) => (
+                  <tr key={i}>
+                    <td
+                      className={cn(
+                        i === 0 ? "" : "border-t border-transparent",
+                        "py-1 px-3 table-cell text-sm border-r border-r-gray-300",
+                      )}
+                    >
+                      <div className="font-medium text-gray-500">{key}</div>
+                    </td>
+                    <td
+                      className={cn(
+                        i === 0 ? "" : "border-t border-gray-200",
+                        "py-1 px-3 table-cell",
+                      )}
+                    >
+                      {str(value)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function ToolResponse(props: {
+  name?: string;
+  open?: boolean;
+  setOpen?: (open: boolean) => void;
+}) {
+  return (
+    <>
+      {props.name && (
+        <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 relative -top-[1px] mr-2">
+          {props.name}
+        </span>
+      )}
+      {props.setOpen && (
         <span
           className={cn(
             "inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 cursor-pointer relative top-1",
@@ -51,38 +86,6 @@ function Function(props: {
             className={cn("h-5 w-5 transition", props.open ? "rotate-180" : "")}
           />
         </span>
-      )}
-      {props.args && (
-        <div className="text-gray-900 my-2 whitespace-pre-wrap break-words">
-          <div className="ring-1 ring-gray-300 rounded">
-            <table className="divide-y divide-gray-300">
-              <tbody>
-                {Object.entries(tryJsonParse(props.args)).map(
-                  ([key, value], i) => (
-                    <tr key={i}>
-                      <td
-                        className={cn(
-                          i === 0 ? "" : "border-t border-transparent",
-                          "py-1 px-3 table-cell text-sm border-r border-r-gray-300",
-                        )}
-                      >
-                        <div className="font-medium text-gray-500">{key}</div>
-                      </td>
-                      <td
-                        className={cn(
-                          i === 0 ? "" : "border-t border-gray-200",
-                          "py-1 px-3 table-cell",
-                        )}
-                      >
-                        {str(value)}
-                      </td>
-                    </tr>
-                  ),
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
       )}
     </>
   );
@@ -117,7 +120,18 @@ export function MessageContent(props: { content: MessageType["content"] }) {
       />
     );
   } else {
-    return <div className="text-gray-900 prose">{str(props.content)}</div>;
+    let content = props.content;
+    if (Array.isArray(content)) {
+      content = content.filter((it) =>
+        typeof it === "object" && !!it && "type" in it
+          ? it.type !== "tool_use"
+          : true,
+      );
+    }
+    if (Array.isArray(content) ? content.length === 0 : !content) {
+      return null;
+    }
+    return <div className="text-gray-900 prose">{str(content)}</div>;
   }
 }
 
@@ -145,30 +159,15 @@ export const MessageViewer = memo(function (
         </div>
         <div className="flex-1">
           {["function", "tool"].includes(props.type) && (
-            <Function
-              call={false}
-              name={props.name ?? props.additional_kwargs?.name}
+            <ToolResponse
+              name={props.name}
               open={open}
               setOpen={contentIsDocuments ? undefined : setOpen}
             />
           )}
-          {props.additional_kwargs?.function_call && (
-            <Function
-              call={true}
-              name={props.additional_kwargs.function_call.name}
-              args={props.additional_kwargs.function_call.arguments}
-            />
-          )}
-          {props.additional_kwargs?.tool_calls
-            ?.filter((call) => call.function)
-            ?.map((call) => (
-              <Function
-                key={call.id}
-                call={true}
-                name={call.function?.name}
-                args={call.function?.arguments}
-              />
-            ))}
+          {props.tool_calls?.map((call) => (
+            <ToolRequest key={call.id} {...call} />
+          ))}
           {showContent && <MessageContent content={props.content} />}
         </div>
       </div>
