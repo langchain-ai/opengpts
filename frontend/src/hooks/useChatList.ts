@@ -1,37 +1,6 @@
 import { useCallback, useEffect, useReducer } from "react";
 import orderBy from "lodash/orderBy";
-
-export interface Message {
-  id: string;
-  type: string;
-  content:
-    | string
-    | { page_content: string; metadata: Record<string, object> }[]
-    | object;
-  name?: string;
-  additional_kwargs?: {
-    name?: string;
-    function_call?: {
-      name?: string;
-      arguments?: string;
-    };
-    tool_calls?: {
-      id: string;
-      function?: {
-        name?: string;
-        arguments?: string;
-      };
-    }[];
-  };
-  example: boolean;
-}
-
-export interface Chat {
-  assistant_id: string;
-  thread_id: string;
-  name: string;
-  updated_at: string;
-}
+import { Chat } from "../types";
 
 export interface ChatListProps {
   chats: Chat[] | null;
@@ -40,6 +9,7 @@ export interface ChatListProps {
     assistant_id: string,
     thread_id?: string,
   ) => Promise<Chat>;
+  deleteChat: (thread_id: string) => Promise<void>;
 }
 
 function chatsReducer(
@@ -87,8 +57,22 @@ export function useChatList(): ChatListProps {
     return saved;
   }, []);
 
+  const deleteChat = useCallback(
+    async (thread_id: string) => {
+      await fetch(`/threads/${thread_id}`, {
+        method: "DELETE",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+      setChats((chats || []).filter((c: Chat) => c.thread_id !== thread_id));
+    },
+    [chats],
+  );
+
   return {
     chats,
     createChat,
+    deleteChat,
   };
 }

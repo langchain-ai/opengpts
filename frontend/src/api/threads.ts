@@ -1,4 +1,4 @@
-import { Chat } from "../hooks/useChatList.ts";
+import { Chat } from "../types";
 
 export async function getThread(threadId: string): Promise<Chat | null> {
   try {

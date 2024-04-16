@@ -2,11 +2,20 @@ import pickle
 from datetime import datetime
 from typing import AsyncIterator, Optional
 
+from langchain_core.messages import BaseMessage
 from langchain_core.runnables import ConfigurableFieldSpec, RunnableConfig
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.checkpoint.base import Checkpoint, CheckpointThreadTs, CheckpointTuple
 
 from app.lifespan import get_pg_pool
+
+
+def loads(value: bytes) -> Checkpoint:
+    loaded: Checkpoint = pickle.loads(value)
+    for key, value in loaded["channel_values"].items():
+        if isinstance(value, list) and all(isinstance(v, BaseMessage) for v in value):
+            loaded["channel_values"][key] = [v.__class__(**v.__dict__) for v in value]
+    return loaded
 
 
 class PostgresCheckpoint(BaseCheckpointSaver):
@@ -47,7 +56,7 @@ class PostgresCheckpoint(BaseCheckpointSaver):
                             "thread_ts": value[1],
                         }
                     },
-                    pickle.loads(value[0]),
+                    loads(value[0]),
                     {
                         "configurable": {
                             "thread_id": thread_id,
@@ -70,7 +79,7 @@ class PostgresCheckpoint(BaseCheckpointSaver):
                 ):
                     return CheckpointTuple(
                         config,
-                        pickle.loads(value[0]),
+                        loads(value[0]),
                         {
                             "configurable": {
                                 "thread_id": thread_id,
@@ -92,7 +101,7 @@ class PostgresCheckpoint(BaseCheckpointSaver):
                                 "thread_ts": value[1],
                             }
                         },
-                        pickle.loads(value[0]),
+                        loads(value[0]),
                         {
                             "configurable": {
                                 "thread_id": thread_id,

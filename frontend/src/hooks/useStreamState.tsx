@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
-import { Message } from "./useChatList";
+import { Message } from "../types";
 
 export interface StreamState {
   status: "inflight" | "error" | "done";
