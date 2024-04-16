@@ -10,7 +10,8 @@ export interface MessageDocument {
 
 export interface Message {
   id: string;
-  role: string;
+  type: string;
+  role?: string; // for chat_retrieval bot
   content: string | MessageDocument[] | object;
   name?: string;
   additional_kwargs?: {

@@ -126,10 +126,10 @@ export const MessageViewer = memo(function (
 ) {
   const [open, setOpen] = useState(false);
   const contentIsDocuments =
-    ["function", "tool"].includes(props.role) &&
+    ["function", "tool"].includes(props.type) &&
     isDocumentContent(props.content);
   const showContent =
-    ["function", "tool"].includes(props.role) && !contentIsDocuments
+    ["function", "tool"].includes(props.type) && !contentIsDocuments
       ? open
       : true;
   return (
@@ -138,13 +138,13 @@ export const MessageViewer = memo(function (
         <div
           className={cn(
             "font-medium text-sm text-gray-400 uppercase mr-2 mt-1 w-28 flex flex-col",
-            props.role === "function" && "mt-2",
+            props.type === "function" && "mt-2",
           )}
         >
-          {props.role}
+          {props.type}
         </div>
         <div className="flex-1">
-          {["function", "tool"].includes(props.role) && (
+          {["function", "tool"].includes(props.type) && (
             <Function
               call={false}
               name={props.name ?? props.additional_kwargs?.name}
