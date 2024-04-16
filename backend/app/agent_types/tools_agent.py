@@ -1,9 +1,14 @@
-import json
+from typing import cast
 
 from langchain.tools import BaseTool
-from langchain.tools.render import format_tool_to_openai_tool
 from langchain_core.language_models.base import LanguageModelLike
-from langchain_core.messages import SystemMessage, ToolMessage
+from langchain_core.messages import (
+    AIMessage,
+    FunctionMessage,
+    HumanMessage,
+    SystemMessage,
+    ToolMessage,
+)
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph import END
 from langgraph.graph.message import MessageGraph
@@ -12,7 +17,7 @@ from langgraph.prebuilt import ToolExecutor, ToolInvocation
 from app.message_types import LiberalToolMessage
 
 
-def get_openai_agent_executor(
+def get_tools_agent_executor(
     tools: list[BaseTool],
     llm: LanguageModelLike,
     system_message: str,
@@ -27,13 +32,16 @@ def get_openai_agent_executor(
                 _dict["content"] = str(_dict["content"])
                 m_c = ToolMessage(**_dict)
                 msgs.append(m_c)
+            elif isinstance(m, FunctionMessage):
+                # anthropic doesn't like function messages
+                msgs.append(HumanMessage(content=str(m.content)))
             else:
                 msgs.append(m)
 
         return [SystemMessage(content=system_message)] + msgs
 
     if tools:
-        llm_with_tools = llm.bind(tools=[format_tool_to_openai_tool(t) for t in tools])
+        llm_with_tools = llm.bind_tools(tools)
     else:
         llm_with_tools = llm
     agent = _get_messages | llm_with_tools
@@ -43,7 +51,7 @@ def get_openai_agent_executor(
     def should_continue(messages):
         last_message = messages[-1]
         # If there is no function call, then we finish
-        if "tool_calls" not in last_message.additional_kwargs:
+        if not last_message.tool_calls:
             return "end"
         # Otherwise if there is, we continue
         else:
@@ -54,16 +62,13 @@ def get_openai_agent_executor(
         actions: list[ToolInvocation] = []
         # Based on the continue condition
         # we know the last message involves a function call
-        last_message = messages[-1]
-        for tool_call in last_message.additional_kwargs["tool_calls"]:
-            function = tool_call["function"]
-            function_name = function["name"]
-            _tool_input = json.loads(function["arguments"] or "{}")
-            # We construct an ToolInvocation from the function_call
+        last_message = cast(AIMessage, messages[-1])
+        for tool_call in last_message.tool_calls:
+            # We construct a ToolInvocation from the function_call
             actions.append(
                 ToolInvocation(
-                    tool=function_name,
-                    tool_input=_tool_input,
+                    tool=tool_call["name"],
+                    tool_input=tool_call["args"],
                 )
             )
         # We call the tool_executor and get back a response
@@ -72,12 +77,10 @@ def get_openai_agent_executor(
         tool_messages = [
             LiberalToolMessage(
                 tool_call_id=tool_call["id"],
+                name=tool_call["name"],
                 content=response,
-                additional_kwargs={"name": tool_call["function"]["name"]},
             )
-            for tool_call, response in zip(
-                last_message.additional_kwargs["tool_calls"], responses
-            )
+            for tool_call, response in zip(last_message.tool_calls, responses)
         ]
         return tool_messages
 

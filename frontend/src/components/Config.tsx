@@ -35,23 +35,26 @@ function Types(props: {
     props.field.enum?.map((id) => TYPES[id as keyof typeof TYPES]) ?? [];
   return (
     <div className="-mx-8 mt-6 pt-4 border-t-2 border-dotted mb-8">
-      <div className="mx-8 sm:hidden">
+      <div className="mx-8 md:hidden">
         <label htmlFor="tabs" className="sr-only">
           Select a tab
         </label>
         <select
           id="tabs"
           name="tabs"
-          className="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+          className={cn(
+            "block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500",
+          )}
           defaultValue={options.find((o) => o.id === props.value)?.id}
           onChange={(e) => props.setValue(e.target.value)}
+          disabled={props.readonly}
         >
           {options.map((option) => (
             <option key={option.id}>{option.title}</option>
           ))}
         </select>
       </div>
-      <div className="mx-8 hidden sm:block">
+      <div className="mx-8 hidden md:block">
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex" aria-label="Tabs">
             {options.map((option) => (
@@ -61,10 +64,18 @@ function Types(props: {
                   props.value === option.id
                     ? "border-indigo-500 text-indigo-600"
                     : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700",
-                  "w-1/4 border-b-2 py-4 px-1 text-center text-sm font-medium cursor-pointer",
+                  "w-1/4 border-b-2 py-4 px-1 text-center text-sm font-medium",
+                  props.readonly
+                    ? props.value === option.id
+                      ? "cursor-default"
+                      : "cursor-default opacity-50 pointer-events-none"
+                    : "cursor-pointer",
                 )}
                 aria-current={props.value === option.id ? "page" : undefined}
-                onClick={() => props.setValue(option.id)}
+                onClick={
+                  !props.readonly ? () => props.setValue(option.id) : undefined
+                }
+                aria-disabled={props.readonly}
               >
                 {option.title}
               </div>
@@ -477,6 +488,21 @@ const ORDER = [
   "agent_type",
 ];
 
+function assignDefaults(
+  config: ConfigInterface["config"] | undefined | null,
+  configDefaults: Schemas["configDefaults"],
+) {
+  return config
+    ? {
+        ...config,
+        configurable: {
+          ...configDefaults?.configurable,
+          ...config.configurable,
+        },
+      }
+    : configDefaults;
+}
+
 export function Config(props: {
   className?: string;
   configSchema: Schemas["configSchema"];
@@ -487,7 +513,7 @@ export function Config(props: {
   edit?: boolean;
 }) {
   const [values, setValues] = useState(
-    props.config?.config ?? props.configDefaults,
+    assignDefaults(props.config?.config, props.configDefaults),
   );
   const [selectedTools, setSelectedTools] = useState<Tool[]>([]);
   const typeKey = "type";
@@ -526,7 +552,7 @@ export function Config(props: {
   };
 
   useEffect(() => {
-    setValues(props.config?.config ?? props.configDefaults);
+    setValues(assignDefaults(props.config?.config, props.configDefaults));
   }, [props.config, props.configDefaults]);
   useEffect(() => {
     if (dropzone.acceptedFiles.length > 0) {
