@@ -10,7 +10,7 @@ export interface MessageDocument {
 
 export interface Message {
   id: string;
-  type: string;
+  role: string;
   content: string | MessageDocument[] | object;
   name?: string;
   additional_kwargs?: {

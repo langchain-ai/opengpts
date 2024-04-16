@@ -15,6 +15,7 @@ import { Config } from "./components/Config";
 import { MessageWithFiles } from "./utils/formTypes.ts";
 import { useNavigate } from "react-router-dom";
 import { useThreadAndAssistant } from "./hooks/useThreadAndAssistant.ts";
+import { Message } from "./types.ts";
 
 function App(props: { edit?: boolean }) {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ function App(props: { edit?: boolean }) {
   const { currentChat, assistantConfig, isLoading } = useThreadAndAssistant();
 
   const startTurn = useCallback(
-    async (message: MessageWithFiles | null, thread_id: string) => {
+    async (message: MessageWithFiles | null, thread_id: string, assistantType: string) => {
       const files = message?.files || [];
       if (files.length > 0) {
         const formData = files.reduce((formData, file) => {
@@ -43,20 +44,31 @@ function App(props: { edit?: boolean }) {
           body: formData,
         });
       }
-      await startStream(
-        message
-          ? [
-              {
-                content: message.message,
-                additional_kwargs: {},
-                type: "human",
-                example: false,
-                id: `human-${Math.random()}`,
-              },
-            ]
-          : null,
-        thread_id,
-      );
+
+      let input: Message[] | Record<string, any> | null = null;
+
+      if (message) {
+        // Set the input to an array of messages. This is the default input
+        // format for all assistant types.
+        input = [
+          {
+            content: message.message,
+            additional_kwargs: {},
+            role: "human",
+            example: false,
+            id: `human-${Math.random()}`,
+          },
+        ]
+
+        if (assistantType === "chat_retrieval") {
+          // The RAG assistant type requires an object with a `messages` field.
+          input = {
+            messages: input,
+          }
+        }
+      }
+
+      await startStream(input, thread_id);
     },
     [startStream],
   );
@@ -65,7 +77,8 @@ function App(props: { edit?: boolean }) {
     async (config: ConfigInterface, message: MessageWithFiles) => {
       const chat = await createChat(message.message, config.assistant_id);
       navigate(`/thread/${chat.thread_id}`);
-      return startTurn(message, chat.thread_id);
+      const assistantType = config.config.configurable?.type as string;
+      return startTurn(message, chat.thread_id, assistantType);
     },
     [createChat, navigate, startTurn],
   );

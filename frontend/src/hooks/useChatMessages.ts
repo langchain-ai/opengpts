@@ -32,7 +32,15 @@ export function useChatMessages(
     async function fetchMessages() {
       if (threadId) {
         const { values, next } = await getState(threadId);
-        setMessages(values);
+        let messages = Array.isArray(values) ? values : values.messages;
+
+        // manually set message `role` to `type`
+        // messages = messages.map((msg: any) => {
+        //   msg.role = msg.type;
+        //   return msg;
+        // });
+
+        setMessages(messages);
         setNext(next);
       }
     }
@@ -48,7 +56,15 @@ export function useChatMessages(
     async function fetchMessages() {
       if (threadId) {
         const { values, next } = await getState(threadId);
-        setMessages(values);
+        let messages = Array.isArray(values) ? values : values.messages;
+
+        // manually set message `role` to `type`
+        // messages = messages.map((msg: any) => {
+        //   msg.role = msg.type;
+        //   return msg;
+        // });
+
+        setMessages(messages);
         setNext(next);
         stopStream?.(true);
       }
