@@ -1,4 +1,5 @@
 import json
+import operator
 from typing import Annotated, Sequence, TypedDict
 
 from langchain_core.language_models.base import LanguageModelLike
@@ -43,6 +44,7 @@ def get_retrieval_executor(
 ):
     class AgentState(TypedDict):
         messages: Annotated[Sequence[BaseMessage], add_messages]
+        msg_count: Annotated[int, operator.add]
 
     def _get_messages(messages):
         chat_history = []
@@ -79,7 +81,7 @@ def get_retrieval_executor(
     async def invoke_retrieval(state: AgentState):
         messages = state["messages"]
         if len(messages) == 1:
-            human_input = messages[-1].content
+            human_input = messages[-1]["content"]
             return {
                 "messages": [
                     AIMessage(
@@ -91,7 +93,8 @@ def get_retrieval_executor(
                             }
                         },
                     )
-                ]
+                ],
+                "msg_count": 1,
             }
         else:
             search_query = await get_search_query.ainvoke(messages)
@@ -106,7 +109,8 @@ def get_retrieval_executor(
                             }
                         },
                     )
-                ]
+                ],
+                "msg_count": 1,
             }
 
     async def retrieve(state: AgentState):
@@ -115,12 +119,12 @@ def get_retrieval_executor(
         query = json.loads(params["arguments"])["query"]
         response = await retriever.ainvoke(query)
         msg = LiberalFunctionMessage(name="retrieval", content=response)
-        return {"messages": [msg]}
+        return {"messages": [msg], "msg_count": 1}
 
     def call_model(state: AgentState):
         messages = state["messages"]
         response = llm.invoke(_get_messages(messages))
-        return {"messages": [response]}
+        return {"messages": [response], "msg_count": 1}
 
     workflow = StateGraph(AgentState)
     workflow.add_node("invoke_retrieval", invoke_retrieval)
