@@ -30,15 +30,18 @@ async def astream_state(
             new_messages: list[BaseMessage] = []
 
             # event["data"]["chunk"] is a Sequence[AnyMessage] or a Dict[str, Any]
-            state_chunk_msgs = event["data"]["chunk"]
+            state_chunk_msgs: Union[Sequence[AnyMessage], Dict[str, Any]] = event[
+                "data"
+            ]["chunk"]
             if isinstance(state_chunk_msgs, Dict):
                 state_chunk_msgs = event["data"]["chunk"]["messages"]
 
             for msg in state_chunk_msgs:
-                if msg.id in messages and msg == messages[msg.id]:
+                msg_id = msg["id"] if isinstance(msg, Dict) else msg.id
+                if msg_id in messages and msg == messages[msg_id]:
                     continue
                 else:
-                    messages[msg.id] = msg
+                    messages[msg_id] = msg
                     new_messages.append(msg)
             if new_messages:
                 yield new_messages

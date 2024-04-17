@@ -3,16 +3,7 @@ from typing import Any, Dict, List, Optional, Sequence, Union
 
 from langchain_core.messages import AnyMessage
 
-# TODO: migrate to `from app.agent import agent`
-from app.agent import (
-    CHECKPOINTER,
-    AgentType,
-    get_agent_executor,
-    get_chatbot_executor,
-    get_openai_llm,
-    get_retrieval_executor,
-    get_retriever,
-)
+from app.agent import agent
 from app.lifespan import get_pg_pool
 from app.schema import Assistant, Thread, User
 
@@ -109,24 +100,16 @@ async def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
 
 async def get_thread_state(user_id: str, thread_id: str):
     """Get state for a thread."""
-    # TODO: remove
     thread = await get_thread(user_id, thread_id)
     assistant = await get_assistant(user_id, thread["assistant_id"])
-
-    if assistant["config"]["configurable"]["type"] == "chatbot":
-        app = get_chatbot_executor(get_openai_llm(), "", CHECKPOINTER)
-    elif assistant["config"]["configurable"]["type"] == "chat_retrieval":
-        app = get_retrieval_executor(
-            get_openai_llm(),
-            get_retriever(assistant["assistant_id"], thread_id),
-            "",
-            CHECKPOINTER,
-        )
-    else:
-        app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
-
-    # TODO: migrate to `await agent.aget_state()`
-    state = await app.aget_state({"configurable": {"thread_id": thread_id}})
+    state = await agent.aget_state(
+        {
+            "configurable": {
+                **assistant["config"]["configurable"],
+                "thread_id": thread_id,
+            }
+        }
+    )
     return {
         "values": state.values,
         "next": state.next,
@@ -137,13 +120,23 @@ async def update_thread_state(
     user_id: str, thread_id: str, values: Union[Sequence[AnyMessage], Dict[str, Any]]
 ):
     """Add state to a thread."""
-    app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
-    await app.aupdate_state({"configurable": {"thread_id": thread_id}}, values)
+    thread = await get_thread(user_id, thread_id)
+    assistant = await get_assistant(user_id, thread["assistant_id"])
+    await agent.aupdate_state(
+        {
+            "configurable": {
+                **assistant["config"]["configurable"],
+                "thread_id": thread_id,
+            }
+        },
+        values,
+    )
 
 
 async def get_thread_history(user_id: str, thread_id: str):
     """Get the history of a thread."""
-    app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
+    thread = await get_thread(user_id, thread_id)
+    assistant = await get_assistant(user_id, thread["assistant_id"])
     return [
         {
             "values": c.values,
@@ -151,8 +144,13 @@ async def get_thread_history(user_id: str, thread_id: str):
             "config": c.config,
             "parent": c.parent_config,
         }
-        async for c in app.aget_state_history(
-            {"configurable": {"thread_id": thread_id}}
+        async for c in agent.aget_state_history(
+            {
+                "configurable": {
+                    **assistant["config"]["configurable"],
+                    "thread_id": thread_id,
+                }
+            }
         )
     ]
 

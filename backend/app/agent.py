@@ -7,6 +7,7 @@ from langchain_core.runnables import (
     RunnableBinding,
 )
 from langgraph.checkpoint import CheckpointAt
+from langgraph.pregel import Pregel
 
 from app.agent_types.tools_agent import get_tools_agent_executor
 from app.agent_types.xml_agent import get_xml_agent_executor
@@ -173,6 +174,10 @@ class ConfigurableAgent(RunnableBinding):
             config=config or {},
         )
 
+    def __getattr__(self, name: str) -> Any:
+        print("getattr", name, flush=True)
+        return super().__getattr__(name)
+
 
 class LLMType(str, Enum):
     GPT_35_TURBO = "GPT 3.5 Turbo"
@@ -314,7 +319,7 @@ chat_retrieval = (
 )
 
 
-agent = (
+agent: Pregel = (
     ConfigurableAgent(
         agent=AgentType.GPT_35_TURBO,
         tools=[],
