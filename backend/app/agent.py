@@ -1,3 +1,4 @@
+import pickle
 from enum import Enum
 from typing import Any, Dict, Mapping, Optional, Sequence, Union
 
@@ -69,7 +70,7 @@ class AgentType(str, Enum):
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
-CHECKPOINTER = PostgresCheckpoint(at=CheckpointAt.END_OF_STEP)
+CHECKPOINTER = PostgresCheckpoint(serde=pickle, at=CheckpointAt.END_OF_STEP)
 
 
 def get_agent_executor(
