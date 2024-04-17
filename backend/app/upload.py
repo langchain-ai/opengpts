@@ -12,6 +12,7 @@ from __future__ import annotations
 import os
 from typing import Any, BinaryIO, List, Optional
 
+from langchain_chroma import Chroma
 from langchain_community.document_loaders.blob_loaders.schema import Blob
 from langchain_community.vectorstores.pgvector import PGVector
 from langchain_core.runnables import (
@@ -53,16 +54,14 @@ def _convert_ingestion_input_to_blob(data: BinaryIO) -> Blob:
     )
 
 
-def _determine_azure_or_openai_embeddings() -> PGVector:
+def _determine_azure_or_openai_embeddings() -> Chroma:
     if os.environ.get("OPENAI_API_KEY"):
-        return PGVector(
-            connection_string=PG_CONNECTION_STRING,
-            embedding_function=OpenAIEmbeddings(),
-            use_jsonb=True,
+        return Chroma(
+            persist_directory="./chroma_db", embedding_function=OpenAIEmbeddings()
         )
     if os.environ.get("AZURE_OPENAI_API_KEY"):
-        return PGVector(
-            connection_string=PG_CONNECTION_STRING,
+        return Chroma(
+            persist_directory="./chroma_db",
             embedding_function=AzureOpenAIEmbeddings(
                 azure_endpoint=os.environ.get("AZURE_OPENAI_API_BASE"),
                 azure_deployment=os.environ.get(
@@ -70,7 +69,6 @@ def _determine_azure_or_openai_embeddings() -> PGVector:
                 ),
                 openai_api_version=os.environ.get("AZURE_OPENAI_API_VERSION"),
             ),
-            use_jsonb=True,
         )
     raise ValueError(
         "Either OPENAI_API_KEY or AZURE_OPENAI_API_KEY needs to be set for embeddings to work."
