@@ -88,7 +88,11 @@ async def test_threads() -> None:
     async with get_client() as client:
         response = await client.put(
             f"/assistants/{aid}",
-            json={"name": "assistant", "config": {}, "public": False},
+            json={
+                "name": "assistant",
+                "config": {"configurable": {"type": "chatbot"}},
+                "public": False,
+            },
             headers=headers,
         )
 

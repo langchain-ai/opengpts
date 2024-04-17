@@ -174,10 +174,6 @@ class ConfigurableAgent(RunnableBinding):
             config=config or {},
         )
 
-    def __getattr__(self, name: str) -> Any:
-        print("getattr", name, flush=True)
-        return super().__getattr__(name)
-
 
 class LLMType(str, Enum):
     GPT_35_TURBO = "GPT 3.5 Turbo"
