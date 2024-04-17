@@ -32,7 +32,7 @@ export function useChatMessages(
     async function fetchMessages() {
       if (threadId) {
         const { values, next } = await getState(threadId);
-        let messages = Array.isArray(values) ? values : values.messages;
+        const messages = Array.isArray(values) ? values : values.messages;
         setMessages(messages);
         setNext(next);
       }
@@ -49,7 +49,7 @@ export function useChatMessages(
     async function fetchMessages() {
       if (threadId) {
         const { values, next } = await getState(threadId);
-        let messages = Array.isArray(values) ? values : values.messages;
+        const messages = Array.isArray(values) ? values : values.messages;
         setMessages(messages);
         setNext(next);
         stopStream?.(true);

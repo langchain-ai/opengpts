@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useState } from "react";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import { Message } from "../types";
