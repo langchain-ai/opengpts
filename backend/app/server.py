@@ -39,7 +39,7 @@ async def ingest_files(
 
     thread_id = config["configurable"].get("thread_id")
     if thread_id is not None:
-        thread = await storage.get_thread(user["user_id"], thread_id)
+        thread = storage.get_thread(user["user_id"], thread_id)
         if thread is None:
             raise HTTPException(status_code=404, detail="Thread not found.")
 

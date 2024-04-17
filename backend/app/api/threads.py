@@ -1,4 +1,3 @@
-import asyncio
 from typing import Annotated, Any, Dict, List, Sequence, Union
 from uuid import uuid4
 
@@ -32,7 +31,7 @@ class ThreadPostRequest(BaseModel):
 @router.get("/")
 async def list_threads(user: AuthedUser) -> List[Thread]:
     """List all threads for the current user."""
-    return await storage.list_threads(user["user_id"])
+    return storage.list_threads(user["user_id"])
 
 
 @router.get("/{tid}/state")
@@ -42,7 +41,7 @@ async def get_thread_state(
 ):
     """Get state for a thread."""
     thread = storage.get_thread(user["user_id"], tid)
-    state = await storage.get_thread_state(user["user_id"], tid)
+    state = storage.get_thread_state(user["user_id"], tid)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
     return state
@@ -58,7 +57,7 @@ async def add_thread_state(
     thread = storage.get_thread(user["user_id"], tid)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
-    return await storage.update_thread_state(user["user_id"], tid, payload.values)
+    return storage.update_thread_state(user["user_id"], tid, payload.values)
 
 
 @router.get("/{tid}/history")
@@ -68,7 +67,7 @@ async def get_thread_history(
 ):
     """Get all past states for a thread."""
     thread = storage.get_thread(user["user_id"], tid)
-    history = await storage.get_thread_history(user["user_id"], tid)
+    history = storage.get_thread_history(user["user_id"], tid)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
     return history
@@ -121,5 +120,5 @@ async def delete_thread(
     tid: ThreadID,
 ):
     """Delete a thread by ID."""
-    await storage.delete_thread(user["user_id"], tid)
+    storage.delete_thread(user["user_id"], tid)
     return {"status": "ok"}

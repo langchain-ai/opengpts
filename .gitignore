@@ -63,3 +63,4 @@ pnpm-debug.log*
 
 # Local db files
 chroma_db/
+opengpts.db

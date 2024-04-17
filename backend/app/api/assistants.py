@@ -37,7 +37,7 @@ async def list_public_assistants(
     ] = None,
 ) -> List[Assistant]:
     """List all public assistants."""
-    return await storage.list_public_assistants(
+    return storage.list_public_assistants(
         FEATURED_PUBLIC_ASSISTANTS + ([shared_id] if shared_id else [])
     )
 
@@ -76,7 +76,7 @@ async def upsert_assistant(
     payload: AssistantPayload,
 ) -> Assistant:
     """Create or update an assistant."""
-    return await storage.put_assistant(
+    return storage.put_assistant(
         user["user_id"],
         aid,
         name=payload.name,

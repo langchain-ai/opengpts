@@ -3,7 +3,7 @@ import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Sequence, Union
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from langchain_core.messages import AnyMessage
 
@@ -33,8 +33,11 @@ def list_assistants(user_id: str) -> List[Assistant]:
         assistants = []
         for row in rows:
             assistant_data = dict(row)  # Convert sqlite3.Row to dict
-            assistant_data['config'] = json.loads(assistant_data['config']) if 'config' in assistant_data and \
-                                                                               assistant_data['config'] else {}
+            assistant_data["config"] = (
+                json.loads(assistant_data["config"])
+                if "config" in assistant_data and assistant_data["config"]
+                else {}
+            )
             assistant = Assistant(**assistant_data)
             assistants.append(assistant)
 
@@ -53,12 +56,15 @@ def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
         if not row:
             return None
         assistant_data = dict(row)  # Convert sqlite3.Row to dict
-        assistant_data['config'] = json.loads(assistant_data['config']) if 'config' in assistant_data and \
-                                                                           assistant_data['config'] else {}
+        assistant_data["config"] = (
+            json.loads(assistant_data["config"])
+            if "config" in assistant_data and assistant_data["config"]
+            else {}
+        )
         return Assistant(**assistant_data)
 
 
-async def list_public_assistants(assistant_ids: Sequence[str]) -> List[Assistant]:
+def list_public_assistants(assistant_ids: Sequence[str]) -> List[Assistant]:
     """List all the public assistants."""
     assistant_ids_tuple = tuple(
         assistant_ids
@@ -108,7 +114,7 @@ def put_assistant(
         )
 
 
-async def list_threads(user_id: str) -> List[Thread]:
+def list_threads(user_id: str) -> List[Thread]:
     """List all threads for the current user."""
     with _connect() as conn:
         cursor = conn.cursor()
@@ -129,25 +135,25 @@ def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
         return Thread(**dict(row)) if row else None
 
 
-async def get_thread_state(user_id: str, thread_id: str):
+def get_thread_state(user_id: str, thread_id: str):
     """Get state for a thread."""
     app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
-    state = await app.aget_state({"configurable": {"thread_id": thread_id}})
+    state = app.get_state({"configurable": {"thread_id": thread_id}})
     return {
         "values": state.values,
         "next": state.next,
     }
 
 
-async def update_thread_state(
+def update_thread_state(
     user_id: str, thread_id: str, values: Union[Sequence[AnyMessage], Dict[str, Any]]
 ):
     """Add state to a thread."""
     app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
-    await app.aupdate_state({"configurable": {"thread_id": thread_id}}, values)
+    app.update_state({"configurable": {"thread_id": thread_id}}, values)
 
 
-async def get_thread_history(user_id: str, thread_id: str):
+def get_thread_history(user_id: str, thread_id: str):
     """Get the history of a thread."""
     app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
     return [
@@ -157,9 +163,7 @@ async def get_thread_history(user_id: str, thread_id: str):
             "config": c.config,
             "parent": c.parent_config,
         }
-        async for c in app.aget_state_history(
-            {"configurable": {"thread_id": thread_id}}
-        )
+        for c in app.get_state_history({"configurable": {"thread_id": thread_id}})
     ]
 
 
@@ -200,23 +204,33 @@ def get_or_create_user(sub: str) -> tuple[User, bool]:
 
         if user_row:
             # Convert sqlite3.Row to a User object
-            user = User(user_id=user_row["user_id"], sub=user_row["sub"], created_at=user_row["created_at"])
+            user = User(
+                user_id=user_row["user_id"],
+                sub=user_row["sub"],
+                created_at=user_row["created_at"],
+            )
             return user, False
 
         # SQLite doesn't support RETURNING *, so we need to manually fetch the created user.
-        cursor.execute('INSERT INTO "user" (user_id, sub, created_at) VALUES (?, ?, ?)', (str(uuid4()), sub, datetime.now()))
+        cursor.execute(
+            'INSERT INTO "user" (user_id, sub, created_at) VALUES (?, ?, ?)',
+            (str(uuid4()), sub, datetime.now()),
+        )
         conn.commit()
 
         # Fetch the newly created user
         cursor.execute('SELECT * FROM "user" WHERE sub = ?', (sub,))
         new_user_row = cursor.fetchone()
 
-        new_user = User(user_id=new_user_row["user_id"], sub=new_user_row["sub"],
-                            created_at=new_user_row["created_at"])
+        new_user = User(
+            user_id=new_user_row["user_id"],
+            sub=new_user_row["sub"],
+            created_at=new_user_row["created_at"],
+        )
         return new_user, True
 
 
-async def delete_thread(user_id: str, thread_id: str):
+def delete_thread(user_id: str, thread_id: str):
     """Delete a thread by ID."""
     with _connect() as conn:
         cursor = conn.cursor()
