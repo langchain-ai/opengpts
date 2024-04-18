@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, List, Optional, Sequence, Union
 
 from langchain_core.messages import AnyMessage
+from langchain_core.runnables import RunnableConfig
 
 from app.agent import agent
 from app.lifespan import get_pg_pool
@@ -98,10 +99,9 @@ async def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
         )
 
 
-async def get_thread_state(user_id: str, thread_id: str):
+async def get_thread_state(*, user_id: str, thread_id: str, assistant_id: str):
     """Get state for a thread."""
-    thread = await get_thread(user_id, thread_id)
-    assistant = await get_assistant(user_id, thread["assistant_id"])
+    assistant = await get_assistant(user_id, assistant_id)
     state = await agent.aget_state(
         {
             "configurable": {
@@ -117,26 +117,28 @@ async def get_thread_state(user_id: str, thread_id: str):
 
 
 async def update_thread_state(
-    user_id: str, thread_id: str, values: Union[Sequence[AnyMessage], Dict[str, Any]]
+    config: RunnableConfig,
+    values: Union[Sequence[AnyMessage], dict[str, Any]],
+    *,
+    user_id: str,
+    assistant_id: str,
 ):
     """Add state to a thread."""
-    thread = await get_thread(user_id, thread_id)
-    assistant = await get_assistant(user_id, thread["assistant_id"])
+    assistant = await get_assistant(user_id, assistant_id)
     await agent.aupdate_state(
         {
             "configurable": {
                 **assistant["config"]["configurable"],
-                "thread_id": thread_id,
+                **config["configurable"],
             }
         },
         values,
     )
 
 
-async def get_thread_history(user_id: str, thread_id: str):
+async def get_thread_history(*, user_id: str, thread_id: str, assistant_id: str):
     """Get the history of a thread."""
-    thread = await get_thread(user_id, thread_id)
-    assistant = await get_assistant(user_id, thread["assistant_id"])
+    assistant = await get_assistant(user_id, assistant_id)
     return [
         {
             "values": c.values,

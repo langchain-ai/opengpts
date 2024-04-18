@@ -32,6 +32,7 @@ function App(props: { edit?: boolean }) {
       message: MessageWithFiles | null,
       thread_id: string,
       assistantType: string,
+      config?: Record<string, unknown>,
     ) => {
       const files = message?.files || [];
       if (files.length > 0) {
@@ -73,7 +74,7 @@ function App(props: { edit?: boolean }) {
         }
       }
 
-      await startStream(input, thread_id);
+      await startStream(input, thread_id, config);
     },
     [startStream],
   );
