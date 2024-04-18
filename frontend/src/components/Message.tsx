@@ -102,7 +102,10 @@ function isDocumentContent(
 
 export function MessageContent(props: { content: MessageType["content"] }) {
   if (typeof props.content === "string") {
-    return <StringViewer value={props.content} />;
+    if (!props.content.trim()) {
+      return null;
+    }
+    return <StringViewer value={props.content} markdown />;
   } else if (isDocumentContent(props.content)) {
     return <DocumentList documents={props.content} />;
   } else if (
@@ -113,6 +116,7 @@ export function MessageContent(props: { content: MessageType["content"] }) {
   ) {
     return (
       <DocumentList
+        markdown
         documents={props.content.map((it) => ({
           page_content: it.content,
           metadata: omit(it, "content"),
