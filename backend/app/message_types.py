@@ -32,6 +32,11 @@ def _convert_pydantic_dict_to_message(
 
 
 def add_messages_liberal(left: Messages, right: Messages):
+    # coerce to list
+    if not isinstance(left, list):
+        left = [left]
+    if not isinstance(right, list):
+        right = [right]
     return add_messages(
         [_convert_pydantic_dict_to_message(m) for m in left],
         [_convert_pydantic_dict_to_message(m) for m in right],

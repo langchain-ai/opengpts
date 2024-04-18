@@ -7,7 +7,6 @@ from langchain.pydantic_v1 import ValidationError
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import RunnableConfig
 from langserve.schema import FeedbackCreateRequest
-from langserve.server import _unpack_input
 from langsmith.utils import tracing_is_enabled
 from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
@@ -51,15 +50,12 @@ async def _run_input_and_config(payload: CreateRunPayload, user_id: str):
     }
 
     try:
-        input_ = (
-            _unpack_input(agent.get_input_schema(config).validate(payload.input))
-            if payload.input is not None
-            else None
-        )
+        if payload.input is not None:
+            agent.get_input_schema(config).validate(payload.input)
     except ValidationError as e:
         raise RequestValidationError(e.errors(), body=payload)
 
-    return input_, config
+    return payload.input, config
 
 
 @router.post("")
