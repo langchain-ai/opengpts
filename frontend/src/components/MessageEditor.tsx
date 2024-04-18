@@ -10,7 +10,7 @@ import {
 import { StringEditor } from "./StringEditor";
 import { JsonEditor } from "./JsonEditor";
 import { useThreadAndAssistant } from "../hooks/useThreadAndAssistant";
-import { uniqueId } from "lodash";
+import { v4 } from "uuid";
 
 function ToolCallEditor(props: {
   value: ToolCall;
@@ -183,7 +183,7 @@ export function ToolCallsEditor(props: {
             ...props.message,
             tool_calls: [
               ...(props.message.tool_calls ?? []),
-              { id: uniqueId(), name: "", args: {} },
+              { id: v4(), name: availableTools[0], args: {} },
             ],
           });
         }}
