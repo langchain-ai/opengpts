@@ -5,7 +5,13 @@ from typing import AsyncIterator, Optional
 from langchain_core.messages import BaseMessage
 from langchain_core.runnables import ConfigurableFieldSpec, RunnableConfig
 from langgraph.checkpoint import BaseCheckpointSaver
-from langgraph.checkpoint.base import Checkpoint, CheckpointThreadTs, CheckpointTuple
+from langgraph.checkpoint.base import (
+    Checkpoint,
+    CheckpointAt,
+    CheckpointThreadTs,
+    CheckpointTuple,
+    SerializerProtocol,
+)
 
 from app.lifespan import get_pg_pool
 
@@ -19,8 +25,13 @@ def loads(value: bytes) -> Checkpoint:
 
 
 class PostgresCheckpoint(BaseCheckpointSaver):
-    class Config:
-        arbitrary_types_allowed = True
+    def __init__(
+        self,
+        *,
+        serde: Optional[SerializerProtocol] = None,
+        at: Optional[CheckpointAt] = None,
+    ) -> None:
+        super().__init__(serde=serde, at=at)
 
     @property
     def config_specs(self) -> list[ConfigurableFieldSpec]:
