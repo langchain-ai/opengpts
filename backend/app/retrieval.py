@@ -1,5 +1,5 @@
 import operator
-from typing import Annotated, Sequence, TypedDict
+from typing import Annotated, List, Sequence, TypedDict
 from uuid import uuid4
 
 from langchain_core.language_models.base import LanguageModelLike
@@ -43,7 +43,7 @@ def get_retrieval_executor(
     checkpoint: BaseCheckpointSaver,
 ):
     class AgentState(TypedDict):
-        messages: Annotated[Sequence[BaseMessage], add_messages]
+        messages: Annotated[List[BaseMessage], add_messages]
         msg_count: Annotated[int, operator.add]
 
     def _get_messages(messages):
