@@ -67,12 +67,8 @@ function App(props: { edit?: boolean }) {
 
         if (assistantType === "chat_retrieval") {
           // The RAG assistant type requires an object with a `messages` field.
-          // Each message must contain a `role` field.
           input = {
-            messages: input.map((msg: Message) => {
-              msg.role = "human";
-              return msg;
-            }),
+            messages: input,
           };
         }
       }
