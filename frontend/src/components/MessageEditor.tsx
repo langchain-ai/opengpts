@@ -1,155 +1,145 @@
 import { memo } from "react";
-import type { Message } from "../types";
+import type { Message, ToolCall } from "../types";
 import { str } from "../utils/str";
 import { cn } from "../utils/cn";
 import {
   XCircleIcon,
-  ChevronDownIcon,
   PlusCircleIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { StringEditor } from "./StringEditor";
 import { JsonEditor } from "./JsonEditor";
+import { useThreadAndAssistant } from "../hooks/useThreadAndAssistant";
+import { uniqueId } from "lodash";
 
-// TODO adapt (and use) or remove
-function Function(props: {
-  call: boolean;
-  name?: string;
-  onNameChange?: (newValue: string) => void;
-  argsEntries?: [string, unknown][];
-  onArgsEntriesChange?: (newValue: [string, unknown][]) => void;
-  onRemovePressed?: () => void;
-  open?: boolean;
-  setOpen?: (open: boolean) => void;
+function ToolCallEditor(props: {
+  value: ToolCall;
+  onChange: (newValue: ToolCall) => void;
+  onRemove: () => void;
+  availableTools: string[];
 }) {
   return (
-    <div className="flex flex-col mt-1">
-      <div className="flex w-full">
+    <div className="flex flex-col">
+      <div className="flex w-full items-center gap-2">
+        <span className="text-gray-900 whitespace-pre-wrap break-words">
+          Use
+        </span>
         <div className="flex flex-col">
-          {props.call && (
-            <span className="text-gray-900 whitespace-pre-wrap break-words mr-2 uppercase opacity-50 text-xs mb-1">
-              Tool:
-            </span>
-          )}
-          {props.name !== undefined && (
-            <input
-              onChange={(e) => props.onNameChange?.(e.target.value)}
-              className="rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 -top-[1px] mr-auto focus:ring-0"
-              value={props.name}
-            />
+          {props.value.name !== undefined && (
+            <select
+              onChange={(e) =>
+                props.onChange({ ...props.value, name: e.target.value })
+              }
+              className="rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 -top-[1px] mr-auto focus:ring-0 w-40"
+              value={props.value.name}
+            >
+              {props.availableTools.map((tool) => (
+                <option key={tool} value={tool}>
+                  {tool}
+                </option>
+              ))}
+            </select>
           )}
         </div>
 
         <TrashIcon
-          className="w-4 h-4 ml-2 cursor-pointer opacity-50"
-          onClick={props.onRemovePressed}
+          className="w-5 h-5 cursor-pointer opacity-50"
+          onClick={props.onRemove}
         />
       </div>
-      {!props.call && props.setOpen && (
-        <span
-          className={cn(
-            "mr-auto inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 cursor-pointer relative top-1",
-            props.open && "mb-2",
-          )}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            props.setOpen?.(!props.open);
-          }}
-        >
-          <ChevronDownIcon
-            className={cn("h-5 w-5 transition", props.open ? "rotate-180" : "")}
-          />
-        </span>
-      )}
-      {props.argsEntries && (
-        <div className="text-gray-900 whitespace-pre-wrap break-words">
-          <span className="text-gray-900 whitespace-pre-wrap break-words mr-2 uppercase text-xs opacity-50">
-            Arguments:
-          </span>
-          <div className="ring-1 ring-gray-300 rounded">
-            <table className="mt-0 divide-gray-300">
-              <tbody>
-                {props.argsEntries.map(([key, value], i) => (
-                  <tr key={i}>
-                    <td
-                      className={cn(
-                        i === 0 ? "" : "border-t border-transparent",
-                        "py-1 px-3 table-cell text-sm border-r border-r-gray-300 w-0 min-w-[128px]",
-                      )}
-                    >
-                      <input
-                        className="rounded-md font-medium text-sm text-gray-500 px-2 py-1 focus:ring-0"
-                        value={key}
-                        onChange={(e) => {
-                          if (props.argsEntries !== undefined) {
-                            props.onArgsEntriesChange?.([
-                              ...props.argsEntries.slice(0, i),
-                              [e.target.value, value],
-                              ...props.argsEntries.slice(i + 1),
-                            ]);
-                          }
-                        }}
-                      />
-                    </td>
-                    <td
-                      className={cn(
-                        i === 0 ? "" : "border-t border-gray-200",
-                        "py-1 px-3 table-cell",
-                      )}
-                    >
-                      <div className="flex items-center">
-                        <StringEditor
-                          className="py-0 px-0 prose text-sm leading-normal bg-white"
-                          value={str(value)?.toString()}
-                          onChange={(newValue) => {
-                            if (props.argsEntries !== undefined) {
-                              props.onArgsEntriesChange?.([
-                                ...props.argsEntries.slice(0, i),
-                                [key, newValue],
-                                ...props.argsEntries.slice(i + 1),
-                              ]);
-                            }
-                          }}
-                        />
-                        <TrashIcon
-                          className="w-4 h-4 ml-2 cursor-pointer opacity-50"
-                          onClick={() => {
-                            if (props.argsEntries !== undefined) {
-                              props.onArgsEntriesChange?.([
-                                ...props.argsEntries.slice(0, i),
-                                ...props.argsEntries.slice(i + 1),
-                              ]);
-                            }
-                          }}
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-
-                <tr>
-                  <td></td>
-                  <td className="px-3 py-2">
-                    <PlusCircleIcon
-                      className="ml-auto w-6 h-6 cursor-pointer opacity-50"
-                      onClick={() => {
-                        if (props.argsEntries === undefined) {
-                          return;
-                        }
-                        props.onArgsEntriesChange?.([
-                          ...props.argsEntries,
-                          ["", ""],
-                        ]);
+      <div className="text-gray-900 whitespace-pre-wrap break-words mt-2 mb-4 ring-1 ring-gray-300 rounded">
+        <table className="my-0 divide-gray-300">
+          <tbody>
+            {Object.entries(props.value.args).map(([key, value], i) => (
+              <tr key={i}>
+                <td
+                  className={cn(
+                    i === 0 ? "" : "border-t border-transparent",
+                    "p-2 table-cell text-sm border-r border-r-gray-300 w-0 min-w-[128px]",
+                  )}
+                >
+                  <input
+                    className="rounded-md font-medium text-sm text-gray-500 px-2 py-1 focus:ring-0"
+                    value={key}
+                    onChange={(e) => {
+                      const newKey = e.target.value;
+                      props.onChange({
+                        ...props.value,
+                        args: Object.fromEntries(
+                          Object.entries(props.value.args).map(([k, v]) => [
+                            k === key ? newKey : k,
+                            v,
+                          ]),
+                        ),
+                      });
+                    }}
+                  />
+                </td>
+                <td
+                  className={cn(
+                    i === 0 ? "" : "border-t border-gray-200",
+                    "p-2 table-cell",
+                  )}
+                >
+                  <div className="flex items-center">
+                    <StringEditor
+                      className="py-0 px-0 prose text-sm leading-normal bg-white"
+                      value={str(value)?.toString()}
+                      onChange={(newValue) => {
+                        props.onChange({
+                          ...props.value,
+                          args: {
+                            ...props.value.args,
+                            [key]: newValue,
+                          },
+                        });
                       }}
                     />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+                    <TrashIcon
+                      className="w-4 h-4 ml-2 cursor-pointer opacity-50"
+                      onClick={() => {
+                        props.onChange({
+                          ...props.value,
+                          args: Object.fromEntries(
+                            Object.entries(props.value.args).filter(
+                              ([k]) => k !== key,
+                            ),
+                          ),
+                        });
+                      }}
+                    />
+                  </div>
+                </td>
+              </tr>
+            ))}
+
+            <tr>
+              <td
+                className={cn(
+                  "p-2 opacity-50 cursor-pointer flex gap-1 items-center",
+                  "" in props.value.args && "opacity-20 pointer-events-none",
+                )}
+                onClick={
+                  "" in props.value.args
+                    ? undefined
+                    : () => {
+                        props.onChange({
+                          ...props.value,
+                          args: {
+                            ...props.value.args,
+                            "": "",
+                          },
+                        });
+                      }
+                }
+              >
+                <PlusCircleIcon className="w-6 h-6" />
+                Add argument
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -158,20 +148,50 @@ export function ToolCallsEditor(props: {
   message: Message;
   onUpdate: (newValue: Message) => void;
 }) {
+  const { assistantConfig } = useThreadAndAssistant();
+  const availableTools =
+    assistantConfig?.config.configurable?.["type==agent/tools"]?.map(
+      (t) => t.type,
+    ) ?? [];
   return (
-    <JsonEditor
-      value={JSON.stringify(props.message.tool_calls, null, 2)}
-      onChange={(newValue) => {
-        try {
+    <div>
+      {props.message.tool_calls?.map((toolCall, i) => (
+        <ToolCallEditor
+          key={i}
+          value={toolCall}
+          onChange={(newValue) => {
+            props.onUpdate({
+              ...props.message,
+              tool_calls: props.message.tool_calls?.map((tc, j) =>
+                j === i ? newValue : tc,
+              ),
+            });
+          }}
+          onRemove={() => {
+            props.onUpdate({
+              ...props.message,
+              tool_calls: props.message.tool_calls?.filter((_, j) => j !== i),
+            });
+          }}
+          availableTools={availableTools}
+        />
+      ))}
+      <div
+        className="pl-2 flex items-center gap-1 cursor-pointer opacity-50"
+        onClick={() => {
           props.onUpdate({
             ...props.message,
-            tool_calls: JSON.parse(newValue),
+            tool_calls: [
+              ...(props.message.tool_calls ?? []),
+              { id: uniqueId(), name: "", args: {} },
+            ],
           });
-        } catch (e) {
-          console.error(e);
-        }
-      }}
-    />
+        }}
+      >
+        <PlusCircleIcon className={cn("w-6 h-6")} />
+        Add tool call
+      </div>
+    </div>
   );
 }
 
@@ -258,12 +278,13 @@ export const MessageEditor = memo(function (props: {
             message={props.message}
             onUpdate={props.onUpdate}
           />
-          {props.message.type === "ai" && props.message.tool_calls && (
-            <ToolCallsEditor
-              message={props.message}
-              onUpdate={props.onUpdate}
-            />
-          )}
+          {props.message.type === "ai" &&
+            (props.message.tool_calls?.length ?? 0) > 0 && (
+              <ToolCallsEditor
+                message={props.message}
+                onUpdate={props.onUpdate}
+              />
+            )}
         </div>
       </div>
     </div>
