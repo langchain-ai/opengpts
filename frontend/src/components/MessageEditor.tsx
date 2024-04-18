@@ -153,6 +153,9 @@ export function ToolCallsEditor(props: {
     assistantConfig?.config.configurable?.["type==agent/tools"]?.map(
       (t) => t.type,
     ) ?? [];
+  if (!props.message.tool_calls?.length && !availableTools.length) {
+    return null;
+  }
   return (
     <div>
       {props.message.tool_calls?.map((toolCall, i) => (
@@ -273,18 +276,17 @@ export const MessageEditor = memo(function (props: {
             onMouseUp={props.abandonEdits}
           />
         </div>
-        <div className="prose flex flex-col w-[65ch]">
+        <div className="prose flex flex-col w-[65ch] gap-2">
           <MessageContentEditor
             message={props.message}
             onUpdate={props.onUpdate}
           />
-          {props.message.type === "ai" &&
-            (props.message.tool_calls?.length ?? 0) > 0 && (
-              <ToolCallsEditor
-                message={props.message}
-                onUpdate={props.onUpdate}
-              />
-            )}
+          {props.message.type === "ai" && props.message.tool_calls && (
+            <ToolCallsEditor
+              message={props.message}
+              onUpdate={props.onUpdate}
+            />
+          )}
         </div>
       </div>
     </div>
