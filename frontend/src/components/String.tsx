@@ -7,13 +7,21 @@ const OPTIONS: MarkedOptions = {
   breaks: true,
 };
 
-export function StringViewer(props: { value: string; className?: string }) {
-  return (
+export function StringViewer(props: {
+  value: string;
+  className?: string;
+  markdown?: boolean;
+}) {
+  return props.markdown ? (
     <div
       className={cn("text-gray-900 prose", props.className)}
       dangerouslySetInnerHTML={{
         __html: DOMPurify.sanitize(marked(props.value, OPTIONS)).trim(),
       }}
     />
+  ) : (
+    <div className={cn("text-gray-900 prose", props.className)}>
+      {props.value}
+    </div>
   );
 }

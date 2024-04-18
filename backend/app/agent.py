@@ -29,6 +29,7 @@ from app.tools import (
     Arxiv,
     AvailableTools,
     Connery,
+    DallE,
     DDGSearch,
     PressReleases,
     PubMed,
@@ -55,6 +56,7 @@ Tool = Union[
     Tavily,
     TavilyAnswer,
     Retrieval,
+    DallE,
 ]
 
 
