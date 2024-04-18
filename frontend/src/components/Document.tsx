@@ -18,6 +18,7 @@ function isValidHttpUrl(str: string) {
 
 function DocumentViewer(props: {
   document: MessageDocument;
+  markdown?: boolean;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -79,7 +80,10 @@ function DocumentViewer(props: {
       </button>
 
       <span className="flex flex-grow basis-0 flex-col gap-4">
-        <StringViewer value={props.document.page_content} />
+        <StringViewer
+          value={props.document.page_content}
+          markdown={props.markdown}
+        />
 
         <span className="flex flex-col flex-wrap items-start gap-2">
           {metadata.map(({ key, value }, idx) => {
@@ -105,12 +109,20 @@ function DocumentViewer(props: {
   );
 }
 
-export function DocumentList(props: { documents: MessageDocument[] }) {
+export function DocumentList(props: {
+  documents: MessageDocument[];
+  markdown?: boolean;
+}) {
   return (
     <div className="flex flex-col items-stretch gap-4 rounded-lg ring-1 ring-gray-300 overflow-hidden my-2">
       <div className="grid divide-y empty:hidden">
         {props.documents.map((document, idx) => (
-          <DocumentViewer document={document} key={idx} className="py-3" />
+          <DocumentViewer
+            document={document}
+            key={idx}
+            className="py-3"
+            markdown={props.markdown}
+          />
         ))}
       </div>
     </div>
