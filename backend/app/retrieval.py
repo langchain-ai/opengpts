@@ -9,10 +9,9 @@ from langchain_core.retrievers import BaseRetriever
 from langchain_core.runnables import chain
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph import END
-from langgraph.graph.message import add_messages
 from langgraph.graph.state import StateGraph
 
-from app.message_types import LiberalFunctionMessage
+from app.message_types import LiberalToolMessage, add_messages_liberal
 
 search_prompt = PromptTemplate.from_template(
     """Given the conversation below, come up with a search query to look up.
@@ -43,14 +42,14 @@ def get_retrieval_executor(
     checkpoint: BaseCheckpointSaver,
 ):
     class AgentState(TypedDict):
-        messages: Annotated[List[BaseMessage], add_messages]
+        messages: Annotated[List[BaseMessage], add_messages_liberal]
         msg_count: Annotated[int, operator.add]
 
     def _get_messages(messages):
         chat_history = []
         for m in messages:
             if isinstance(m, AIMessage):
-                if "function_call" not in m.additional_kwargs:
+                if not m.tool_calls:
                     chat_history.append(m)
             if isinstance(m, HumanMessage):
                 chat_history.append(m)
@@ -75,7 +74,7 @@ def get_retrieval_executor(
                 convo.append(f"Human: {m.content}")
         conversation = "\n".join(convo)
         prompt = await search_prompt.ainvoke({"conversation": conversation})
-        response = await llm.ainvoke(prompt)
+        response = await llm.ainvoke(prompt, {"tags": ["nostream"]})
         return response
 
     async def invoke_retrieval(state: AgentState):
@@ -119,7 +118,9 @@ def get_retrieval_executor(
         params = messages[-1].tool_calls[0]
         query = params["args"]["query"]
         response = await retriever.ainvoke(query)
-        msg = LiberalFunctionMessage(name="retrieval", content=response)
+        msg = LiberalToolMessage(
+            name="retrieval", content=response, tool_call_id=params["id"]
+        )
         return {"messages": [msg], "msg_count": 1}
 
     def call_model(state: AgentState):
