@@ -8,6 +8,7 @@ from langchain_core.runnables import (
     RunnableBinding,
 )
 from langgraph.checkpoint import CheckpointAt
+from langgraph.graph.message import Messages
 from langgraph.pregel import Pregel
 
 from app.agent_types.tools_agent import get_tools_agent_executor
@@ -247,8 +248,8 @@ chatbot = (
         system_message=ConfigurableField(id="system_message", name="Instructions"),
     )
     .with_types(
-        input_type=Union[Sequence[AnyMessage], Dict[str, Any]],
-        output_type=Union[Sequence[AnyMessage], Dict[str, Any]],
+        input_type=Messages,
+        output_type=Sequence[AnyMessage],
     )
 )
 
@@ -312,8 +313,8 @@ chat_retrieval = (
         thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
     )
     .with_types(
-        input_type=Union[Sequence[AnyMessage], Dict[str, Any]],
-        output_type=Union[Sequence[AnyMessage], Dict[str, Any]],
+        input_type=Dict[str, Any],
+        output_type=Dict[str, Any],
     )
 )
 
@@ -352,8 +353,8 @@ agent: Pregel = (
         chat_retrieval=chat_retrieval,
     )
     .with_types(
-        input_type=Union[Sequence[AnyMessage], Dict[str, Any]],
-        output_type=Union[Sequence[AnyMessage], Dict[str, Any]],
+        input_type=Messages,
+        output_type=Sequence[AnyMessage],
     )
 )
 
