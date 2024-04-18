@@ -32,7 +32,11 @@ export function useChatMessages(
     async function fetchMessages() {
       if (threadId) {
         const { values, next } = await getState(threadId);
-        const messages = Array.isArray(values) ? values : values.messages;
+        const messages = values
+          ? Array.isArray(values)
+            ? values
+            : values.messages
+          : [];
         setMessages(messages);
         setNext(next);
       }
