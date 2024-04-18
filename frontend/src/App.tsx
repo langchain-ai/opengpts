@@ -135,6 +135,7 @@ function App(props: { edit?: boolean }) {
       sidebar={
         <ChatList
           chats={chats}
+          configs={configs}
           enterChat={selectChat}
           deleteChat={deleteChat}
           enterConfig={selectConfig}
