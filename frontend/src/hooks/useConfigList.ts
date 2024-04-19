@@ -7,7 +7,12 @@ export interface Config {
   updated_at: string;
   config: {
     configurable?: {
-      tools?: string[];
+      type?: string;
+      "type==agent/tools"?: {
+        type: string;
+        name: string;
+        description: string;
+      }[];
       [key: string]: unknown;
     };
   };
