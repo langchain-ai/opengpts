@@ -10,10 +10,8 @@ from langchain_community.chat_models import BedrockChat, ChatFireworks
 from langchain_community.chat_models.ollama import ChatOllama
 from langchain_google_vertexai import ChatVertexAI
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
-from langchain_anthropic import ChatAnthropic
 import huggingface_hub
 from langchain.llms import HuggingFaceTextGenInference
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain_community.chat_models.huggingface import ChatHuggingFace
 
 logger = logging.getLogger(__name__)
@@ -109,3 +107,31 @@ def get_ollama_llm():
         ollama_base_url = "http://localhost:11434"
 
     return ChatOllama(model=model_name, base_url=ollama_base_url)
+
+@lru_cache(maxsize=1)
+def get_huggingface_textgen_inference_llm(
+    max_new_tokens=2048,
+    top_k=10,
+    top_p=0.95,
+    typical_p=0.95,
+    temperature=0.3,
+    repetition_penalty=1.1,
+    streaming=True,
+    model_id="HuggingFaceH4/zephyr-7b-beta"
+):
+    """Initialize the HuggingFace TextGenInference model with dynamic parameters."""
+    huggingface_hub.login(load_env_var("HUGGINGFACE_TOKEN"))
+    llm = HuggingFaceTextGenInference(
+        inference_server_url=load_env_var("HUGGINGFACE_INFERENCE_SERVER_URL"),
+        max_new_tokens=max_new_tokens,
+        top_k=top_k,
+        top_p=top_p,
+        typical_p=typical_p,
+        temperature=temperature,
+        repetition_penalty=repetition_penalty,
+        streaming=streaming,
+        server_kwargs={
+            "headers": {"Content-Type": "application/json"}
+        },
+    )
+    return ChatHuggingFace(llm=llm, model_id=model_id)
