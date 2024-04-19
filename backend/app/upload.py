@@ -12,7 +12,7 @@ from __future__ import annotations
 import os
 from typing import BinaryIO, List, Optional
 
-from langchain_community.document_loaders.blob_loaders.schema import Blob
+from langchain_core.document_loaders.blob_loaders import Blob
 from langchain_community.vectorstores.pgvector import PGVector
 from langchain_core.runnables import (
     ConfigurableField,
