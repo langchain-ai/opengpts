@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { ChatListProps } from "../hooks/useChatList";
 import { cn } from "../utils/cn";
 import { useThreadAndAssistant } from "../hooks/useThreadAndAssistant.ts";
+import { ConfigListProps } from "../hooks/useConfigList.ts";
 
 export function ChatList(props: {
   chats: ChatListProps["chats"];
+  configs: ConfigListProps["configs"];
   enterChat: (id: string | null) => void;
   deleteChat: (id: string) => void;
   enterConfig: (id: string | null) => void;
@@ -76,15 +78,17 @@ export function ChatList(props: {
         {props.chats?.map((chat) => (
           <li
             key={chat.thread_id}
-            className="flex justify-between items-center p-2 rounded-md hover:bg-gray-50 cursor-pointer"
+            className={cn(
+              chat.thread_id === currentChat?.thread_id
+                ? "bg-gray-50 text-indigo-600"
+                : "text-gray-700 hover:text-indigo-600 hover:bg-gray-50",
+              "flex justify-between items-center p-2 rounded-md hover:bg-gray-50 cursor-pointer",
+            )}
           >
             <div
               onClick={() => props.enterChat(chat.thread_id)}
               className={cn(
-                chat.thread_id === currentChat?.thread_id
-                  ? "bg-gray-50 text-indigo-600"
-                  : "text-gray-700 hover:text-indigo-600 hover:bg-gray-50",
-                "group flex gap-x-3 rounded-md p-2 leading-6 cursor-pointer flex-grow min-w-0",
+                "group flex items-center gap-x-3 rounded-md px-2 leading-6 cursor-pointer flex-grow min-w-0",
               )}
             >
               <span
@@ -97,7 +101,16 @@ export function ChatList(props: {
               >
                 {chat.name?.[0] ?? " "}
               </span>
-              <span className="truncate flex-grow min-w-0">{chat.name}</span>
+              <div className="flex flex-col truncate">
+                <span className="truncate flex-grow min-w-0">{chat.name}</span>
+                <span className="truncate flex-grow min-w-0 text-xs text-gray-400">
+                  {
+                    props.configs?.find(
+                      (config) => config.assistant_id === chat.assistant_id,
+                    )?.name
+                  }
+                </span>
+              </div>
             </div>
             {/* Ellipsis Button */}
             <button

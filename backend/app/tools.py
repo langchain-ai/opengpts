@@ -5,14 +5,13 @@ from typing import Optional
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools.retriever import create_retriever_tool
 from langchain_community.agent_toolkits.connery import ConneryToolkit
-from langchain_community.retrievers import (
-    KayAiRetriever,
-    PubMedRetriever,
-    WikipediaRetriever,
-)
+from langchain_community.retrievers.kay import KayAiRetriever
+from langchain_community.retrievers.pubmed import PubMedRetriever
+from langchain_community.retrievers.wikipedia import WikipediaRetriever
 from langchain_community.retrievers.you import YouRetriever
-from langchain_community.tools import ArxivQueryRun, DuckDuckGoSearchRun
+from langchain_community.tools.arxiv.tool import ArxivQueryRun
 from langchain_community.tools.connery import ConneryService
+from langchain_community.tools.ddg_search.tool import DuckDuckGoSearchRun
 from langchain_community.tools.tavily_search import (
     TavilyAnswer as _TavilyAnswer,
 )
@@ -20,7 +19,9 @@ from langchain_community.tools.tavily_search import (
     TavilySearchResults,
 )
 from langchain_community.utilities.arxiv import ArxivAPIWrapper
+from langchain_community.utilities.dalle_image_generator import DallEAPIWrapper
 from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
+from langchain_core.tools import Tool
 from langchain_robocorp import ActionServerToolkit
 from typing_extensions import TypedDict
 
@@ -39,6 +40,10 @@ class PythonREPLInput(BaseModel):
     query: str = Field(description="python command to run")
 
 
+class DallEInput(BaseModel):
+    query: str = Field(description="image description to generate image from")
+
+
 class AvailableTools(str, Enum):
     ACTION_SERVER = "action_server_by_robocorp"
     CONNERY = "ai_action_runner_by_connery"
@@ -52,6 +57,7 @@ class AvailableTools(str, Enum):
     PRESS_RELEASES = "press_releases_kai_ai"
     PUBMED = "pubmed"
     WIKIPEDIA = "wikipedia"
+    DALL_E = "dall_e"
 
 
 class ToolConfig(TypedDict):
@@ -184,6 +190,15 @@ class Retrieval(BaseTool):
     description: str = Field("Look up information in uploaded files.", const=True)
 
 
+class DallE(BaseTool):
+    type: AvailableTools = Field(AvailableTools.DALL_E, const=True)
+    name: str = Field("Generate Image (Dall-E)", const=True)
+    description: str = Field(
+        "Generates images from a text description using OpenAI's DALL-E model.",
+        const=True,
+    )
+
+
 RETRIEVAL_DESCRIPTION = """Can be used to look up information that was uploaded to this assistant.
 If the user is referencing particular files, that is often a good hint that information may be here.
 If the user asks a vague question, they are likely meaning to look up info from this retriever, and you should call it!"""
@@ -262,13 +277,13 @@ def _get_wikipedia():
 @lru_cache(maxsize=1)
 def _get_tavily():
     tavily_search = TavilySearchAPIWrapper()
-    return TavilySearchResults(api_wrapper=tavily_search)
+    return TavilySearchResults(api_wrapper=tavily_search, name="search_tavily")
 
 
 @lru_cache(maxsize=1)
 def _get_tavily_answer():
     tavily_search = TavilySearchAPIWrapper()
-    return _TavilyAnswer(api_wrapper=tavily_search)
+    return _TavilyAnswer(api_wrapper=tavily_search, name="search_tavily_answer")
 
 
 def _get_action_server(**kwargs: ActionServerConfig):
@@ -285,6 +300,15 @@ def _get_connery_actions():
     return tools
 
 
+@lru_cache(maxsize=1)
+def _get_dalle_tools():
+    return Tool(
+        "Dall-E-Image-Generator",
+        DallEAPIWrapper(size="1024x1024", quality="hd").run,
+        "A wrapper around OpenAI DALL-E API. Useful for when you need to generate images from a text description. Input should be an image description.",
+    )
+
+
 TOOLS = {
     AvailableTools.ACTION_SERVER: _get_action_server,
     AvailableTools.CONNERY: _get_connery_actions,
@@ -297,4 +321,5 @@ TOOLS = {
     AvailableTools.TAVILY: _get_tavily,
     AvailableTools.WIKIPEDIA: _get_wikipedia,
     AvailableTools.TAVILY_ANSWER: _get_tavily_answer,
+    AvailableTools.DALL_E: _get_dalle_tools,
 }

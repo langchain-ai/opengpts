@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 
 import boto3
 import httpx
+from langchain_anthropic import ChatAnthropic
 from langchain_community.chat_models import BedrockChat, ChatFireworks
 from langchain_community.chat_models.ollama import ChatOllama
 from langchain_google_vertexai import ChatVertexAI
