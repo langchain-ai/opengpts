@@ -6,7 +6,7 @@ services:
       context: tools/sqlite_migrate
     volumes:
       - ./backend:/backend
-    command: ["migrate", "-path", "/backend/migrations", "-database", "sqlite3://opengpts.db", "up"]
+    command: ["migrate", "-path", "/backend/migrations/sqlite", "-database", "sqlite3://opengpts.db", "up"]
   backend:
     container_name: opengpts-backend
     build:

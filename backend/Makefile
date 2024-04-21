@@ -17,7 +17,13 @@ start:
 	poetry run uvicorn app.server:app --reload --port 8100
 
 migrate:
-	migrate -database sqlite3://$(PWD)/opengpts.db -path ./migrations up
+    ifeq ($(STORAGE_TYPE),postgres)
+		@echo "Running Postgres migrations..."
+		migrate -database postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable -path ./migrations/postgres up
+    else
+		@echo "Running SQLite migrations..."
+		migrate -database sqlite3://$(PWD)/opengpts.db -path ./migrations/sqlite up
+    endif
 
 test:
 	# We need to update handling of env variables for tests
