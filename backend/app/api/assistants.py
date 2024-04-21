@@ -4,9 +4,9 @@ from uuid import uuid4
 from fastapi import APIRouter, HTTPException, Path, Query
 from pydantic import BaseModel, Field
 
-import app.storage as storage
 from app.auth.handlers import AuthedUser
 from app.schema import Assistant
+from app.storage import storage
 
 router = APIRouter()
 
@@ -25,9 +25,9 @@ AssistantID = Annotated[str, Path(description="The ID of the assistant.")]
 
 
 @router.get("/")
-def list_assistants(user: AuthedUser) -> List[Assistant]:
+async def list_assistants(user: AuthedUser) -> List[Assistant]:
     """List all assistants for the current user."""
-    return storage.list_assistants(user["user_id"])
+    return await storage.list_assistants(user["user_id"])
 
 
 @router.get("/public/")
@@ -37,7 +37,7 @@ async def list_public_assistants(
     ] = None,
 ) -> List[Assistant]:
     """List all public assistants."""
-    return storage.list_public_assistants(
+    return await storage.list_public_assistants(
         FEATURED_PUBLIC_ASSISTANTS + ([shared_id] if shared_id else [])
     )
 
@@ -48,7 +48,7 @@ async def get_assistant(
     aid: AssistantID,
 ) -> Assistant:
     """Get an assistant by ID."""
-    assistant = storage.get_assistant(user["user_id"], aid)
+    assistant = await storage.get_assistant(user["user_id"], aid)
     if not assistant:
         raise HTTPException(status_code=404, detail="Assistant not found")
     return assistant
@@ -60,7 +60,7 @@ async def create_assistant(
     payload: AssistantPayload,
 ) -> Assistant:
     """Create an assistant."""
-    return storage.put_assistant(
+    return await storage.put_assistant(
         user["user_id"],
         str(uuid4()),
         name=payload.name,
@@ -76,7 +76,7 @@ async def upsert_assistant(
     payload: AssistantPayload,
 ) -> Assistant:
     """Create or update an assistant."""
-    return storage.put_assistant(
+    return await storage.put_assistant(
         user["user_id"],
         aid,
         name=payload.name,

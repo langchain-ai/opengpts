@@ -1,26 +1,21 @@
 import pickle
-import sqlite3
-from contextlib import contextmanager
-from typing import Iterator, Optional
+from datetime import datetime
+from typing import AsyncIterator, Optional
 
+import aiosqlite
 from langchain_core.messages import BaseMessage
 from langchain_core.runnables import ConfigurableFieldSpec, RunnableConfig
 from langgraph.checkpoint import BaseCheckpointSaver
+from langgraph.checkpoint.aiosqlite import AsyncSqliteSaver
 from langgraph.checkpoint.base import (
     Checkpoint,
     CheckpointThreadTs,
     CheckpointTuple,
 )
 
-
-@contextmanager
-def _connect():
-    conn = sqlite3.connect("opengpts.db")
-    conn.row_factory = sqlite3.Row  # Enable dictionary access to row items.
-    try:
-        yield conn
-    finally:
-        conn.close()
+from app.lifespan import create_sqlite_conn, get_pg_pool
+from app.storage.settings import StorageType
+from app.storage.settings import settings as storage_settings
 
 
 def loads(value: bytes) -> Checkpoint:
@@ -31,7 +26,7 @@ def loads(value: bytes) -> Checkpoint:
     return loaded
 
 
-class SQLiteCheckpoint(BaseCheckpointSaver):
+class PostgresCheckpointer(BaseCheckpointSaver):
     class Config:
         arbitrary_types_allowed = True
 
@@ -49,34 +44,53 @@ class SQLiteCheckpoint(BaseCheckpointSaver):
             CheckpointThreadTs,
         ]
 
-    @contextmanager
-    def cursor(self, transaction: bool = True):
-        with _connect() as conn:
-            cur = conn.cursor()
-            try:
-                yield cur
-            finally:
-                if transaction:
-                    conn.commit()
-                cur.close()
+    def get(self, config: RunnableConfig) -> Optional[Checkpoint]:
+        raise NotImplementedError
 
-    def get_tuple(self, config: RunnableConfig) -> Optional[CheckpointTuple]:
-        with self.cursor(transaction=False) as cur:
-            if config["configurable"].get("thread_ts"):
-                cur.execute(
-                    "SELECT checkpoint, parent_ts FROM checkpoints WHERE thread_id = ? AND thread_ts = ?",
-                    (
-                        config["configurable"]["thread_id"],
-                        config["configurable"]["thread_ts"],
-                    ),
+    def put(self, config: RunnableConfig, checkpoint: Checkpoint) -> RunnableConfig:
+        raise NotImplementedError
+
+    async def alist(self, config: RunnableConfig) -> AsyncIterator[CheckpointTuple]:
+        async with get_pg_pool().acquire() as db, db.transaction():
+            thread_id = config["configurable"]["thread_id"]
+            async for value in db.cursor(
+                "SELECT checkpoint, thread_ts, parent_ts FROM checkpoints WHERE thread_id = $1 ORDER BY thread_ts DESC",
+                thread_id,
+            ):
+                yield CheckpointTuple(
+                    {
+                        "configurable": {
+                            "thread_id": thread_id,
+                            "thread_ts": value[1],
+                        }
+                    },
+                    loads(value[0]),
+                    {
+                        "configurable": {
+                            "thread_id": thread_id,
+                            "thread_ts": value[2],
+                        }
+                    }
+                    if value[2]
+                    else None,
                 )
-                if value := cur.fetchone():
+
+    async def aget_tuple(self, config: RunnableConfig) -> Optional[CheckpointTuple]:
+        thread_id = config["configurable"]["thread_id"]
+        thread_ts = config["configurable"].get("thread_ts")
+        async with get_pg_pool().acquire() as conn:
+            if thread_ts:
+                if value := await conn.fetchrow(
+                    "SELECT checkpoint, parent_ts FROM checkpoints WHERE thread_id = $1 AND thread_ts = $2",
+                    thread_id,
+                    datetime.fromisoformat(thread_ts),
+                ):
                     return CheckpointTuple(
                         config,
                         loads(value[0]),
                         {
                             "configurable": {
-                                "thread_id": config["configurable"]["thread_id"],
+                                "thread_id": thread_id,
                                 "thread_ts": value[1],
                             }
                         }
@@ -84,22 +98,21 @@ class SQLiteCheckpoint(BaseCheckpointSaver):
                         else None,
                     )
             else:
-                cur.execute(
-                    "SELECT thread_id, thread_ts, parent_ts, checkpoint FROM checkpoints WHERE thread_id = ? ORDER BY thread_ts DESC LIMIT 1",
-                    (config["configurable"]["thread_id"],),
-                )
-                if value := cur.fetchone():
+                if value := await conn.fetchrow(
+                    "SELECT checkpoint, thread_ts, parent_ts FROM checkpoints WHERE thread_id = $1 ORDER BY thread_ts DESC LIMIT 1",
+                    thread_id,
+                ):
                     return CheckpointTuple(
                         {
                             "configurable": {
-                                "thread_id": value[0],
+                                "thread_id": thread_id,
                                 "thread_ts": value[1],
                             }
                         },
-                        loads(value[3]),
+                        loads(value[0]),
                         {
                             "configurable": {
-                                "thread_id": value[0],
+                                "thread_id": thread_id,
                                 "thread_ts": value[2],
                             }
                         }
@@ -107,40 +120,57 @@ class SQLiteCheckpoint(BaseCheckpointSaver):
                         else None,
                     )
 
-    def list(self, config: RunnableConfig) -> Iterator[CheckpointTuple]:
-        with self.cursor(transaction=False) as cur:
-            cur.execute(
-                "SELECT thread_id, thread_ts, parent_ts, checkpoint FROM checkpoints WHERE thread_id = ? ORDER BY thread_ts DESC",
-                (config["configurable"]["thread_id"],),
-            )
-            for thread_id, thread_ts, parent_ts, value in cur:
-                yield CheckpointTuple(
-                    {"configurable": {"thread_id": thread_id, "thread_ts": thread_ts}},
-                    loads(value),
-                    {
-                        "configurable": {
-                            "thread_id": thread_id,
-                            "thread_ts": parent_ts,
-                        }
-                    }
-                    if parent_ts
-                    else None,
-                )
-
-    def put(self, config: RunnableConfig, checkpoint: Checkpoint) -> RunnableConfig:
-        with self.cursor() as cur:
-            cur.execute(
-                "INSERT OR REPLACE INTO checkpoints (thread_id, thread_ts, parent_ts, checkpoint) VALUES (?, ?, ?, ?)",
-                (
-                    config["configurable"]["thread_id"],
-                    checkpoint["ts"],
-                    config["configurable"].get("thread_ts"),
-                    pickle.dumps(checkpoint),
-                ),
+    async def aput(self, config: RunnableConfig, checkpoint: Checkpoint) -> None:
+        thread_id = config["configurable"]["thread_id"]
+        async with get_pg_pool().acquire() as conn:
+            await conn.execute(
+                """
+                INSERT INTO checkpoints (thread_id, thread_ts, parent_ts, checkpoint)
+                VALUES ($1, $2, $3, $4) 
+                ON CONFLICT (thread_id, thread_ts) 
+                DO UPDATE SET checkpoint = EXCLUDED.checkpoint;""",
+                thread_id,
+                datetime.fromisoformat(checkpoint["ts"]),
+                datetime.fromisoformat(checkpoint.get("parent_ts"))
+                if checkpoint.get("parent_ts")
+                else None,
+                pickle.dumps(checkpoint),
             )
         return {
             "configurable": {
-                "thread_id": config["configurable"]["thread_id"],
+                "thread_id": thread_id,
                 "thread_ts": checkpoint["ts"],
             }
         }
+
+
+class SqliteCheckpointer(AsyncSqliteSaver):
+    conn: aiosqlite.Connection = None
+
+    @property
+    def config_specs(self) -> list[ConfigurableFieldSpec]:
+        return [
+            ConfigurableFieldSpec(
+                id="thread_id",
+                annotation=Optional[str],
+                name="Thread ID",
+                description=None,
+                default=None,
+                is_shared=True,
+            ),
+            CheckpointThreadTs,
+        ]
+
+    async def setup(self) -> None:
+        if self.is_setup:
+            return
+        self.conn = await create_sqlite_conn(global_=True)
+        self.is_setup = True
+
+
+if storage_settings.storage_type == StorageType.POSTGRES:
+    Checkpointer = PostgresCheckpointer
+elif storage_settings.storage_type == StorageType.SQLITE:
+    Checkpointer = SqliteCheckpointer
+else:
+    raise NotImplementedError()

@@ -7,14 +7,15 @@ from fastapi import FastAPI, Form, UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.staticfiles import StaticFiles
 
-import app.storage as storage
 from app.api import router as api_router
 from app.auth.handlers import AuthedUser
+from app.lifespan import lifespan
+from app.storage import storage
 from app.upload import ingest_runnable
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="OpenGPTs API")
+app = FastAPI(title="OpenGPTs API", lifespan=lifespan)
 
 
 # Get root of app, used to point to directory containing static files
@@ -33,13 +34,13 @@ async def ingest_files(
 
     assistant_id = config["configurable"].get("assistant_id")
     if assistant_id is not None:
-        assistant = storage.get_assistant(user["user_id"], assistant_id)
+        assistant = await storage.get_assistant(user["user_id"], assistant_id)
         if assistant is None:
             raise HTTPException(status_code=404, detail="Assistant not found.")
 
     thread_id = config["configurable"].get("thread_id")
     if thread_id is not None:
-        thread = storage.get_thread(user["user_id"], thread_id)
+        thread = await storage.get_thread(user["user_id"], thread_id)
         if thread is None:
             raise HTTPException(status_code=404, detail="Thread not found.")
 

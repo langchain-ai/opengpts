@@ -10,7 +10,7 @@ For the time being, upload and ingestion are coupled
 from __future__ import annotations
 
 import os
-from typing import Any, BinaryIO, List, Optional
+from typing import Any, BinaryIO, List, Optional, Union
 
 from langchain_chroma import Chroma
 from langchain_community.document_loaders.blob_loaders.schema import Blob
@@ -26,6 +26,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter, TextSplitte
 
 from app.ingest import ingest_blob
 from app.parsing import MIMETYPE_BASED_PARSER
+from app.storage.settings import StorageType, settings
 
 
 def _guess_mimetype(file_bytes: bytes) -> str:
@@ -54,25 +55,41 @@ def _convert_ingestion_input_to_blob(data: BinaryIO) -> Blob:
     )
 
 
-def _determine_azure_or_openai_embeddings() -> Chroma:
+def _get_embedding_function() -> Union[OpenAIEmbeddings, AzureOpenAIEmbeddings]:
     if os.environ.get("OPENAI_API_KEY"):
-        return Chroma(
-            persist_directory="./chroma_db", embedding_function=OpenAIEmbeddings()
-        )
-    if os.environ.get("AZURE_OPENAI_API_KEY"):
-        return Chroma(
-            persist_directory="./chroma_db",
-            embedding_function=AzureOpenAIEmbeddings(
-                azure_endpoint=os.environ.get("AZURE_OPENAI_API_BASE"),
-                azure_deployment=os.environ.get(
-                    "AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT_NAME"
-                ),
-                openai_api_version=os.environ.get("AZURE_OPENAI_API_VERSION"),
-            ),
+        return OpenAIEmbeddings()
+    elif os.environ.get("AZURE_OPENAI_API_KEY"):
+        return AzureOpenAIEmbeddings(
+            azure_endpoint=os.environ.get("AZURE_OPENAI_API_BASE"),
+            azure_deployment=os.environ.get("AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT_NAME"),
+            openai_api_version=os.environ.get("AZURE_OPENAI_API_VERSION"),
         )
     raise ValueError(
         "Either OPENAI_API_KEY or AZURE_OPENAI_API_KEY needs to be set for embeddings to work."
     )
+
+
+def _get_vstore() -> VectorStore:
+    if settings.storage_type == StorageType.POSTGRES:
+        PG_CONNECTION_STRING = PGVector.connection_string_from_db_params(
+            driver="psycopg2",
+            host=settings.postgres.host,
+            port=settings.postgres.port,
+            database=settings.postgres.db,
+            user=settings.postgres.user,
+            password=settings.postgres.password,
+        )
+        return PGVector(
+            connection_string=PG_CONNECTION_STRING,
+            embedding_function=_get_embedding_function(),
+            use_jsonb=True,
+        )
+    elif settings.storage_type == StorageType.SQLITE:
+        return Chroma(
+            persist_directory="./chroma_db",
+            embedding_function=_get_embedding_function(),
+        )
+    raise NotImplementedError()
 
 
 class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
@@ -131,15 +148,7 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
         return ids
 
 
-PG_CONNECTION_STRING = PGVector.connection_string_from_db_params(
-    driver="psycopg2",
-    host=os.environ["POSTGRES_HOST"],
-    port=int(os.environ["POSTGRES_PORT"]),
-    database=os.environ["POSTGRES_DB"],
-    user=os.environ["POSTGRES_USER"],
-    password=os.environ["POSTGRES_PASSWORD"],
-)
-vstore = _determine_azure_or_openai_embeddings()
+vstore = _get_vstore()
 
 
 ingest_runnable = IngestRunnable(

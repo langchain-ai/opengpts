@@ -1,30 +1,12 @@
 version: "3"
 
 services:
-  postgres:
-    image: pgvector/pgvector:pg16
-    healthcheck:
-      test: pg_isready -U $POSTGRES_USER
-      start_interval: 1s
-      start_period: 5s
-      interval: 5s
-      retries: 5
-    ports:
-      - "5433:5432"
-    env_file:
-      - .env
+  sqlite-setup:
+    build:
+      context: tools/sqlite_migrate
     volumes:
-      - ./postgres-volume:/var/lib/postgresql/data
-  postgres-setup:
-    image: migrate/migrate
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - ./backend/migrations:/migrations
-    env_file:
-      - .env
-    command: ["-path", "/migrations", "-database", "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:$POSTGRES_PORT/$POSTGRES_DB?sslmode=disable", "up"]
+      - ./backend:/backend
+    command: ["migrate", "-path", "/backend/migrations", "-database", "sqlite3://opengpts.db", "up"]
   backend:
     container_name: opengpts-backend
     build:
@@ -32,14 +14,14 @@ services:
     ports:
       - "8100:8000" # Backend is accessible on localhost:8100
     depends_on:
-      postgres-setup:
+      sqlite-setup:
         condition: service_completed_successfully
     env_file:
       - .env
     volumes:
       - ./backend:/backend
     environment:
-      POSTGRES_HOST: "postgres"
+      STORAGE_TYPE: "sqlite"
     command:
       - --reload
   frontend:
