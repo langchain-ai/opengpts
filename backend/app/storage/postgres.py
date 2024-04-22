@@ -172,12 +172,14 @@ class PostgresStorage(BaseStorage):
     async def get_or_create_user(self, sub: str) -> tuple[User, bool]:
         """Returns a tuple of the user and a boolean indicating whether the user was created."""
         async with get_pg_pool().acquire() as conn:
-            if user := await conn.fetchrow('SELECT * FROM "user" WHERE sub = $1', sub):
-                return user, False
             user = await conn.fetchrow(
-                'INSERT INTO "user" (sub) VALUES ($1) RETURNING *', sub
+                'INSERT INTO "user" (sub) VALUES ($1) ON CONFLICT (sub) DO NOTHING RETURNING *',
+                sub,
             )
-            return user, True
+            if user:
+                return user, True
+            user = await conn.fetchrow('SELECT * FROM "user" WHERE sub = $1', sub)
+            return user, False
 
     async def delete_thread(self, user_id: str, thread_id: str) -> None:
         """Delete a thread by ID."""
