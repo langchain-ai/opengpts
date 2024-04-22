@@ -36,7 +36,7 @@ Because this is open source, if you do not like those architectures or want to m
 ## Quickstart with Docker
 
 This project supports a Docker-based setup, streamlining installation and execution. It automatically builds images for 
-the frontend and backend and sets up Postgres using docker-compose.
+the frontend and backend and sets up either SQLite or Postgres using docker-compose.
 
 
 1. **Prerequisites:**  
@@ -53,7 +53,7 @@ the frontend and backend and sets up Postgres using docker-compose.
 
 3. **Set Up Environment Variables:**  
    Create a `.env` file in the root directory of the project by copying `.env.example` as a template, and add the 
-   following environment variables:
+   following environment variables (if you want to use SQLite, you can skip the Postgres-related variables):
    ```shell
    # At least one language model API key is required
    OPENAI_API_KEY=sk-...
@@ -71,14 +71,18 @@ the frontend and backend and sets up Postgres using docker-compose.
 
 
 4. **Run with Docker Compose:**  
-   In the root directory of the project, execute:
+   In the root directory of the project, execute one of the following commands to start the services:
 
-   ```
+   ```shell
+   # For SQLite based setup
    docker compose up
+
+   # For Postgres based setup
+   docker compose -f docker-compose.pg.yml up
    ```
 
    This command builds the Docker images for the frontend and backend from their respective Dockerfiles and starts all 
-   necessary services, including Postgres.
+   necessary services, including SQLite/Postgres.
 
 5. **Access the Application:**  
    With the services running, access the frontend at [http://localhost:5173](http://localhost:5173), substituting `5173` with the 
@@ -87,8 +91,12 @@ the frontend and backend and sets up Postgres using docker-compose.
 
 6. **Rebuilding After Changes:**  
    If you make changes to either the frontend or backend, rebuild the Docker images to reflect these changes. Run:
-   ```
+   ```shell
+   # For SQLite based setup
    docker compose up --build
+
+   # For Postgres based setup
+   docker compose -f docker-compose.pg.yml up --build
    ```
    This command rebuilds the images with your latest changes and restarts the services.
 
@@ -119,6 +127,16 @@ pip install langchain-community
 brew install libmagic
 ```
 
+### Persistence Layer
+
+The backend supports using SQLite and Postgres for saving agent configurations and chat message history. Set the `STORAGE_TYPE` environment variable to `sqlite` or `postgres`:
+
+```shell
+export STORAGE_TYPE=postgres
+```
+
+SQLite requires no configuration (apart from [running migrations](####migrations)). The database file will be created in the `backend` directory. However, to configure and use Postgres, follow the instructions below:
+
 **Install Postgres and the Postgres Vector Extension**
 ```
 brew install postgresql pgvector
@@ -127,8 +145,7 @@ brew services start postgresql
 
 **Configure persistence layer**
 
-The backend uses Postgres for saving agent configurations and chat message history.
-In order to use this, you need to set the following environment variables:
+Set the following environment variables:
 
 ```shell
 export POSTGRES_HOST=localhost
@@ -152,9 +169,9 @@ psql -d opengpts
 CREATE ROLE postgres WITH LOGIN SUPERUSER CREATEDB CREATEROLE;
 ```
 
-**Install Golang Migrate**
+#### Migrations
 
-Database migrations are managed with [golang-migrate](https://github.com/golang-migrate/migrate). 
+Database migrations for both SQLite and Postgres are managed with [golang-migrate](https://github.com/golang-migrate/migrate). 
 
 On MacOS, you can install it with `brew install golang-migrate`. Instructions for other OSs or the Golang toolchain, 
 can be found [here](https://github.com/golang-migrate/migrate/blob/master/cmd/migrate/README.md#installation).
@@ -164,7 +181,7 @@ Once `golang-migrate` is installed, you can run all the migrations with:
 make migrate
 ```
 
-This will enable the backend to use Postgres as a vector database and create the initial tables.
+This will create the initial tables.
 
 
 **Install backend dependencies**
@@ -176,7 +193,7 @@ poetry install
 
 **Alternate vector databases**
 
-The instructions above use Postgres as a vector database,
+The instructions above use Postgres or Chroma DB (for SQLite based setup) as a vector database,
 although you can easily switch this out to use any of the 50+ vector databases in LangChain.
 
 **Set up language models**
