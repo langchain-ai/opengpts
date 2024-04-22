@@ -27,7 +27,7 @@ migrate:
 
 test:
 	# We need to update handling of env variables for tests
-	YDC_API_KEY=placeholder OPENAI_API_KEY=placeholder poetry run pytest $(TEST_FILE)
+	STORAGE_TYPE=postgres YDC_API_KEY=placeholder OPENAI_API_KEY=placeholder poetry run pytest $(TEST_FILE)
 
 
 test_watch:
