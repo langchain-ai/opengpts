@@ -107,7 +107,9 @@ class PostgresStorage(BaseStorage):
                 user_id,
             )
 
-    async def get_thread_state(self, *, user_id: str, thread_id: str, assistant_id: str):
+    async def get_thread_state(
+        self, *, user_id: str, thread_id: str, assistant_id: str
+    ):
         """Get state for a thread."""
         assistant = await self.get_assistant(user_id, assistant_id)
         state = await agent.aget_state(
@@ -143,7 +145,9 @@ class PostgresStorage(BaseStorage):
             values,
         )
 
-    async def get_thread_history(self, *, user_id: str, thread_id: str, assistant_id: str):
+    async def get_thread_history(
+        self, *, user_id: str, thread_id: str, assistant_id: str
+    ):
         """Get the history of a thread."""
         assistant = await self.get_assistant(user_id, assistant_id)
         return [
