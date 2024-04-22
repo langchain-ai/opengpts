@@ -160,7 +160,7 @@ class SqliteCheckpointer(AsyncSqliteSaver):
         serde: Optional[SerializerProtocol] = None,
         at: Optional[CheckpointAt] = None,
     ) -> None:
-        super().__init__(serde=serde, at=at)
+        super().__init__(conn=None, serde=serde, at=at)
 
     @property
     def config_specs(self) -> list[ConfigurableFieldSpec]:
