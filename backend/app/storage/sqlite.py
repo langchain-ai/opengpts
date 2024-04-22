@@ -4,8 +4,9 @@ from typing import Any, Optional, Sequence, Union
 from uuid import uuid4
 
 from langchain_core.messages import AnyMessage
+from langchain_core.runnables import RunnableConfig
 
-from app.agent import AgentType, get_agent_executor
+from app.agent import agent
 from app.lifespan import sqlite_conn
 from app.schema import Assistant, Thread, User
 from app.storage.base import BaseStorage
@@ -130,10 +131,17 @@ class SqliteStorage(BaseStorage):
             row = await cur.fetchone()
             return Thread(**dict(row)) if row else None
 
-    async def get_thread_state(self, user_id: str, thread_id: str):
+    async def get_thread_state(self, *, user_id: str, thread_id: str, assistant_id: str):
         """Get state for a thread."""
-        app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
-        state = await app.aget_state({"configurable": {"thread_id": thread_id}})
+        assistant = await self.get_assistant(user_id, assistant_id)
+        state = await agent.aget_state(
+            {
+                "configurable": {
+                    **assistant["config"]["configurable"],
+                    "thread_id": thread_id,
+                }
+            }
+        )
         return {
             "values": state.values,
             "next": state.next,
@@ -141,17 +149,27 @@ class SqliteStorage(BaseStorage):
 
     async def update_thread_state(
         self,
-        user_id: str,
-        thread_id: str,
+        config: RunnableConfig,
         values: Union[Sequence[AnyMessage], dict[str, Any]],
+        *,
+        user_id: str,
+        assistant_id: str,
     ):
         """Add state to a thread."""
-        app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
-        await app.aupdate_state({"configurable": {"thread_id": thread_id}}, values)
+        assistant = await self.get_assistant(user_id, assistant_id)
+        await agent.aupdate_state(
+            {
+                "configurable": {
+                    **assistant["config"]["configurable"],
+                    **config["configurable"],
+                }
+            },
+            values,
+        )
 
-    async def get_thread_history(self, user_id: str, thread_id: str):
+    async def get_thread_history(self, *, user_id: str, thread_id: str, assistant_id: str):
         """Get the history of a thread."""
-        app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
+        assistant = await self.get_assistant(user_id, assistant_id)
         return [
             {
                 "values": c.values,
@@ -159,8 +177,13 @@ class SqliteStorage(BaseStorage):
                 "config": c.config,
                 "parent": c.parent_config,
             }
-            async for c in app.aget_state_history(
-                {"configurable": {"thread_id": thread_id}}
+            async for c in agent.aget_state_history(
+                {
+                    "configurable": {
+                        **assistant["config"]["configurable"],
+                        "thread_id": thread_id,
+                    }
+                }
             )
         ]
 

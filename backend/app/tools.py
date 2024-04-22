@@ -277,13 +277,13 @@ def _get_wikipedia():
 @lru_cache(maxsize=1)
 def _get_tavily():
     tavily_search = TavilySearchAPIWrapper()
-    return TavilySearchResults(api_wrapper=tavily_search)
+    return TavilySearchResults(api_wrapper=tavily_search, name="search_tavily")
 
 
 @lru_cache(maxsize=1)
 def _get_tavily_answer():
     tavily_search = TavilySearchAPIWrapper()
-    return _TavilyAnswer(api_wrapper=tavily_search)
+    return _TavilyAnswer(api_wrapper=tavily_search, name="search_tavily_answer")
 
 
 def _get_action_server(**kwargs: ActionServerConfig):

@@ -301,6 +301,8 @@ This can be a really powerful and flexible architecture. This is probably closes
 these also can be not super reliable, and generally only work with the more performant models (and even then they can 
 mess up). Therefore, we introduced a few simpler architecures.
 
+Assistants are implemented with [LangGraph](https://github.com/langchain-ai/langgraph) `MessageGraph`. A `MessageGraph` is a graph that models its state as a `list` of messages.
+
 **RAGBot**
 
 One of the big use cases of the GPT store is uploading files and giving the bot knowledge of those files. What would it 
@@ -321,6 +323,8 @@ pretty well with a wider variety of models (including lots of open source models
 you don’t NEED the flexibility of an assistant (eg you know users will be looking up information every time) then it 
 can be more focused. And third, compared to the final architecture below it can use external knowledge.
 
+RAGBot is implemented with [LangGraph](https://github.com/langchain-ai/langgraph) `StateGraph`. A `StateGraph` is a generalized graph that can model arbitrary state (i.e. `dict`), not just a `list` of messages.
+
 **ChatBot**
 
 The final architecture is dead simple - just a call to a language model, parameterized by a system message. This allows 
@@ -330,6 +334,8 @@ system messages at the end of the day, and CharacterAI is crushing it despite la
 well.
 
 ![](_static/chatbot.png)
+
+ChatBot is implemented with [LangGraph](https://github.com/langchain-ai/langgraph) `StateGraph`. A `StateGraph` is a generalized graph that can model arbitrary state (i.e. `dict`), not just a `list` of messages.
 
 ### LLMs
 

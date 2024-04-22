@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, List, Optional, Sequence, Union
 
 from langchain_core.messages import AnyMessage
+from langchain_core.runnables import RunnableConfig
 
-from app.agent import AgentType, get_agent_executor
+from app.agent import agent
 from app.lifespan import get_pg_pool
 from app.schema import Assistant, Thread, User
 from app.storage.base import BaseStorage
@@ -106,10 +107,17 @@ class PostgresStorage(BaseStorage):
                 user_id,
             )
 
-    async def get_thread_state(self, user_id: str, thread_id: str):
+    async def get_thread_state(self, *, user_id: str, thread_id: str, assistant_id: str):
         """Get state for a thread."""
-        app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
-        state = await app.aget_state({"configurable": {"thread_id": thread_id}})
+        assistant = await self.get_assistant(user_id, assistant_id)
+        state = await agent.aget_state(
+            {
+                "configurable": {
+                    **assistant["config"]["configurable"],
+                    "thread_id": thread_id,
+                }
+            }
+        )
         return {
             "values": state.values,
             "next": state.next,
@@ -117,17 +125,27 @@ class PostgresStorage(BaseStorage):
 
     async def update_thread_state(
         self,
+        config: RunnableConfig,
+        values: Union[Sequence[AnyMessage], dict[str, Any]],
+        *,
         user_id: str,
-        thread_id: str,
-        values: Union[Sequence[AnyMessage], Dict[str, Any]],
+        assistant_id: str,
     ):
         """Add state to a thread."""
-        app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
-        await app.aupdate_state({"configurable": {"thread_id": thread_id}}, values)
+        assistant = await self.get_assistant(user_id, assistant_id)
+        await agent.aupdate_state(
+            {
+                "configurable": {
+                    **assistant["config"]["configurable"],
+                    **config["configurable"],
+                }
+            },
+            values,
+        )
 
-    async def get_thread_history(self, user_id: str, thread_id: str):
+    async def get_thread_history(self, *, user_id: str, thread_id: str, assistant_id: str):
         """Get the history of a thread."""
-        app = get_agent_executor([], AgentType.GPT_35_TURBO, "", False)
+        assistant = await self.get_assistant(user_id, assistant_id)
         return [
             {
                 "values": c.values,
@@ -135,8 +153,13 @@ class PostgresStorage(BaseStorage):
                 "config": c.config,
                 "parent": c.parent_config,
             }
-            async for c in app.aget_state_history(
-                {"configurable": {"thread_id": thread_id}}
+            async for c in agent.aget_state_history(
+                {
+                    "configurable": {
+                        **assistant["config"]["configurable"],
+                        "thread_id": thread_id,
+                    }
+                }
             )
         ]
 
