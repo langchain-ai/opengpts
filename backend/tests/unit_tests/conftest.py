@@ -9,6 +9,7 @@ from app.auth.settings import AuthType
 from app.auth.settings import settings as auth_settings
 from app.lifespan import get_pg_pool, lifespan
 from app.server import app
+from app.storage.settings import settings as storage_settings
 
 auth_settings.auth_type = AuthType.NOOP
 
@@ -16,16 +17,16 @@ auth_settings.auth_type = AuthType.NOOP
 os.environ["OPENAI_API_KEY"] = "test"
 
 TEST_DB = "test"
-assert os.environ["POSTGRES_DB"] != TEST_DB, "Test and main database conflict."
-os.environ["POSTGRES_DB"] = TEST_DB
+assert storage_settings.postgres.db != TEST_DB, "Test and main database conflict."
+storage_settings.postgres.db = TEST_DB
 
 
 async def _get_conn() -> asyncpg.Connection:
     return await asyncpg.connect(
-        user=os.environ["POSTGRES_USER"],
-        password=os.environ["POSTGRES_PASSWORD"],
-        host=os.environ["POSTGRES_HOST"],
-        port=os.environ["POSTGRES_PORT"],
+        user=storage_settings.postgres.user,
+        password=storage_settings.postgres.password,
+        host=storage_settings.postgres.host,
+        port=storage_settings.postgres.port,
         database="postgres",
     )
 
@@ -49,7 +50,21 @@ async def _drop_test_db() -> None:
 
 
 def _migrate_test_db() -> None:
-    subprocess.run(["make", "migrate"], check=True)
+    subprocess.run(
+        [
+            "migrate",
+            "-database",
+            (
+                f"postgres://{storage_settings.postgres.user}:{storage_settings.postgres.password}"
+                f"@{storage_settings.postgres.host}:{storage_settings.postgres.port}"
+                f"/{storage_settings.postgres.db}?sslmode=disable"
+            ),
+            "-path",
+            "./migrations/postgres",
+            "up",
+        ],
+        check=True,
+    )
 
 
 @pytest.fixture(scope="session")
