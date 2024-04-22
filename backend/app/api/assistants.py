@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 from app.auth.handlers import AuthedUser
 from app.schema import Assistant
-from app.storage import storage
+from app.storage.storage import storage
 
 router = APIRouter()
 

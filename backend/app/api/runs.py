@@ -14,7 +14,7 @@ from sse_starlette import EventSourceResponse
 
 from app.agent import agent
 from app.auth.handlers import AuthedUser
-from app.storage import storage
+from app.storage.storage import storage
 from app.stream import astream_messages, to_sse
 
 router = APIRouter()

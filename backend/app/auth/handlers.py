@@ -9,7 +9,7 @@ from fastapi.security.http import HTTPBearer
 
 from app.auth.settings import AuthType, settings
 from app.schema import User
-from app.storage import storage
+from app.storage.storage import storage
 
 
 class AuthHandler(ABC):

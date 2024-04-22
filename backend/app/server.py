@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api import router as api_router
 from app.auth.handlers import AuthedUser
 from app.lifespan import lifespan
-from app.storage import storage
+from app.storage.storage import storage
 from app.upload import ingest_runnable
 
 logger = logging.getLogger(__name__)
