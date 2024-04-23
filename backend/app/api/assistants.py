@@ -1,7 +1,7 @@
-from typing import Annotated, List, Optional
+from typing import Annotated, List
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, HTTPException, Path
 from pydantic import BaseModel, Field
 
 import app.storage as storage
@@ -9,8 +9,6 @@ from app.auth.handlers import AuthedUser
 from app.schema import Assistant
 
 router = APIRouter()
-
-FEATURED_PUBLIC_ASSISTANTS = []
 
 
 class AssistantPayload(BaseModel):
@@ -31,15 +29,9 @@ async def list_assistants(user: AuthedUser) -> List[Assistant]:
 
 
 @router.get("/public/")
-async def list_public_assistants(
-    shared_id: Annotated[
-        Optional[str], Query(description="ID of a publicly shared assistant.")
-    ] = None,
-) -> List[Assistant]:
+async def list_public_assistants() -> List[Assistant]:
     """List all public assistants."""
-    return await storage.list_public_assistants(
-        FEATURED_PUBLIC_ASSISTANTS + ([shared_id] if shared_id else [])
-    )
+    return await storage.list_public_assistants()
 
 
 @router.get("/{aid}")
