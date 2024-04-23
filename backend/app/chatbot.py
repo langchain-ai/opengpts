@@ -1,10 +1,11 @@
 from typing import Annotated, List
 
-from app.message_types import add_messages_liberal
 from langchain_core.language_models.base import LanguageModelLike
 from langchain_core.messages import BaseMessage, SystemMessage
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph.state import StateGraph
+
+from app.message_types import add_messages_liberal
 
 
 def get_chatbot_executor(

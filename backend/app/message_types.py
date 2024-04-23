@@ -6,7 +6,7 @@ from langchain_core.messages import (
     MessageLikeRepresentation,
     ToolMessage,
 )
-from langgraph.graph.message import add_messages, Messages
+from langgraph.graph.message import Messages, add_messages
 
 
 class LiberalFunctionMessage(FunctionMessage):
