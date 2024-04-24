@@ -206,3 +206,19 @@ async def delete_thread(user_id: str, thread_id: str):
             thread_id,
             user_id,
         )
+
+
+async def delete_assistant(user_id: str, assistant_id: str):
+    """Delete an assistant by ID.
+    
+    Args:
+        user_id: The user's ID.
+        assistant_id: The assistant's ID.
+        
+    """
+    async with get_pg_pool().acquire() as conn:
+        await conn.execute(
+            "DELETE FROM assistant WHERE assistant_id = $1 AND user_id = $2",
+            assistant_id,
+            user_id,
+        )
