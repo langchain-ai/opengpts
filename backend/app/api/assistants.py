@@ -83,3 +83,18 @@ async def upsert_assistant(
         config=payload.config,
         public=payload.public,
     )
+
+
+@router.delete("/{aid}")
+async def delete_assistant(
+    user: AuthedUser,
+    aid: AssistantID,
+) -> dict:
+    """Delete an assistant by ID."""
+    assistant = await storage.get_assistant(user["user_id"], aid)
+    if not assistant:
+        raise HTTPException(status_code=404, detail="Assistant not found")
+    if not assistant.get('public') and assistant.get('user_id') != user["user_id"]:
+        raise HTTPException(status_code=403, detail="Unauthorized to delete this assistant")
+    await storage.delete_assistant(user["user_id"], aid)
+    return {"message": "Assistant deleted successfully"}
