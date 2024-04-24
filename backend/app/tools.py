@@ -271,12 +271,12 @@ def _get_you_search():
 
 @lru_cache(maxsize=1)
 def _get_serper_search():
-    #os.environ["SERPAPI_API_KEY"] = "API key from https://serper.dev/api-key"
+    #os.environ["SERPER_API_KEY"] = "API key from https://serper.dev/api-key"
     return GoogleSerperRun(api_wrapper=GoogleSerperAPIWrapper(), args_schema=GoogleSerperInput)
 
 @lru_cache(maxsize=1)
 def _get_serper_search_result():
-    #os.environ["SERPAPI_API_KEY"] = "API key from https://serper.dev/api-key"
+    #os.environ["SERPER_API_KEY"] = "API key from https://serper.dev/api-key"
     return GoogleSerperResults(api_wrapper=GoogleSerperAPIWrapper(), args_schema=GoogleSerperInput)
 
 
