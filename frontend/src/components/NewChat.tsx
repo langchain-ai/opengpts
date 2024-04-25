@@ -15,6 +15,7 @@ interface NewChatProps extends ConfigListProps {
   configSchema: Schemas["configSchema"];
   configDefaults: Schemas["configDefaults"];
   enterConfig: (id: string | null) => void;
+  deleteConfig: (id: string) => Promise<void>;
   startChat: (
     config: ConfigInterface,
     message: MessageWithFiles,
@@ -44,6 +45,7 @@ export function NewChat(props: NewChatProps) {
             configs={props.configs}
             currentConfig={assistantConfig}
             enterConfig={(id) => navigator(`/assistant/${id}`)}
+            deleteConfig={props.deleteConfig}
           />
         </div>
 
