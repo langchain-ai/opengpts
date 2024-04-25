@@ -107,6 +107,7 @@ async def get_thread_state(*, user_id: str, thread_id: str, assistant_id: str):
             "configurable": {
                 **assistant["config"]["configurable"],
                 "thread_id": thread_id,
+                "assistant_id": assistant_id,
             }
         }
     )
@@ -130,6 +131,7 @@ async def update_thread_state(
             "configurable": {
                 **assistant["config"]["configurable"],
                 **config["configurable"],
+                "assistant_id": assistant_id,
             }
         },
         values,
@@ -151,6 +153,7 @@ async def get_thread_history(*, user_id: str, thread_id: str, assistant_id: str)
                 "configurable": {
                     **assistant["config"]["configurable"],
                     "thread_id": thread_id,
+                    "assistant_id": assistant_id,
                 }
             }
         )
