@@ -78,7 +78,21 @@ async def stream_run(
     """Create a run."""
     input_, config = await _run_input_and_config(payload, user["user_id"])
 
-    return EventSourceResponse(to_sse(astream_state(agent, input_, config)))
+    # DEBUG When being rate limitted, skip generating actual events.
+    async def fake_event_stream():
+        import orjson
+
+        for x in range(3):
+            yield {
+                "event": "metadata",
+                "data": orjson.dumps(
+                    {"run_id": f"irothschild debug fake run id {x}"}
+                ).decode(),
+            }
+
+    return EventSourceResponse(fake_event_stream())
+
+    # return EventSourceResponse(to_sse(astream_state(agent, input_, config)))
 
 
 @router.get("/input_schema")

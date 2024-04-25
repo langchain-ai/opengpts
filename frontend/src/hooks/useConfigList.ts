@@ -92,13 +92,36 @@ export function useConfigList(): ConfigListProps {
         }, new FormData());
         formData.append(
           "config",
-          JSON.stringify({ configurable: { assistant_id } }),
+          JSON.stringify({ configurable: { assistant_id, show_progress_bar: true } }),
         );
-        await fetch(`/ingest`, {
-          method: "POST",
-          body: formData,
+
+        const response = await fetch(`/ingest`, {
+            method: "POST",
+            body: formData,
         });
+        if (response.body instanceof ReadableStream) {
+          let total = formData.getAll("files").length
+          let progress = 0;
+
+          const reader = response.body.getReader();
+          reader.read().then(function read_progress({ done, value }) {
+            if (done) {
+              return;
+            }
+            // If the server understands the progress bar, it will send messages like
+            // [0, msg0], [1, msg1], ...
+            // Check to make sure we are receiving well formed responses before
+            // printing progress info.
+            const data = new TextDecoder().decode(value);
+            const dataJson = JSON.parse(data);
+            if (dataJson instanceof Array && dataJson.length == 2 && typeof dataJson[0] === 'number') {
+              progress += 1;
+              console.log(`Progress ${progress} / ${total} (Data: ${data})`);
+            }
+            reader.read().then(read_progress);
+          });
       }
+
       setConfigs({ ...savedConfig, mine: true });
       return savedConfig.assistant_id;
     },
