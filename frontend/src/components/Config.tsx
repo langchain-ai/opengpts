@@ -412,11 +412,8 @@ function ToolSelectionField(props: {
   );
 }
 
-function PublicLink(props: { assistantId: string }) {
-  const currentLink = window.location.href;
-  const link = currentLink.includes(props.assistantId)
-    ? currentLink
-    : currentLink + "?shared_id=" + props.assistantId;
+function PublicLink() {
+  const link = window.location.href;
   return (
     <div className="flex rounded-md shadow-sm mb-4">
       <button
@@ -591,11 +588,7 @@ export function Config(props: {
       <PublicToggle enabled={isPublic} setEnabled={setPublic} />
     </div>
   ) : (
-    <>
-      {props.config?.public && (
-        <PublicLink assistantId={props.config?.assistant_id} />
-      )}
-    </>
+    <>{props.config?.public && <PublicLink />}</>
   );
   return (
     <form
