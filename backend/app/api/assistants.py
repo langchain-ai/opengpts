@@ -97,4 +97,4 @@ async def delete_assistant(
     if not assistant.get('public') and assistant.get('user_id') != user["user_id"]:
         raise HTTPException(status_code=403, detail="Unauthorized to delete this assistant")
     await storage.delete_assistant(user["user_id"], aid)
-    return {"message": "Assistant deleted successfully"}
+    return {"status": "ok"}
