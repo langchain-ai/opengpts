@@ -19,7 +19,7 @@ async def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
     """Get an assistant by ID."""
     async with get_pg_pool().acquire() as conn:
         return await conn.fetchrow(
-            "SELECT * FROM assistant WHERE assistant_id = $1 AND (user_id = $2 OR public = true)",
+            "SELECT * FROM assistant WHERE assistant_id = $1 AND (user_id = $2 OR public IS true)",
             assistant_id,
             user_id,
         )
@@ -28,7 +28,7 @@ async def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
 async def list_public_assistants() -> List[Assistant]:
     """List all the public assistants."""
     async with get_pg_pool().acquire() as conn:
-        return await conn.fetch(("SELECT * FROM assistant WHERE public = true;"))
+        return await conn.fetch(("SELECT * FROM assistant WHERE public IS true;"))
 
 
 async def put_assistant(
