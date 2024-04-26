@@ -112,7 +112,7 @@ export function useConfigList(): ConfigListProps {
         method: "DELETE",
       });
       setConfigs(
-        (configs?.filter((config) => config.assistant_id !== assistantId)) || []
+        configs?.filter((config) => config.assistant_id !== assistantId) || [],
       );
     },
     [configs],
