@@ -54,7 +54,7 @@ function ConfigItem(props: {
           >
             <PencilSquareIcon />
           </Link>
-          <Link
+          <button
             className="w-5"
             onClick={(event) => {
               event.stopPropagation();
@@ -62,13 +62,12 @@ function ConfigItem(props: {
             }}
           >
             <TrashIcon />
-          </Link>
+          </button>
         </div>
       </div>
     </li>
   );
 }
-
 
 export function ConfigList(props: {
   configs: ConfigListProps["configs"];
@@ -93,10 +92,10 @@ export function ConfigList(props: {
               deleteConfig={props.deleteConfig}
             />
           )) ?? (
-            <li className="leading-6 p-2 animate-pulse font-black text-gray-400 text-lg">
-              ...
-            </li>
-          )}
+          <li className="leading-6 p-2 animate-pulse font-black text-gray-400 text-lg">
+            ...
+          </li>
+        )}
       </ul>
 
       <div className="text-xs font-semibold leading-6 text-gray-400 mt-4">
@@ -114,10 +113,10 @@ export function ConfigList(props: {
               deleteConfig={props.deleteConfig}
             />
           )) ?? (
-            <li className="leading-6 p-2 animate-pulse font-black text-gray-400 text-lg">
-              ...
-            </li>
-          )}
+          <li className="leading-6 p-2 animate-pulse font-black text-gray-400 text-lg">
+            ...
+          </li>
+        )}
       </ul>
     </>
   );

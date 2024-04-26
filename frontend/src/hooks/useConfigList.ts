@@ -111,7 +111,9 @@ export function useConfigList(): ConfigListProps {
       await fetch(`/assistants/${assistantId}`, {
         method: "DELETE",
       });
-      setConfigs(configs?.filter(config => config.assistant_id !== assistantId));
+      setConfigs(
+        (configs?.filter((config) => config.assistant_id !== assistantId)) || []
+      );
     },
     [configs],
   );
