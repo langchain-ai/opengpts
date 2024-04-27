@@ -51,7 +51,7 @@ export function useConfigList(): ConfigListProps {
 
   useEffect(() => {
     async function fetchConfigs() {
-      const myConfigs = await fetch("/assistants/", {
+      const myConfigs = await fetch("/api/v1/assistants/", {
         headers: {
           Accept: "application/json",
         },
@@ -73,7 +73,7 @@ export function useConfigList(): ConfigListProps {
       assistantId?: string,
     ): Promise<string> => {
       const confResponse = await fetch(
-        assistantId ? `/assistants/${assistantId}` : "/assistants",
+        assistantId ? `/api/v1/assistants/${assistantId}` : "/api/v1/assistants",
         {
           method: assistantId ? "PUT" : "POST",
           body: JSON.stringify({ name, config, public: isPublic }),
@@ -94,7 +94,7 @@ export function useConfigList(): ConfigListProps {
           "config",
           JSON.stringify({ configurable: { assistant_id } }),
         );
-        await fetch(`/ingest`, {
+        await fetch(`/api/v1/ingest`, {
           method: "POST",
           body: formData,
         });

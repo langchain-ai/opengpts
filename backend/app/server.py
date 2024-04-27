@@ -25,7 +25,7 @@ ROOT = Path(__file__).parent.parent
 app.include_router(api_router)
 
 
-@app.post("/ingest", description="Upload files to the given assistant.")
+@app.post("/api/v1/ingest", description="Upload files to the given assistant.")
 async def ingest_files(
     files: list[UploadFile], user: AuthedUser, config: str = Form(...)
 ) -> None:
@@ -47,7 +47,7 @@ async def ingest_files(
     return ingest_runnable.batch([file.file for file in files], config)
 
 
-@app.get("/health")
+@app.get("/api/v1/health")
 async def health() -> dict:
     return {"status": "ok"}
 
