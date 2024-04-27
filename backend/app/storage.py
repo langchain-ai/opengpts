@@ -1,34 +1,57 @@
-from datetime import datetime, timezone
 from typing import Any, List, Optional, Sequence, Union
 
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import RunnableConfig
 
-from app.agent import agent
-from app.lifespan import get_pg_pool
+from app.lifespan import get_langserve, get_pg_pool
 from app.schema import Assistant, Thread, User
 
 
 async def list_assistants(user_id: str) -> List[Assistant]:
     """List all assistants for the current user."""
-    async with get_pg_pool().acquire() as conn:
-        return await conn.fetch("SELECT * FROM assistant WHERE user_id = $1", user_id)
+    assistants = await get_langserve().assistants.search(
+        metadata={"user_id": user_id}, limit=100
+    )
+    return [
+        Assistant(
+            assistant_id=a["assistant_id"],
+            updated_at=a["updated_at"],
+            config=a["config"],
+            **a["metadata"],
+        )
+        for a in assistants
+    ]
 
 
 async def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
     """Get an assistant by ID."""
-    async with get_pg_pool().acquire() as conn:
-        return await conn.fetchrow(
-            "SELECT * FROM assistant WHERE assistant_id = $1 AND (user_id = $2 OR public IS true)",
-            assistant_id,
-            user_id,
+    assistant = await get_langserve().assistants.get(assistant_id)
+    if (
+        assistant["metadata"]["user_id"] != user_id
+        and not assistant["metadata"]["public"]
+    ):
+        return None
+    else:
+        return Assistant(
+            assistant_id=assistant["assistant_id"],
+            updated_at=assistant["updated_at"],
+            config=assistant["config"],
+            **assistant["metadata"],
         )
 
 
 async def list_public_assistants() -> List[Assistant]:
     """List all the public assistants."""
-    async with get_pg_pool().acquire() as conn:
-        return await conn.fetch(("SELECT * FROM assistant WHERE public IS true;"))
+    assistants = await get_langserve().assistants.search(metadata={"public": True})
+    return [
+        Assistant(
+            assistant_id=a["assistant_id"],
+            updated_at=a["updated_at"],
+            config=a["config"],
+            **a["metadata"],
+        )
+        for a in assistants
+    ]
 
 
 async def put_assistant(
@@ -46,34 +69,20 @@ async def put_assistant(
     Returns:
         return the assistant model if no exception is raised.
     """
-    updated_at = datetime.now(timezone.utc)
-    async with get_pg_pool().acquire() as conn:
-        async with conn.transaction():
-            await conn.execute(
-                (
-                    "INSERT INTO assistant (assistant_id, user_id, name, config, updated_at, public) VALUES ($1, $2, $3, $4, $5, $6) "
-                    "ON CONFLICT (assistant_id) DO UPDATE SET "
-                    "user_id = EXCLUDED.user_id, "
-                    "name = EXCLUDED.name, "
-                    "config = EXCLUDED.config, "
-                    "updated_at = EXCLUDED.updated_at, "
-                    "public = EXCLUDED.public;"
-                ),
-                assistant_id,
-                user_id,
-                name,
-                config,
-                updated_at,
-                public,
-            )
-    return {
-        "assistant_id": assistant_id,
-        "user_id": user_id,
-        "name": name,
-        "config": config,
-        "updated_at": updated_at,
-        "public": public,
-    }
+    assistant = await get_langserve().assistants.upsert(
+        assistant_id,
+        "agent",
+        config,
+        metadata={"user_id": user_id, "public": public, "name": name},
+    )
+    return Assistant(
+        assistant_id=assistant["assistant_id"],
+        updated_at=assistant["updated_at"],
+        config=assistant["config"],
+        name=name,
+        public=public,
+        user_id=user_id,
+    )
 
 
 async def delete_assistant(user_id: str, assistant_id: str) -> None:
@@ -88,35 +97,40 @@ async def delete_assistant(user_id: str, assistant_id: str) -> None:
 
 async def list_threads(user_id: str) -> List[Thread]:
     """List all threads for the current user."""
-    async with get_pg_pool().acquire() as conn:
-        return await conn.fetch("SELECT * FROM thread WHERE user_id = $1", user_id)
+    threads = await get_langserve().threads.search(
+        metadata={"user_id": user_id}, limit=100
+    )
+
+    return [
+        Thread(
+            thread_id=t["thread_id"],
+            user_id=t["metadata"]["user_id"],
+            assistant_id=t["metadata"]["assistant_id"],
+            name=t["metadata"]["name"],
+            updated_at=t["updated_at"],
+        )
+        for t in threads
+    ]
 
 
 async def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
     """Get a thread by ID."""
-    async with get_pg_pool().acquire() as conn:
-        return await conn.fetchrow(
-            "SELECT * FROM thread WHERE thread_id = $1 AND user_id = $2",
-            thread_id,
-            user_id,
+    thread = await get_langserve().threads.get(thread_id)
+    if thread["metadata"]["user_id"] != user_id:
+        return None
+    else:
+        return Thread(
+            thread_id=thread["thread_id"],
+            user_id=thread["metadata"]["user_id"],
+            assistant_id=thread["metadata"]["assistant_id"],
+            name=thread["metadata"]["name"],
+            updated_at=thread["updated_at"],
         )
 
 
 async def get_thread_state(*, user_id: str, thread_id: str, assistant: Assistant):
     """Get state for a thread."""
-    state = await agent.aget_state(
-        {
-            "configurable": {
-                **assistant["config"]["configurable"],
-                "thread_id": thread_id,
-                "assistant_id": assistant["assistant_id"],
-            }
-        }
-    )
-    return {
-        "values": state.values,
-        "next": state.next,
-    }
+    return await get_langserve().threads.get_state(thread_id)
 
 
 async def update_thread_state(
@@ -127,86 +141,35 @@ async def update_thread_state(
     assistant: Assistant,
 ):
     """Add state to a thread."""
-    await agent.aupdate_state(
-        {
-            "configurable": {
-                **assistant["config"]["configurable"],
-                **config["configurable"],
-                "assistant_id": assistant["assistant_id"],
-            }
-        },
-        values,
-    )
+    return await get_langserve().threads.update_state(config, values)
 
 
 async def get_thread_history(*, user_id: str, thread_id: str, assistant: Assistant):
     """Get the history of a thread."""
-    return [
-        {
-            "values": c.values,
-            "next": c.next,
-            "config": c.config,
-            "parent": c.parent_config,
-        }
-        async for c in agent.aget_state_history(
-            {
-                "configurable": {
-                    **assistant["config"]["configurable"],
-                    "thread_id": thread_id,
-                    "assistant_id": assistant["assistant_id"],
-                }
-            }
-        )
-    ]
+    raise NotImplementedError
 
 
 async def put_thread(
     user_id: str, thread_id: str, *, assistant_id: str, name: str
 ) -> Thread:
     """Modify a thread."""
-    updated_at = datetime.now(timezone.utc)
-    assistant = await get_assistant(user_id, assistant_id)
-    metadata = (
-        {"assistant_type": assistant["config"]["configurable"]["type"]}
-        if assistant
-        else None
+    thread = await get_langserve().threads.upsert(
+        thread_id,
+        metadata={"user_id": user_id, "assistant_id": assistant_id, "name": name},
     )
-    async with get_pg_pool().acquire() as conn:
-        await conn.execute(
-            (
-                "INSERT INTO thread (thread_id, user_id, assistant_id, name, updated_at, metadata) VALUES ($1, $2, $3, $4, $5, $6) "
-                "ON CONFLICT (thread_id) DO UPDATE SET "
-                "user_id = EXCLUDED.user_id,"
-                "assistant_id = EXCLUDED.assistant_id, "
-                "name = EXCLUDED.name, "
-                "updated_at = EXCLUDED.updated_at, "
-                "metadata = EXCLUDED.metadata;"
-            ),
-            thread_id,
-            user_id,
-            assistant_id,
-            name,
-            updated_at,
-            metadata,
-        )
-        return {
-            "thread_id": thread_id,
-            "user_id": user_id,
-            "assistant_id": assistant_id,
-            "name": name,
-            "updated_at": updated_at,
-            "metadata": metadata,
-        }
+    return Thread(
+        thread_id=thread["thread_id"],
+        user_id=thread["metadata"].pop("user_id"),
+        assistant_id=thread["metadata"].pop("assistant_id"),
+        name=thread["metadata"].pop("name"),
+        updated_at=thread["updated_at"],
+        metadata=thread["metadata"],
+    )
 
 
 async def delete_thread(user_id: str, thread_id: str):
     """Delete a thread by ID."""
-    async with get_pg_pool().acquire() as conn:
-        await conn.execute(
-            "DELETE FROM thread WHERE thread_id = $1 AND user_id = $2",
-            thread_id,
-            user_id,
-        )
+    await get_langserve().threads.delete(thread_id)
 
 
 async def get_or_create_user(sub: str) -> tuple[User, bool]:

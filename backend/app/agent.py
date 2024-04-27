@@ -76,6 +76,15 @@ DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 CHECKPOINTER = PostgresCheckpoint(serde=pickle, at=CheckpointAt.END_OF_STEP)
 
 
+hack = get_tools_agent_executor(
+    [TOOLS[AvailableTools.TAVILY]()],
+    get_openai_llm(),
+    DEFAULT_SYSTEM_MESSAGE,
+    True,
+    CHECKPOINTER,
+)
+
+
 def get_agent_executor(
     tools: list,
     agent: AgentType,
@@ -254,69 +263,69 @@ chatbot = (
 )
 
 
-class ConfigurableRetrieval(RunnableBinding):
-    llm_type: LLMType
-    system_message: str = DEFAULT_SYSTEM_MESSAGE
-    assistant_id: Optional[str] = None
-    thread_id: Optional[str] = None
-    user_id: Optional[str] = None
+# class ConfigurableRetrieval(RunnableBinding):
+#     llm_type: LLMType
+#     system_message: str = DEFAULT_SYSTEM_MESSAGE
+#     assistant_id: Optional[str] = None
+#     thread_id: Optional[str] = None
+#     user_id: Optional[str] = None
 
-    def __init__(
-        self,
-        *,
-        llm_type: LLMType = LLMType.GPT_35_TURBO,
-        system_message: str = DEFAULT_SYSTEM_MESSAGE,
-        assistant_id: Optional[str] = None,
-        thread_id: Optional[str] = None,
-        kwargs: Optional[Mapping[str, Any]] = None,
-        config: Optional[Mapping[str, Any]] = None,
-        **others: Any,
-    ) -> None:
-        others.pop("bound", None)
-        retriever = get_retriever(assistant_id, thread_id)
-        if llm_type == LLMType.GPT_35_TURBO:
-            llm = get_openai_llm()
-        elif llm_type == LLMType.GPT_4:
-            llm = get_openai_llm(gpt_4=True)
-        elif llm_type == LLMType.AZURE_OPENAI:
-            llm = get_openai_llm(azure=True)
-        elif llm_type == LLMType.CLAUDE2:
-            llm = get_anthropic_llm()
-        elif llm_type == LLMType.BEDROCK_CLAUDE2:
-            llm = get_anthropic_llm(bedrock=True)
-        elif llm_type == LLMType.GEMINI:
-            llm = get_google_llm()
-        elif llm_type == LLMType.MIXTRAL:
-            llm = get_mixtral_fireworks()
-        elif llm_type == LLMType.OLLAMA:
-            llm = get_ollama_llm()
-        else:
-            raise ValueError("Unexpected llm type")
-        chatbot = get_retrieval_executor(llm, retriever, system_message, CHECKPOINTER)
-        super().__init__(
-            llm_type=llm_type,
-            system_message=system_message,
-            bound=chatbot,
-            kwargs=kwargs or {},
-            config=config or {},
-        )
+#     def __init__(
+#         self,
+#         *,
+#         llm_type: LLMType = LLMType.GPT_35_TURBO,
+#         system_message: str = DEFAULT_SYSTEM_MESSAGE,
+#         assistant_id: Optional[str] = None,
+#         thread_id: Optional[str] = None,
+#         kwargs: Optional[Mapping[str, Any]] = None,
+#         config: Optional[Mapping[str, Any]] = None,
+#         **others: Any,
+#     ) -> None:
+#         others.pop("bound", None)
+#         retriever = get_retriever(assistant_id, thread_id)
+#         if llm_type == LLMType.GPT_35_TURBO:
+#             llm = get_openai_llm()
+#         elif llm_type == LLMType.GPT_4:
+#             llm = get_openai_llm(gpt_4=True)
+#         elif llm_type == LLMType.AZURE_OPENAI:
+#             llm = get_openai_llm(azure=True)
+#         elif llm_type == LLMType.CLAUDE2:
+#             llm = get_anthropic_llm()
+#         elif llm_type == LLMType.BEDROCK_CLAUDE2:
+#             llm = get_anthropic_llm(bedrock=True)
+#         elif llm_type == LLMType.GEMINI:
+#             llm = get_google_llm()
+#         elif llm_type == LLMType.MIXTRAL:
+#             llm = get_mixtral_fireworks()
+#         elif llm_type == LLMType.OLLAMA:
+#             llm = get_ollama_llm()
+#         else:
+#             raise ValueError("Unexpected llm type")
+#         chatbot = get_retrieval_executor(llm, retriever, system_message, CHECKPOINTER)
+#         super().__init__(
+#             llm_type=llm_type,
+#             system_message=system_message,
+#             bound=chatbot,
+#             kwargs=kwargs or {},
+#             config=config or {},
+#         )
 
 
-chat_retrieval = (
-    ConfigurableRetrieval(llm_type=LLMType.GPT_35_TURBO, checkpoint=CHECKPOINTER)
-    .configurable_fields(
-        llm_type=ConfigurableField(id="llm_type", name="LLM Type"),
-        system_message=ConfigurableField(id="system_message", name="Instructions"),
-        assistant_id=ConfigurableField(
-            id="assistant_id", name="Assistant ID", is_shared=True
-        ),
-        thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
-    )
-    .with_types(
-        input_type=Dict[str, Any],
-        output_type=Dict[str, Any],
-    )
-)
+# chat_retrieval = (
+#     ConfigurableRetrieval(llm_type=LLMType.GPT_35_TURBO, checkpoint=CHECKPOINTER)
+#     .configurable_fields(
+#         llm_type=ConfigurableField(id="llm_type", name="LLM Type"),
+#         system_message=ConfigurableField(id="system_message", name="Instructions"),
+#         assistant_id=ConfigurableField(
+#             id="assistant_id", name="Assistant ID", is_shared=True
+#         ),
+#         thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
+#     )
+#     .with_types(
+#         input_type=Dict[str, Any],
+#         output_type=Dict[str, Any],
+#     )
+# )
 
 
 agent: Pregel = (
@@ -350,7 +359,7 @@ agent: Pregel = (
         default_key="agent",
         prefix_keys=True,
         chatbot=chatbot,
-        chat_retrieval=chat_retrieval,
+        # chat_retrieval=chat_retrieval,
     )
     .with_types(
         input_type=Messages,

@@ -25,8 +25,6 @@ from langchain_core.tools import Tool
 from langchain_robocorp import ActionServerToolkit
 from typing_extensions import TypedDict
 
-from app.upload import vstore
-
 
 class DDGInput(BaseModel):
     query: str = Field(description="search query to look up")
@@ -205,6 +203,8 @@ If the user asks a vague question, they are likely meaning to look up info from 
 
 
 def get_retriever(assistant_id: str, thread_id: str):
+    from app.upload import vstore
+
     return vstore.as_retriever(
         search_kwargs={"filter": {"namespace": {"$in": [assistant_id, thread_id]}}}
     )

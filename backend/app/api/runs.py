@@ -1,11 +1,9 @@
+import json
 from typing import Any, Dict, Optional, Sequence, Union
 from uuid import UUID
 
 import langsmith.client
-from fastapi import APIRouter, BackgroundTasks, HTTPException
-from fastapi.exceptions import RequestValidationError
-from langchain.pydantic_v1 import ValidationError
-from langchain_core.messages import AnyMessage
+from fastapi import APIRouter, HTTPException
 from langchain_core.runnables import RunnableConfig
 from langsmith.utils import tracing_is_enabled
 from pydantic import BaseModel, Field
@@ -13,8 +11,8 @@ from sse_starlette import EventSourceResponse
 
 from app.agent import agent
 from app.auth.handlers import AuthedUser
-from app.storage import get_assistant, get_thread
-from app.stream import astream_state, to_sse
+from app.storage import get_thread
+from app.lifespan import get_langserve
 
 router = APIRouter()
 
@@ -23,51 +21,22 @@ class CreateRunPayload(BaseModel):
     """Payload for creating a run."""
 
     thread_id: str
-    input: Optional[Union[Sequence[AnyMessage], Dict[str, Any]]] = Field(
-        default_factory=dict
-    )
+    input: Optional[Union[Sequence[dict], Dict[str, Any]]] = Field(default_factory=dict)
     config: Optional[RunnableConfig] = None
 
 
-async def _run_input_and_config(payload: CreateRunPayload, user_id: str):
-    thread = await get_thread(user_id, payload.thread_id)
+@router.post("")
+async def create_run(payload: CreateRunPayload, user: AuthedUser):
+    """Create a run."""
+    thread = await get_thread(user["user_id"], payload.thread_id)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
-
-    assistant = await get_assistant(user_id, str(thread["assistant_id"]))
-    if not assistant:
-        raise HTTPException(status_code=404, detail="Assistant not found")
-
-    config: RunnableConfig = {
-        **assistant["config"],
-        "configurable": {
-            **assistant["config"]["configurable"],
-            **((payload.config or {}).get("configurable") or {}),
-            "user_id": user_id,
-            "thread_id": str(thread["thread_id"]),
-            "assistant_id": str(assistant["assistant_id"]),
-        },
-    }
-
-    try:
-        if payload.input is not None:
-            agent.get_input_schema(config).validate(payload.input)
-    except ValidationError as e:
-        raise RequestValidationError(e.errors(), body=payload)
-
-    return payload.input, config
-
-
-@router.post("")
-async def create_run(
-    payload: CreateRunPayload,
-    user: AuthedUser,
-    background_tasks: BackgroundTasks,
-):
-    """Create a run."""
-    input_, config = await _run_input_and_config(payload, user["user_id"])
-    background_tasks.add_task(agent.ainvoke, input_, config)
-    return {"status": "ok"}  # TODO add a run id
+    return await get_langserve().runs.create(
+        payload.thread_id,
+        thread["assistant_id"],
+        input=payload.input,
+        config=payload.config,
+    )
 
 
 @router.post("/stream")
@@ -76,9 +45,21 @@ async def stream_run(
     user: AuthedUser,
 ):
     """Create a run."""
-    input_, config = await _run_input_and_config(payload, user["user_id"])
+    thread = await get_thread(user["user_id"], payload.thread_id)
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found")
 
-    return EventSourceResponse(to_sse(astream_state(agent, input_, config)))
+    return EventSourceResponse(
+        (
+            {"event": e.event, "data": json.dumps(e.data)}
+            async for e in get_langserve().runs.stream(
+                payload.thread_id,
+                thread["assistant_id"],
+                input=payload.input,
+                config=payload.config,
+            )
+        )
+    )
 
 
 @router.get("/input_schema")
