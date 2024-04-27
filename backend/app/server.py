@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+from fastapi.exception_handlers import http_exception_handler
+import httpx
 import orjson
 import structlog
 from fastapi import FastAPI, Form, UploadFile
@@ -16,6 +18,13 @@ from app.upload import convert_ingestion_input_to_blob, ingest_runnable
 logger = structlog.get_logger(__name__)
 
 app = FastAPI(title="OpenGPTs API", lifespan=lifespan)
+
+
+@app.exception_handler(httpx.HTTPStatusError)
+async def httpx_http_status_error_handler(request, exc: httpx.HTTPStatusError):
+    return await http_exception_handler(
+        request, HTTPException(status_code=exc.response.status_code, detail=str(exc))
+    )
 
 
 # Get root of app, used to point to directory containing static files

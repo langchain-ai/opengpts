@@ -1,20 +1,19 @@
-version: "3"
-
 services:
   postgres:
     image: pgvector/pgvector:pg16
-    healthcheck:
-      test: pg_isready -U $POSTGRES_USER
-      start_interval: 1s
-      start_period: 5s
-      interval: 5s
-      retries: 5
-    ports:
-      - "5434:5432"
+  langserve:
+    # Prefer the build section below
+    pull_policy: build
+    # Add langchain_community to the image
+    build:
+      dockerfile_inline: |
+        FROM langchain/langserve
+        COPY ./backend /opengpts
+        RUN pip install -e /opengpts
+    environment:
+      LANGSERVE_GRAPHS: '{"agent": "app.agent:hack"}'
     env_file:
       - .env
-    volumes:
-      - ./postgres-volume:/var/lib/postgresql/data
   postgres-setup:
     image: migrate/migrate
     depends_on:
@@ -32,6 +31,8 @@ services:
     ports:
       - "8100:8000" # Backend is accessible on localhost:8100
     depends_on:
+      # langserve:
+      #   condition: service_healthy
       postgres-setup:
         condition: service_completed_successfully
     env_file:
@@ -40,6 +41,7 @@ services:
       - ./backend:/backend
     environment:
       POSTGRES_HOST: "postgres"
+      LANGSERVE_URL: "http://langserve:8000"
     command:
       - --reload
   frontend:
@@ -55,3 +57,4 @@ services:
       - "5173:5173" # Frontend is accessible on localhost:5173
     environment:
       VITE_BACKEND_URL: "http://backend:8000"
+

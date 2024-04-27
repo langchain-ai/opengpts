@@ -61,7 +61,7 @@ function App(props: { edit?: boolean }) {
           {
             content: message.message,
             additional_kwargs: {},
-            type: "human",
+            role: "human",
             example: false,
             id: `human-${Math.random()}`,
           },
