@@ -73,7 +73,9 @@ export function useConfigList(): ConfigListProps {
       assistantId?: string,
     ): Promise<string> => {
       const confResponse = await fetch(
-        assistantId ? `/api/v1/assistants/${assistantId}` : "/api/v1/assistants",
+        assistantId
+          ? `/api/v1/assistants/${assistantId}`
+          : "/api/v1/assistants",
         {
           method: assistantId ? "PUT" : "POST",
           body: JSON.stringify({ name, config, public: isPublic }),
