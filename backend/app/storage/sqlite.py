@@ -53,19 +53,10 @@ class SqliteStorage(BaseStorage):
             )
             return Assistant(**assistant_data)
 
-    async def list_public_assistants(
-        self, assistant_ids: Sequence[str]
-    ) -> list[Assistant]:
+    async def list_public_assistants(self) -> list[Assistant]:
         """List all the public assistants."""
-        assistant_ids_tuple = tuple(
-            assistant_ids
-        )  # SQL requires a tuple for the IN operator.
-        placeholders = ", ".join("?" for _ in assistant_ids)
         async with sqlite_conn() as conn, conn.cursor() as cur:
-            await cur.execute(
-                f"SELECT * FROM assistant WHERE assistant_id IN ({placeholders}) AND public = 1",
-                assistant_ids_tuple,
-            )
+            await cur.execute("SELECT * FROM assistant WHERE public = 1")
             rows = await cur.fetchall()
             return [Assistant(**dict(row)) for row in rows]
 
