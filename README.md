@@ -53,7 +53,7 @@ the frontend and backend and sets up either SQLite or Postgres using docker-comp
 
 3. **Set Up Environment Variables:**  
    Create a `.env` file in the root directory of the project by copying `.env.example` as a template, and add the 
-   following environment variables (if you want to use SQLite, you can skip the Postgres-related variables):
+   following environment variables:
    ```shell
    # At least one language model API key is required
    OPENAI_API_KEY=sk-...
@@ -193,7 +193,7 @@ poetry install
 
 **Alternate vector databases**
 
-The instructions above use Postgres or Chroma DB (for SQLite based setup) as a vector database,
+The instructions above use Postgres as a vector database,
 although you can easily switch this out to use any of the 50+ vector databases in LangChain.
 
 **Set up language models**
