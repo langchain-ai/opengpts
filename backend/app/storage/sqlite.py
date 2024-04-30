@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from typing import Any, Optional, Sequence, Union
 from uuid import uuid4
 
+import aiosqlite
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import RunnableConfig
 
@@ -12,26 +13,45 @@ from app.schema import Assistant, Thread, User
 from app.storage.base import BaseStorage
 
 
+def _deserialize_assistant(row: aiosqlite.Row) -> Assistant:
+    """Deserialize an assistant from a SQLite row."""
+    return {
+        "assistant_id": row["assistant_id"],
+        "user_id": row["user_id"],
+        "name": row["name"],
+        "config": json.loads(row["config"]),
+        "updated_at": datetime.fromisoformat(row["updated_at"]),
+        "public": bool(row["public"]),
+    }
+
+
+def _deserialize_thread(row: aiosqlite.Row) -> Thread:
+    """Deserialize a thread from a SQLite row."""
+    return {
+        "thread_id": row["thread_id"],
+        "user_id": row["user_id"],
+        "assistant_id": row["assistant_id"],
+        "name": row["name"],
+        "updated_at": datetime.fromisoformat(row["updated_at"]),
+    }
+
+
+def _deserialize_user(row: aiosqlite.Row) -> User:
+    """Deserialize a user from a SQLite row."""
+    return {
+        "user_id": row["user_id"],
+        "sub": row["sub"],
+        "created_at": datetime.fromisoformat(row["created_at"]),
+    }
+
+
 class SqliteStorage(BaseStorage):
     async def list_assistants(self, user_id: str) -> list[Assistant]:
         """List all assistants for the current user."""
         async with sqlite_conn() as conn, conn.cursor() as cur:
             await cur.execute("SELECT * FROM assistant WHERE user_id = ?", (user_id,))
             rows = await cur.fetchall()
-
-            # Deserialize the 'config' field from a JSON string to a dict for each row
-            assistants = []
-            for row in rows:
-                assistant_data = dict(row)  # Convert sqlite3.Row to dict
-                assistant_data["config"] = (
-                    json.loads(assistant_data["config"])
-                    if "config" in assistant_data and assistant_data["config"]
-                    else {}
-                )
-                assistant = Assistant(**assistant_data)
-                assistants.append(assistant)
-
-            return assistants
+            return [_deserialize_assistant(row) for row in rows]
 
     async def get_assistant(
         self, user_id: str, assistant_id: str
@@ -43,22 +63,14 @@ class SqliteStorage(BaseStorage):
                 (assistant_id, user_id),
             )
             row = await cur.fetchone()
-            if not row:
-                return None
-            assistant_data = dict(row)  # Convert sqlite3.Row to dict
-            assistant_data["config"] = (
-                json.loads(assistant_data["config"])
-                if "config" in assistant_data and assistant_data["config"]
-                else {}
-            )
-            return Assistant(**assistant_data)
+            return _deserialize_assistant(row) if row else None
 
     async def list_public_assistants(self) -> list[Assistant]:
         """List all the public assistants."""
         async with sqlite_conn() as conn, conn.cursor() as cur:
             await cur.execute("SELECT * FROM assistant WHERE public = 1")
             rows = await cur.fetchall()
-            return [Assistant(**dict(row)) for row in rows]
+            return [_deserialize_assistant(row) for row in rows]
 
     async def put_assistant(
         self,
@@ -72,8 +84,6 @@ class SqliteStorage(BaseStorage):
         """Modify an assistant."""
         updated_at = datetime.now(timezone.utc)
         async with sqlite_conn() as conn, conn.cursor() as cur:
-            # Convert the config dict to a JSON string for storage.
-            config_str = json.dumps(config)
             await cur.execute(
                 """
                 INSERT INTO assistant (assistant_id, user_id, name, config, updated_at, public) 
@@ -90,27 +100,27 @@ class SqliteStorage(BaseStorage):
                     assistant_id,
                     user_id,
                     name,
-                    config_str,
+                    json.dumps(config),
                     updated_at.isoformat(),
                     public,
                 ),
             )
             await conn.commit()
-        return Assistant(
-            assistant_id=assistant_id,
-            user_id=user_id,
-            name=name,
-            config=config,
-            updated_at=updated_at,
-            public=public,
-        )
+        return {
+            "assistant_id": assistant_id,
+            "user_id": user_id,
+            "name": name,
+            "config": config,
+            "updated_at": updated_at,
+            "public": public,
+        }
 
     async def list_threads(self, user_id: str) -> list[Thread]:
         """List all threads for the current user."""
         async with sqlite_conn() as conn, conn.cursor() as cur:
             await cur.execute("SELECT * FROM thread WHERE user_id = ?", (user_id,))
             rows = await cur.fetchall()
-            return [Thread(**dict(row)) for row in rows]
+            return [_deserialize_thread(row) for row in rows]
 
     async def get_thread(self, user_id: str, thread_id: str) -> Optional[Thread]:
         """Get a thread by ID."""
@@ -120,7 +130,7 @@ class SqliteStorage(BaseStorage):
                 (thread_id, user_id),
             )
             row = await cur.fetchone()
-            return Thread(**dict(row)) if row else None
+            return _deserialize_thread(row) if row else None
 
     async def get_thread_state(
         self, *, user_id: str, thread_id: str, assistant_id: str
@@ -132,13 +142,11 @@ class SqliteStorage(BaseStorage):
                 "configurable": {
                     **assistant["config"]["configurable"],
                     "thread_id": thread_id,
+                    "assistant_id": assistant_id,
                 }
             }
         )
-        return {
-            "values": state.values,
-            "next": state.next,
-        }
+        return {"values": state.values, "next": state.next}
 
     async def update_thread_state(
         self,
@@ -155,6 +163,7 @@ class SqliteStorage(BaseStorage):
                 "configurable": {
                     **assistant["config"]["configurable"],
                     **config["configurable"],
+                    "assistant_id": assistant_id,
                 }
             },
             values,
@@ -177,6 +186,7 @@ class SqliteStorage(BaseStorage):
                     "configurable": {
                         **assistant["config"]["configurable"],
                         "thread_id": thread_id,
+                        "assistant_id": assistant_id,
                     }
                 }
             )
@@ -199,7 +209,7 @@ class SqliteStorage(BaseStorage):
                     name = EXCLUDED.name, 
                     updated_at = EXCLUDED.updated_at
                 """,
-                (thread_id, user_id, assistant_id, name, updated_at),
+                (thread_id, user_id, assistant_id, name, updated_at.isoformat()),
             )
             await conn.commit()
             return {
@@ -213,38 +223,24 @@ class SqliteStorage(BaseStorage):
     async def get_or_create_user(self, sub: str) -> tuple[User, bool]:
         """Returns a tuple of the user and a boolean indicating whether the user was created."""
         async with sqlite_conn() as conn, conn.cursor() as cur:
-            # start a write transaction to avoid the unique contraint error due to
-            # concurrent inserts
+            # Start a write transaction to avoid the unique contraint error due to
+            # concurrent inserts.
             await cur.execute("BEGIN EXCLUSIVE")
             await cur.execute('SELECT * FROM "user" WHERE sub = ?', (sub,))
-            user_row = await cur.fetchone()
-
-            if user_row:
-                # Convert sqlite3.Row to a User object
-                user = User(
-                    user_id=user_row["user_id"],
-                    sub=user_row["sub"],
-                    created_at=user_row["created_at"],
-                )
-                return user, False
+            row = await cur.fetchone()
+            if row:
+                return _deserialize_user(row), False
 
             # SQLite doesn't support RETURNING *, so we need to manually fetch the created user.
             await cur.execute(
                 'INSERT INTO "user" (user_id, sub, created_at) VALUES (?, ?, ?)',
-                (str(uuid4()), sub, datetime.now()),
+                (str(uuid4()), sub, datetime.now(timezone.utc).isoformat()),
             )
             await conn.commit()
 
-            # Fetch the newly created user
             await cur.execute('SELECT * FROM "user" WHERE sub = ?', (sub,))
-            new_user_row = await cur.fetchone()
-
-            new_user = User(
-                user_id=new_user_row["user_id"],
-                sub=new_user_row["sub"],
-                created_at=new_user_row["created_at"],
-            )
-            return new_user, True
+            row = await cur.fetchone()
+            return _deserialize_user(row), True
 
     async def delete_thread(self, user_id: str, thread_id: str) -> None:
         """Delete a thread by ID."""

@@ -108,6 +108,7 @@ class PostgresStorage(BaseStorage):
                 "configurable": {
                     **assistant["config"]["configurable"],
                     "thread_id": thread_id,
+                    "assistant_id": assistant_id,
                 }
             }
         )
@@ -131,6 +132,7 @@ class PostgresStorage(BaseStorage):
                 "configurable": {
                     **assistant["config"]["configurable"],
                     **config["configurable"],
+                    "assistant_id": assistant_id,
                 }
             },
             values,
@@ -153,6 +155,7 @@ class PostgresStorage(BaseStorage):
                     "configurable": {
                         **assistant["config"]["configurable"],
                         "thread_id": thread_id,
+                        "assistant_id": assistant_id,
                     }
                 }
             )
