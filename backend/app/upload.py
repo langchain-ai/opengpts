@@ -12,7 +12,6 @@ from __future__ import annotations
 import os
 from typing import BinaryIO, List, Optional, Union
 
-from langchain_chroma import Chroma
 from langchain_community.vectorstores.pgvector import PGVector
 from langchain_core.document_loaders.blob_loaders import Blob
 from langchain_core.runnables import (
@@ -70,7 +69,7 @@ def _get_embedding_function() -> Union[OpenAIEmbeddings, AzureOpenAIEmbeddings]:
 
 
 def _get_vstore() -> VectorStore:
-    if settings.storage_type == StorageType.POSTGRES:
+    if settings.storage_type in (StorageType.POSTGRES, StorageType.SQLITE):
         PG_CONNECTION_STRING = PGVector.connection_string_from_db_params(
             driver="psycopg2",
             host=settings.postgres.host,
@@ -83,11 +82,6 @@ def _get_vstore() -> VectorStore:
             connection_string=PG_CONNECTION_STRING,
             embedding_function=_get_embedding_function(),
             use_jsonb=True,
-        )
-    elif settings.storage_type == StorageType.SQLITE:
-        return Chroma(
-            persist_directory="./chroma_db",
-            embedding_function=_get_embedding_function(),
         )
     raise NotImplementedError()
 

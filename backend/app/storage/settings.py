@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseSettings
 
@@ -22,9 +21,7 @@ class PostgresSettings(BaseSettings):
 
 class Settings(BaseSettings):
     storage_type: StorageType = StorageType.SQLITE
-    postgres: Optional[PostgresSettings] = None
+    postgres: PostgresSettings = PostgresSettings()
 
 
 settings = Settings()
-if settings.storage_type == StorageType.POSTGRES:
-    settings.postgres = PostgresSettings()

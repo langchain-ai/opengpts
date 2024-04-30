@@ -36,4 +36,5 @@ services:
     env_file:
       - .env
     environment:
+      STORAGE_TYPE: "postgres"
       POSTGRES_HOST: "postgres"

@@ -1,6 +1,30 @@
 version: "3"
 
 services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    healthcheck:
+      test: pg_isready -U $POSTGRES_USER
+      start_interval: 1s
+      start_period: 5s
+      interval: 5s
+      retries: 5
+    ports:
+      - "5433:5432"
+    env_file:
+      - .env
+    volumes:
+      - ./postgres-volume:/var/lib/postgresql/data
+  postgres-setup:
+    image: migrate/migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/migrations:/migrations
+    env_file:
+      - .env
+    command: ["-path", "/migrations/postgres", "-database", "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:$POSTGRES_PORT/$POSTGRES_DB?sslmode=disable", "up"]
   sqlite-setup:
     build:
       context: tools/sqlite_migrate
@@ -16,12 +40,15 @@ services:
     depends_on:
       sqlite-setup:
         condition: service_completed_successfully
+      postgres-setup:
+        condition: service_completed_successfully
     env_file:
       - .env
     volumes:
       - ./backend:/backend
     environment:
       STORAGE_TYPE: "sqlite"
+      POSTGRES_HOST: "postgres"
     command:
       - --reload
   frontend:

@@ -20,13 +20,6 @@ def _update_document_metadata(document: Document, namespace: str) -> None:
     document.metadata["namespace"] = namespace
 
 
-def _sanitize_document_metadata(document: Document) -> Document:
-    """Chroma doesn't accept None values in metadata, so we replace them."""
-    for k, v in document.metadata.items():
-        if v is None:
-            document.metadata[k] = ""
-
-
 def _sanitize_document_content(document: Document) -> Document:
     """Sanitize the document."""
     # Without this, PDF ingestion fails with
@@ -53,7 +46,6 @@ def ingest_blob(
         docs = text_splitter.split_documents([document])
         for doc in docs:
             _sanitize_document_content(doc)
-            _sanitize_document_metadata(doc)
             _update_document_metadata(doc, namespace)
         docs_to_index.extend(docs)
 
