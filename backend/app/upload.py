@@ -69,6 +69,8 @@ def _get_embedding_function() -> Union[OpenAIEmbeddings, AzureOpenAIEmbeddings]:
 
 
 def _get_vstore() -> VectorStore:
+    # TODO Need to add a sqlite-based vectorstore for StorageType.SQLITE.
+    # Using PGVector is temporary.
     if settings.storage_type in (StorageType.POSTGRES, StorageType.SQLITE):
         PG_CONNECTION_STRING = PGVector.connection_string_from_db_params(
             driver="psycopg2",
