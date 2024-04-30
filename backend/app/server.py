@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 from pathlib import Path
@@ -5,13 +6,16 @@ from pathlib import Path
 import orjson
 from fastapi import FastAPI, Form, UploadFile
 from fastapi.exceptions import HTTPException
+from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
+
 
 import app.storage as storage
 from app.api import router as api_router
 from app.auth.handlers import AuthedUser
 from app.lifespan import lifespan
 from app.upload import ingest_runnable
+
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +48,27 @@ async def ingest_files(
         if thread is None:
             raise HTTPException(status_code=404, detail="Thread not found.")
 
-    return ingest_runnable.batch([file.file for file in files], config)
+    if config["configurable"].get("show_progress_bar"):
+        ingest_runnable.abatch_as_completed([file.file for file in files], config)
+
+        # The return type of the IngestRunnable is not compatible with the
+        # FastAPI StreamingResponse (the data must have an `.encode()`
+        # property). The results are (int, list) tuples, so lets use orjson to
+        # byte the tuple
+        async def decode_ingestion_response(ingest_generator):
+            async for x in ingest_generator:
+                yield orjson.dumps(x)
+                await asyncio.sleep(3)  # Debug: to demonstrate streaming
+
+        return StreamingResponse(
+            decode_ingestion_response(
+                ingest_runnable.abatch_as_completed(
+                    [file.file for file in files], config
+                )
+            )
+        )
+    else:
+        return ingest_runnable.batch([file.file for file in files], config)
 
 
 @app.get("/health")

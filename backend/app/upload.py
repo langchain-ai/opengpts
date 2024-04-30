@@ -87,7 +87,7 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
     assistant_id: Optional[str]
     thread_id: Optional[str]
     """Ingested documents will be associated with assistant_id or thread_id.
-    
+
     ID is used as the namespace, and is filtered on at query time.
     """
 
@@ -108,14 +108,16 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
         self, input: BinaryIO, config: Optional[RunnableConfig] = None
     ) -> List[str]:
         blob = _convert_ingestion_input_to_blob(input)
-        out = ingest_blob(
-            blob,
-            MIMETYPE_BASED_PARSER,
-            self.text_splitter,
-            self.vectorstore,
-            self.namespace,
-        )
-        return out
+        # DEBUG: Being Rate Limitted, so skipping this step
+        return ["irothschild debug, UploadRunnable invoke dummy response"]
+        # out = ingest_blob(
+        #     blob,
+        #     MIMETYPE_BASED_PARSER,
+        #     self.text_splitter,
+        #     self.vectorstore,
+        #     self.namespace,
+        # )
+        # return out
 
 
 PG_CONNECTION_STRING = PGVector.connection_string_from_db_params(

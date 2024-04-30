@@ -6,6 +6,7 @@ into a vector store.
 This code should be agnostic to how the blob got generated; i.e., it does not
 know about server/uploading etc.
 """
+
 from typing import List
 
 from langchain.text_splitter import TextSplitter
