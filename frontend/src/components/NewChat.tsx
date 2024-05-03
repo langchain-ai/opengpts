@@ -15,6 +15,7 @@ interface NewChatProps extends ConfigListProps {
   configSchema: Schemas["configSchema"];
   configDefaults: Schemas["configDefaults"];
   enterConfig: (id: string | null) => void;
+  deleteConfig: (id: string) => Promise<void>;
   startChat: (
     config: ConfigInterface,
     message: MessageWithFiles,
@@ -39,11 +40,12 @@ export function NewChat(props: NewChatProps) {
       )}
     >
       <div className="flex-1 flex flex-col md:flex-row lg:items-stretch self-stretch">
-        <div className="w-72 border-r border-gray-200 pr-6">
+        <div className="md:w-72 border-r border-gray-200 pr-6">
           <ConfigList
             configs={props.configs}
             currentConfig={assistantConfig}
             enterConfig={(id) => navigator(`/assistant/${id}`)}
+            deleteConfig={props.deleteConfig}
           />
         </div>
 

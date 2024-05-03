@@ -21,7 +21,7 @@ function App(props: { edit?: boolean }) {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { chats, createChat, deleteChat } = useChatList();
-  const { configs, saveConfig } = useConfigList();
+  const { configs, saveConfig, deleteConfig } = useConfigList();
   const { startStream, stopStream, stream } = useStreamState();
   const { configSchema, configDefaults } = useSchemas();
 
@@ -153,6 +153,7 @@ function App(props: { edit?: boolean }) {
           configs={configs}
           saveConfig={saveConfig}
           enterConfig={selectConfig}
+          deleteConfig={deleteConfig}
         />
       )}
       {!currentChat && assistantConfig && props.edit && (

@@ -30,6 +30,7 @@ export interface ConfigListProps {
     isPublic: boolean,
     assistantId?: string,
   ) => Promise<string>;
+  deleteConfig: (assistantId: string) => Promise<void>;
 }
 
 function configsReducer(
@@ -102,8 +103,22 @@ export function useConfigList(): ConfigListProps {
     [],
   );
 
+  const deleteConfig = useCallback(
+    async (assistantId: string): Promise<void> => {
+      await fetch(`/assistants/${assistantId}`, {
+        method: "DELETE",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+      setConfigs((configs || []).filter((c) => c.assistant_id !== assistantId));
+    },
+    [configs],
+  );
+
   return {
     configs,
     saveConfig,
+    deleteConfig,
   };
 }
