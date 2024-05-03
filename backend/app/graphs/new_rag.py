@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import chain
 from langgraph.graph import END
 from langgraph.graph.state import StateGraph
 from langgraph.graph.message import add_messages
@@ -101,6 +102,7 @@ def _get_messages(messages, system_message=DEFAULT_SYSTEM_MESSAGE):
     ] + chat_history
 
 
+@chain
 async def get_search_query(messages: Sequence[BaseMessage], config):
     llm = config["configurable"].get("llm_type", LLMType.GPT_35_TURBO)
     convo = []
