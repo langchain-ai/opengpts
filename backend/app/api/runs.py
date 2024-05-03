@@ -63,18 +63,6 @@ async def stream_run(
     )
 
 
-@router.get("/input_schema")
-async def input_schema() -> dict:
-    """Return the input schema of the runnable."""
-    return agent.get_input_schema().schema()
-
-
-@router.get("/output_schema")
-async def output_schema() -> dict:
-    """Return the output schema of the runnable."""
-    return agent.get_output_schema().schema()
-
-
 @router.get("/config_schema")
 async def config_schema() -> dict:
     """Return the config schema of the runnable."""
