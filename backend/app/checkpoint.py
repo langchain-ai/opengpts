@@ -179,7 +179,7 @@ class SqliteCheckpointer(AsyncSqliteSaver):
     async def setup(self) -> None:
         if self.is_setup:
             return
-        self.conn = await storage.create_sqlite_conn(global_=True)
+        self.conn = storage.get_conn()
         self.is_setup = True
 
 
