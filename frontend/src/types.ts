@@ -24,4 +24,5 @@ export interface Chat {
   thread_id: string;
   name: string;
   updated_at: string;
+  metadata: Record<string, unknown> | null;
 }
