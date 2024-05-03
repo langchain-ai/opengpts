@@ -5,9 +5,9 @@ from fastapi import APIRouter, HTTPException, Path
 from langchain.schema.messages import AnyMessage
 from pydantic import BaseModel, Field
 
-import app.storage as storage
 from app.auth.handlers import AuthedUser
 from app.schema import Thread
+from app.storage.storage import storage
 
 router = APIRouter()
 

@@ -7,9 +7,9 @@ import requests
 from fastapi import Depends, HTTPException, Request
 from fastapi.security.http import HTTPBearer
 
-import app.storage as storage
 from app.auth.settings import AuthType, settings
 from app.schema import User
+from app.storage.storage import storage
 
 
 class AuthHandler(ABC):

@@ -4,9 +4,9 @@ from uuid import uuid4
 from fastapi import APIRouter, HTTPException, Path
 from pydantic import BaseModel, Field
 
-import app.storage as storage
 from app.auth.handlers import AuthedUser
 from app.schema import Assistant
+from app.storage.storage import storage
 
 router = APIRouter()
 

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import mimetypes
 import os
-from typing import BinaryIO, List, Optional
+from typing import BinaryIO, List, Optional, Union
 
 from fastapi import UploadFile
 from langchain_community.vectorstores.pgvector import PGVector
@@ -27,6 +27,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter, TextSplitte
 
 from app.ingest import ingest_blob
 from app.parsing import MIMETYPE_BASED_PARSER
+from app.storage.settings import StorageType, settings
 
 
 def _guess_mimetype(file_name: str, file_bytes: bytes) -> str:
@@ -82,28 +83,38 @@ def convert_ingestion_input_to_blob(file: UploadFile) -> Blob:
     )
 
 
-def _determine_azure_or_openai_embeddings() -> PGVector:
+def _get_embedding_function() -> Union[OpenAIEmbeddings, AzureOpenAIEmbeddings]:
     if os.environ.get("OPENAI_API_KEY"):
-        return PGVector(
-            connection_string=PG_CONNECTION_STRING,
-            embedding_function=OpenAIEmbeddings(),
-            use_jsonb=True,
-        )
-    if os.environ.get("AZURE_OPENAI_API_KEY"):
-        return PGVector(
-            connection_string=PG_CONNECTION_STRING,
-            embedding_function=AzureOpenAIEmbeddings(
-                azure_endpoint=os.environ.get("AZURE_OPENAI_API_BASE"),
-                azure_deployment=os.environ.get(
-                    "AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT_NAME"
-                ),
-                openai_api_version=os.environ.get("AZURE_OPENAI_API_VERSION"),
-            ),
-            use_jsonb=True,
+        return OpenAIEmbeddings()
+    elif os.environ.get("AZURE_OPENAI_API_KEY"):
+        return AzureOpenAIEmbeddings(
+            azure_endpoint=os.environ.get("AZURE_OPENAI_API_BASE"),
+            azure_deployment=os.environ.get("AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT_NAME"),
+            openai_api_version=os.environ.get("AZURE_OPENAI_API_VERSION"),
         )
     raise ValueError(
         "Either OPENAI_API_KEY or AZURE_OPENAI_API_KEY needs to be set for embeddings to work."
     )
+
+
+def _get_vstore() -> VectorStore:
+    # TODO Need to add a sqlite-based vectorstore for StorageType.SQLITE.
+    # Using PGVector is temporary.
+    if settings.storage_type in (StorageType.POSTGRES, StorageType.SQLITE):
+        PG_CONNECTION_STRING = PGVector.connection_string_from_db_params(
+            driver="psycopg2",
+            host=settings.postgres.host,
+            port=settings.postgres.port,
+            database=settings.postgres.db,
+            user=settings.postgres.user,
+            password=settings.postgres.password,
+        )
+        return PGVector(
+            connection_string=PG_CONNECTION_STRING,
+            embedding_function=_get_embedding_function(),
+            use_jsonb=True,
+        )
+    raise NotImplementedError()
 
 
 class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
@@ -144,15 +155,7 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
         return out
 
 
-PG_CONNECTION_STRING = PGVector.connection_string_from_db_params(
-    driver="psycopg2",
-    host=os.environ["POSTGRES_HOST"],
-    port=int(os.environ["POSTGRES_PORT"]),
-    database=os.environ["POSTGRES_DB"],
-    user=os.environ["POSTGRES_USER"],
-    password=os.environ["POSTGRES_PASSWORD"],
-)
-vstore = _determine_azure_or_openai_embeddings()
+vstore = _get_vstore()
 
 
 ingest_runnable = IngestRunnable(

@@ -21,7 +21,8 @@ from langgraph.checkpoint.base import (
 from redis.client import Redis as RedisType
 
 from app.checkpoint import PostgresCheckpoint
-from app.lifespan import get_pg_pool, lifespan
+from app.lifespan import lifespan
+from app.storage.storage import storage
 from app.server import app
 
 logging.basicConfig(
@@ -265,7 +266,7 @@ async def migrate_embeddings(conn: asyncpg.Connection) -> None:
 
 async def migrate_data():
     logger.info("Starting to migrate data from Redis to Postgres.")
-    async with get_pg_pool().acquire() as conn, conn.transaction():
+    async with storage.get_pool().acquire() as conn, conn.transaction():
         await migrate_assistants(conn)
         await migrate_threads(conn)
         await migrate_checkpoints()

@@ -14,7 +14,7 @@ from langgraph.pregel import Pregel
 from app.agent_types.tools_agent import get_tools_agent_executor
 from app.agent_types.xml_agent import get_xml_agent_executor
 from app.chatbot import get_chatbot_executor
-from app.checkpoint import PostgresCheckpoint
+from app.checkpoint import Checkpointer
 from app.llms import (
     get_anthropic_llm,
     get_google_llm,
@@ -73,7 +73,7 @@ class AgentType(str, Enum):
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
-CHECKPOINTER = PostgresCheckpoint(serde=pickle, at=CheckpointAt.END_OF_STEP)
+CHECKPOINTER = Checkpointer(serde=pickle, at=CheckpointAt.END_OF_STEP)
 
 
 def get_agent_executor(

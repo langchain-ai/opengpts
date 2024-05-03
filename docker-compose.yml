@@ -24,7 +24,13 @@ services:
       - ./backend/migrations:/migrations
     env_file:
       - .env
-    command: ["-path", "/migrations", "-database", "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:$POSTGRES_PORT/$POSTGRES_DB?sslmode=disable", "up"]
+    command: ["-path", "/migrations/postgres", "-database", "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:$POSTGRES_PORT/$POSTGRES_DB?sslmode=disable", "up"]
+  sqlite-setup:
+    build:
+      context: tools/sqlite_migrate
+    volumes:
+      - ./backend:/backend
+    command: ["migrate", "-path", "/backend/migrations/sqlite", "-database", "sqlite3://opengpts.db", "up"]
   backend:
     container_name: opengpts-backend
     build:
@@ -32,6 +38,8 @@ services:
     ports:
       - "8100:8000" # Backend is accessible on localhost:8100
     depends_on:
+      sqlite-setup:
+        condition: service_completed_successfully
       postgres-setup:
         condition: service_completed_successfully
     env_file:
@@ -39,6 +47,7 @@ services:
     volumes:
       - ./backend:/backend
     environment:
+      STORAGE_TYPE: "sqlite"
       POSTGRES_HOST: "postgres"
     command:
       - --reload
