@@ -1,15 +1,17 @@
 import json
+import pathlib
 from typing import Any, Dict, Optional, Sequence, Union
 from uuid import UUID
 
+from fastapi.responses import ORJSONResponse
 import langsmith.client
 from fastapi import APIRouter, HTTPException
 from langchain_core.runnables import RunnableConfig
 from langsmith.utils import tracing_is_enabled
+import orjson
 from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
 
-from app.agent import agent
 from app.auth.handlers import AuthedUser
 from app.storage import get_thread
 from app.lifespan import get_langserve
@@ -63,10 +65,13 @@ async def stream_run(
     )
 
 
+CONFIG_SCHEMA = open(pathlib.Path(__file__).parent.parent / "config_schema.json").read()
+
+
 @router.get("/config_schema")
 async def config_schema() -> dict:
     """Return the config schema of the runnable."""
-    return agent.config_schema().schema()
+    return ORJSONResponse(orjson.Fragment(CONFIG_SCHEMA))
 
 
 if tracing_is_enabled():

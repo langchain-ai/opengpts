@@ -3,8 +3,9 @@
     "./backend"
   ],
   "graphs": {
-    "chatbot": "app.new_chatbot:graph",
-    "agent": "app.new_agent:graph"
+    "chatbot": "app.graphs.new_chatbot:graph",
+    "chat_retrieval": "app.graphs.new_rag:graph",
+    "agent": "app.graphs.new_agent:graph"
   },
   "env": ".env"
 }

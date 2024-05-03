@@ -19,7 +19,6 @@ class LLMType(str, Enum):
     GPT_4 = "GPT 4 Turbo"
     AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
     CLAUDE2 = "Claude 2"
-    BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
     GEMINI = "GEMINI"
     MIXTRAL = "Mixtral"
     OLLAMA = "Ollama"
@@ -36,8 +35,6 @@ def get_llm(
         llm = get_openai_llm(azure=True)
     elif llm_type == LLMType.CLAUDE2:
         llm = get_anthropic_llm()
-    elif llm_type == LLMType.BEDROCK_CLAUDE2:
-        llm = get_anthropic_llm(bedrock=True)
     elif llm_type == LLMType.GEMINI:
         llm = get_google_llm()
     elif llm_type == LLMType.MIXTRAL:
