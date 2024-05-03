@@ -92,15 +92,14 @@ async def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
         )
 
 
-async def get_thread_state(*, user_id: str, thread_id: str, assistant_id: str):
+async def get_thread_state(*, user_id: str, thread_id: str, assistant: Assistant):
     """Get state for a thread."""
-    assistant = await get_assistant(user_id, assistant_id)
     state = await agent.aget_state(
         {
             "configurable": {
                 **assistant["config"]["configurable"],
                 "thread_id": thread_id,
-                "assistant_id": assistant_id,
+                "assistant_id": assistant["assistant_id"],
             }
         }
     )
@@ -115,25 +114,23 @@ async def update_thread_state(
     values: Union[Sequence[AnyMessage], dict[str, Any]],
     *,
     user_id: str,
-    assistant_id: str,
+    assistant: Assistant,
 ):
     """Add state to a thread."""
-    assistant = await get_assistant(user_id, assistant_id)
     await agent.aupdate_state(
         {
             "configurable": {
                 **assistant["config"]["configurable"],
                 **config["configurable"],
-                "assistant_id": assistant_id,
+                "assistant_id": assistant["assistant_id"],
             }
         },
         values,
     )
 
 
-async def get_thread_history(*, user_id: str, thread_id: str, assistant_id: str):
+async def get_thread_history(*, user_id: str, thread_id: str, assistant: Assistant):
     """Get the history of a thread."""
-    assistant = await get_assistant(user_id, assistant_id)
     return [
         {
             "values": c.values,
@@ -146,7 +143,7 @@ async def get_thread_history(*, user_id: str, thread_id: str, assistant_id: str)
                 "configurable": {
                     **assistant["config"]["configurable"],
                     "thread_id": thread_id,
-                    "assistant_id": assistant_id,
+                    "assistant_id": assistant["assistant_id"],
                 }
             }
         )

@@ -44,10 +44,13 @@ async def get_thread_state(
     thread = await storage.get_thread(user["user_id"], tid)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
+    assistant = await storage.get_assistant(user["user_id"], thread["assistant_id"])
+    if not assistant:
+        raise HTTPException(status_code=400, detail="Thread has no assistant")
     return await storage.get_thread_state(
         user_id=user["user_id"],
         thread_id=tid,
-        assistant_id=thread["assistant_id"],
+        assistant=assistant,
     )
 
 
@@ -61,11 +64,14 @@ async def add_thread_state(
     thread = await storage.get_thread(user["user_id"], tid)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
+    assistant = await storage.get_assistant(user["user_id"], thread["assistant_id"])
+    if not assistant:
+        raise HTTPException(status_code=400, detail="Thread has no assistant")
     return await storage.update_thread_state(
         payload.config or {"configurable": {"thread_id": tid}},
         payload.values,
         user_id=user["user_id"],
-        assistant_id=thread["assistant_id"],
+        assistant=assistant,
     )
 
 
@@ -78,10 +84,13 @@ async def get_thread_history(
     thread = await storage.get_thread(user["user_id"], tid)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
+    assistant = await storage.get_assistant(user["user_id"], thread["assistant_id"])
+    if not assistant:
+        raise HTTPException(status_code=400, detail="Thread has no assistant")
     return await storage.get_thread_history(
         user_id=user["user_id"],
         thread_id=tid,
-        assistant_id=thread["assistant_id"],
+        assistant=assistant,
     )
 
 
