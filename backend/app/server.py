@@ -11,7 +11,7 @@ import app.storage as storage
 from app.api import router as api_router
 from app.auth.handlers import AuthedUser
 from app.lifespan import lifespan
-from app.upload import ingest_runnable, convert_ingestion_input_to_blob
+from app.upload import convert_ingestion_input_to_blob, ingest_runnable
 
 logger = logging.getLogger(__name__)
 

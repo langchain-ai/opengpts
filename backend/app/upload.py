@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import mimetypes
 import os
-
 from typing import BinaryIO, List, Optional
+
 from fastapi import UploadFile
 from langchain_community.vectorstores.pgvector import PGVector
 from langchain_core.document_loaders.blob_loaders import Blob
@@ -39,26 +39,30 @@ def _guess_mimetype(file_name: str, file_bytes: bytes) -> str:
         return mime_type
 
     # Signature-based detection for common types
-    if file_bytes.startswith(b'%PDF'):
-        return 'application/pdf'
-    elif file_bytes.startswith((b'\x50\x4B\x03\x04', b'\x50\x4B\x05\x06', b'\x50\x4B\x07\x08')):
-        return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    elif file_bytes.startswith(b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1'):
-        return 'application/msword'
-    elif file_bytes.startswith(b'\x09\x00\xff\x00\x06\x00'):
-        return 'application/vnd.ms-excel'
+    if file_bytes.startswith(b"%PDF"):
+        return "application/pdf"
+    elif file_bytes.startswith(
+        (b"\x50\x4B\x03\x04", b"\x50\x4B\x05\x06", b"\x50\x4B\x07\x08")
+    ):
+        return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    elif file_bytes.startswith(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"):
+        return "application/msword"
+    elif file_bytes.startswith(b"\x09\x00\xff\x00\x06\x00"):
+        return "application/vnd.ms-excel"
 
     # Check for CSV-like plain text content (commas, tabs, newlines)
     try:
-        decoded = file_bytes[:1024].decode('utf-8', errors='ignore')
-        if all(char in decoded for char in (',', '\n')) or all(char in decoded for char in ('\t', '\n')):
-            return 'text/csv'
-        elif decoded.isprintable() or decoded == '':
-            return 'text/plain'
+        decoded = file_bytes[:1024].decode("utf-8", errors="ignore")
+        if all(char in decoded for char in (",", "\n")) or all(
+            char in decoded for char in ("\t", "\n")
+        ):
+            return "text/csv"
+        elif decoded.isprintable() or decoded == "":
+            return "text/plain"
     except UnicodeDecodeError:
         pass
 
-    return 'application/octet-stream'
+    return "application/octet-stream"
 
 
 def convert_ingestion_input_to_blob(file: UploadFile) -> Blob:
@@ -129,9 +133,7 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
             )
         return self.assistant_id if self.assistant_id is not None else self.thread_id
 
-    def invoke(
-        self, blob: Blob, config: Optional[RunnableConfig] = None
-    ) -> List[str]:
+    def invoke(self, blob: Blob, config: Optional[RunnableConfig] = None) -> List[str]:
         out = ingest_blob(
             blob,
             MIMETYPE_BASED_PARSER,
