@@ -82,7 +82,7 @@ def convert_ingestion_input_to_blob(file: UploadFile) -> Blob:
     )
 
 
-def _determine_azure_or_openai_embeddings() -> PGVector:
+def get_vectorstore() -> PGVector:
     if os.environ.get("OPENAI_API_KEY"):
         return PGVector(
             connection_string=PG_CONNECTION_STRING,
@@ -152,7 +152,7 @@ PG_CONNECTION_STRING = PGVector.connection_string_from_db_params(
     user=os.environ["POSTGRES_USER"],
     password=os.environ["POSTGRES_PASSWORD"],
 )
-vstore = _determine_azure_or_openai_embeddings()
+vstore = get_vectorstore()
 
 
 ingest_runnable = IngestRunnable(
