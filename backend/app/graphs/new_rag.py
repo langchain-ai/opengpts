@@ -107,7 +107,11 @@ def _get_messages(messages, system_message=DEFAULT_SYSTEM_MESSAGE):
 
 @chain
 async def get_search_query(messages: Sequence[BaseMessage], config):
-    llm = config["configurable"].get("llm_type", LLMType.GPT_35_TURBO)
+    llm = get_llm(
+        config["configurable"].get(
+            "agent==chat_retrieval/llm_type", LLMType.GPT_35_TURBO
+        )
+    )
     convo = []
     for m in messages:
         if isinstance(m, AIMessage):
