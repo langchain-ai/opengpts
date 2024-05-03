@@ -8,6 +8,14 @@ from app.schema import Assistant, Thread, User
 
 class BaseStorage(ABC):
     @abstractmethod
+    async def setup(self) -> None:
+        """Setup the storage."""
+
+    @abstractmethod
+    async def teardown(self) -> None:
+        """Teardown the storage."""
+
+    @abstractmethod
     async def list_assistants(self, user_id: str) -> list[Assistant]:
         """List all assistants for the current user."""
 

@@ -1,14 +1,13 @@
 import json
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Any, Optional, Sequence, Union
+from typing import Any, AsyncGenerator, Optional, Sequence, Union
 from uuid import uuid4
 
 import aiosqlite
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import RunnableConfig
 
-from app.agent import agent
-from app.lifespan import sqlite_conn
 from app.schema import Assistant, Thread, User
 from app.storage.base import BaseStorage
 
@@ -46,9 +45,39 @@ def _deserialize_user(row: aiosqlite.Row) -> User:
 
 
 class SqliteStorage(BaseStorage):
+    _global_sqlite_connections = []
+
+    async def setup(self) -> None:
+        pass
+
+    async def teardown(self) -> None:
+        await self._close_global_sqlite_connections()
+
+    async def create_sqlite_conn(
+        self, global_: bool = False, **kwargs
+    ) -> aiosqlite.Connection:
+        conn = await aiosqlite.connect("opengpts.db", **kwargs)
+        conn.row_factory = aiosqlite.Row
+        if global_:
+            self._global_sqlite_connections.append(conn)
+        return conn
+
+    @asynccontextmanager
+    async def sqlite_conn(self, **kwargs) -> AsyncGenerator[aiosqlite.Connection, None]:
+        conn = await self.create_sqlite_conn(**kwargs)
+        try:
+            yield conn
+        finally:
+            await conn.close()
+
+    async def _close_global_sqlite_connections(self) -> None:
+        for conn in self._global_sqlite_connections:
+            await conn.close()
+        self._global_sqlite_connections.clear()
+
     async def list_assistants(self, user_id: str) -> list[Assistant]:
         """List all assistants for the current user."""
-        async with sqlite_conn() as conn, conn.cursor() as cur:
+        async with self.sqlite_conn() as conn, conn.cursor() as cur:
             await cur.execute("SELECT * FROM assistant WHERE user_id = ?", (user_id,))
             rows = await cur.fetchall()
             return [_deserialize_assistant(row) for row in rows]
@@ -57,7 +86,7 @@ class SqliteStorage(BaseStorage):
         self, user_id: str, assistant_id: str
     ) -> Optional[Assistant]:
         """Get an assistant by ID."""
-        async with sqlite_conn() as conn, conn.cursor() as cur:
+        async with self.sqlite_conn() as conn, conn.cursor() as cur:
             await cur.execute(
                 "SELECT * FROM assistant WHERE assistant_id = ? AND (user_id = ? OR public = 1)",
                 (assistant_id, user_id),
@@ -67,7 +96,7 @@ class SqliteStorage(BaseStorage):
 
     async def list_public_assistants(self) -> list[Assistant]:
         """List all the public assistants."""
-        async with sqlite_conn() as conn, conn.cursor() as cur:
+        async with self.sqlite_conn() as conn, conn.cursor() as cur:
             await cur.execute("SELECT * FROM assistant WHERE public = 1")
             rows = await cur.fetchall()
             return [_deserialize_assistant(row) for row in rows]
@@ -83,7 +112,7 @@ class SqliteStorage(BaseStorage):
     ) -> Assistant:
         """Modify an assistant."""
         updated_at = datetime.now(timezone.utc)
-        async with sqlite_conn() as conn, conn.cursor() as cur:
+        async with self.sqlite_conn() as conn, conn.cursor() as cur:
             await cur.execute(
                 """
                 INSERT INTO assistant (assistant_id, user_id, name, config, updated_at, public) 
@@ -117,14 +146,14 @@ class SqliteStorage(BaseStorage):
 
     async def list_threads(self, user_id: str) -> list[Thread]:
         """List all threads for the current user."""
-        async with sqlite_conn() as conn, conn.cursor() as cur:
+        async with self.sqlite_conn() as conn, conn.cursor() as cur:
             await cur.execute("SELECT * FROM thread WHERE user_id = ?", (user_id,))
             rows = await cur.fetchall()
             return [_deserialize_thread(row) for row in rows]
 
     async def get_thread(self, user_id: str, thread_id: str) -> Optional[Thread]:
         """Get a thread by ID."""
-        async with sqlite_conn() as conn, conn.cursor() as cur:
+        async with self.sqlite_conn() as conn, conn.cursor() as cur:
             await cur.execute(
                 "SELECT * FROM thread WHERE thread_id = ? AND user_id = ?",
                 (thread_id, user_id),
@@ -136,6 +165,8 @@ class SqliteStorage(BaseStorage):
         self, *, user_id: str, thread_id: str, assistant_id: str
     ):
         """Get state for a thread."""
+        from app.agent import agent
+
         assistant = await self.get_assistant(user_id, assistant_id)
         state = await agent.aget_state(
             {
@@ -157,6 +188,8 @@ class SqliteStorage(BaseStorage):
         assistant_id: str,
     ):
         """Add state to a thread."""
+        from app.agent import agent
+
         assistant = await self.get_assistant(user_id, assistant_id)
         await agent.aupdate_state(
             {
@@ -173,6 +206,8 @@ class SqliteStorage(BaseStorage):
         self, *, user_id: str, thread_id: str, assistant_id: str
     ):
         """Get the history of a thread."""
+        from app.agent import agent
+
         assistant = await self.get_assistant(user_id, assistant_id)
         return [
             {
@@ -197,7 +232,7 @@ class SqliteStorage(BaseStorage):
     ) -> Thread:
         """Modify a thread."""
         updated_at = datetime.now(timezone.utc)
-        async with sqlite_conn() as conn, conn.cursor() as cur:
+        async with self.sqlite_conn() as conn, conn.cursor() as cur:
             await cur.execute(
                 """
                 INSERT INTO thread (thread_id, user_id, assistant_id, name, updated_at) 
@@ -222,7 +257,7 @@ class SqliteStorage(BaseStorage):
 
     async def get_or_create_user(self, sub: str) -> tuple[User, bool]:
         """Returns a tuple of the user and a boolean indicating whether the user was created."""
-        async with sqlite_conn() as conn, conn.cursor() as cur:
+        async with self.sqlite_conn() as conn, conn.cursor() as cur:
             # Start a write transaction to avoid the unique contraint error due to
             # concurrent inserts.
             await cur.execute("BEGIN EXCLUSIVE")
@@ -244,7 +279,7 @@ class SqliteStorage(BaseStorage):
 
     async def delete_thread(self, user_id: str, thread_id: str) -> None:
         """Delete a thread by ID."""
-        async with sqlite_conn() as conn, conn.cursor() as cur:
+        async with self.sqlite_conn() as conn, conn.cursor() as cur:
             await cur.execute(
                 "DELETE FROM thread WHERE thread_id = ? AND user_id = ?",
                 (thread_id, user_id),

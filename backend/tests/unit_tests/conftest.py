@@ -7,9 +7,10 @@ import pytest
 
 from app.auth.settings import AuthType
 from app.auth.settings import settings as auth_settings
-from app.lifespan import get_pg_pool, lifespan
+from app.lifespan import lifespan
 from app.server import app
 from app.storage.settings import settings as storage_settings
+from app.storage.storage import storage
 
 auth_settings.auth_type = AuthType.NOOP
 
@@ -73,7 +74,7 @@ async def pool():
     await _create_test_db()
     _migrate_test_db()
     async with lifespan(app):
-        yield get_pg_pool()
+        yield storage.get_pg_pool()
     await _drop_test_db()
 
 

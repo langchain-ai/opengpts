@@ -1,19 +1,55 @@
 from datetime import datetime, timezone
 from typing import Any, List, Optional, Sequence, Union
 
+import asyncpg
+import orjson
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import RunnableConfig
 
-from app.agent import agent
-from app.lifespan import get_pg_pool
 from app.schema import Assistant, Thread, User
 from app.storage.base import BaseStorage
+from app.storage.settings import settings as storage_settings
 
 
 class PostgresStorage(BaseStorage):
+    _pg_pool: asyncpg.pool.Pool = None
+    _is_setup: bool = False
+
+    async def setup(self) -> None:
+        if self._is_setup:
+            return
+        self._pg_pool = await asyncpg.create_pool(
+            database=storage_settings.postgres.db,
+            user=storage_settings.postgres.user,
+            password=storage_settings.postgres.password,
+            host=storage_settings.postgres.host,
+            port=storage_settings.postgres.port,
+            init=self._init_connection,
+        )
+        self._is_setup = True
+
+    async def teardown(self) -> None:
+        await self._pg_pool.close()
+        self._pg_pool = None
+        self._is_setup = False
+
+    async def _init_connection(self, conn) -> None:
+        await conn.set_type_codec(
+            "json",
+            encoder=lambda v: orjson.dumps(v).decode(),
+            decoder=orjson.loads,
+            schema="pg_catalog",
+        )
+        await conn.set_type_codec(
+            "uuid", encoder=lambda v: str(v), decoder=lambda v: v, schema="pg_catalog"
+        )
+
+    def get_pg_pool(self) -> asyncpg.pool.Pool:
+        return self._pg_pool
+
     async def list_assistants(self, user_id: str) -> List[Assistant]:
         """List all assistants for the current user."""
-        async with get_pg_pool().acquire() as conn:
+        async with self.get_pg_pool().acquire() as conn:
             return await conn.fetch(
                 "SELECT * FROM assistant WHERE user_id = $1", user_id
             )
@@ -22,7 +58,7 @@ class PostgresStorage(BaseStorage):
         self, user_id: str, assistant_id: str
     ) -> Optional[Assistant]:
         """Get an assistant by ID."""
-        async with get_pg_pool().acquire() as conn:
+        async with self.get_pg_pool().acquire() as conn:
             return await conn.fetchrow(
                 "SELECT * FROM assistant WHERE assistant_id = $1 AND (user_id = $2 OR public IS true)",
                 assistant_id,
@@ -31,7 +67,7 @@ class PostgresStorage(BaseStorage):
 
     async def list_public_assistants(self) -> List[Assistant]:
         """List all the public assistants."""
-        async with get_pg_pool().acquire() as conn:
+        async with self.get_pg_pool().acquire() as conn:
             return await conn.fetch(("SELECT * FROM assistant WHERE public IS true;"))
 
     async def put_assistant(
@@ -56,7 +92,7 @@ class PostgresStorage(BaseStorage):
             return the assistant model if no exception is raised.
         """
         updated_at = datetime.now(timezone.utc)
-        async with get_pg_pool().acquire() as conn:
+        async with self.get_pg_pool().acquire() as conn:
             async with conn.transaction():
                 await conn.execute(
                     (
@@ -86,12 +122,12 @@ class PostgresStorage(BaseStorage):
 
     async def list_threads(self, user_id: str) -> List[Thread]:
         """List all threads for the current user."""
-        async with get_pg_pool().acquire() as conn:
+        async with self.get_pg_pool().acquire() as conn:
             return await conn.fetch("SELECT * FROM thread WHERE user_id = $1", user_id)
 
     async def get_thread(self, user_id: str, thread_id: str) -> Optional[Thread]:
         """Get a thread by ID."""
-        async with get_pg_pool().acquire() as conn:
+        async with self.get_pg_pool().acquire() as conn:
             return await conn.fetchrow(
                 "SELECT * FROM thread WHERE thread_id = $1 AND user_id = $2",
                 thread_id,
@@ -102,6 +138,8 @@ class PostgresStorage(BaseStorage):
         self, *, user_id: str, thread_id: str, assistant_id: str
     ):
         """Get state for a thread."""
+        from app.agent import agent
+
         assistant = await self.get_assistant(user_id, assistant_id)
         state = await agent.aget_state(
             {
@@ -126,6 +164,8 @@ class PostgresStorage(BaseStorage):
         assistant_id: str,
     ):
         """Add state to a thread."""
+        from app.agent import agent
+
         assistant = await self.get_assistant(user_id, assistant_id)
         await agent.aupdate_state(
             {
@@ -142,6 +182,8 @@ class PostgresStorage(BaseStorage):
         self, *, user_id: str, thread_id: str, assistant_id: str
     ):
         """Get the history of a thread."""
+        from app.agent import agent
+
         assistant = await self.get_assistant(user_id, assistant_id)
         return [
             {
@@ -166,7 +208,7 @@ class PostgresStorage(BaseStorage):
     ) -> Thread:
         """Modify a thread."""
         updated_at = datetime.now(timezone.utc)
-        async with get_pg_pool().acquire() as conn:
+        async with self.get_pg_pool().acquire() as conn:
             await conn.execute(
                 (
                     "INSERT INTO thread (thread_id, user_id, assistant_id, name, updated_at) VALUES ($1, $2, $3, $4, $5) "
@@ -192,7 +234,7 @@ class PostgresStorage(BaseStorage):
 
     async def get_or_create_user(self, sub: str) -> tuple[User, bool]:
         """Returns a tuple of the user and a boolean indicating whether the user was created."""
-        async with get_pg_pool().acquire() as conn:
+        async with self.get_pg_pool().acquire() as conn:
             user = await conn.fetchrow(
                 'INSERT INTO "user" (sub) VALUES ($1) ON CONFLICT (sub) DO NOTHING RETURNING *',
                 sub,
@@ -204,7 +246,7 @@ class PostgresStorage(BaseStorage):
 
     async def delete_thread(self, user_id: str, thread_id: str) -> None:
         """Delete a thread by ID."""
-        async with get_pg_pool().acquire() as conn:
+        async with self.get_pg_pool().acquire() as conn:
             await conn.execute(
                 "DELETE FROM thread WHERE thread_id = $1 AND user_id = $2",
                 thread_id,
