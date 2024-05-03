@@ -155,21 +155,29 @@ async def put_thread(
 ) -> Thread:
     """Modify a thread."""
     updated_at = datetime.now(timezone.utc)
+    assistant = await get_assistant(user_id, assistant_id)
+    metadata = (
+        {"assistant_type": assistant["config"]["configurable"]["type"]}
+        if assistant
+        else None
+    )
     async with get_pg_pool().acquire() as conn:
         await conn.execute(
             (
-                "INSERT INTO thread (thread_id, user_id, assistant_id, name, updated_at) VALUES ($1, $2, $3, $4, $5) "
+                "INSERT INTO thread (thread_id, user_id, assistant_id, name, updated_at, metadata) VALUES ($1, $2, $3, $4, $5, $6) "
                 "ON CONFLICT (thread_id) DO UPDATE SET "
                 "user_id = EXCLUDED.user_id,"
                 "assistant_id = EXCLUDED.assistant_id, "
                 "name = EXCLUDED.name, "
-                "updated_at = EXCLUDED.updated_at;"
+                "updated_at = EXCLUDED.updated_at, "
+                "metadata = EXCLUDED.metadata;"
             ),
             thread_id,
             user_id,
             assistant_id,
             name,
             updated_at,
+            metadata,
         )
         return {
             "thread_id": thread_id,
@@ -177,6 +185,7 @@ async def put_thread(
             "assistant_id": assistant_id,
             "name": name,
             "updated_at": updated_at,
+            "metadata": metadata,
         }
 
 

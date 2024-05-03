@@ -41,3 +41,4 @@ class Thread(TypedDict):
     """The name of the thread."""
     updated_at: datetime
     """The last time the thread was updated."""
+    metadata: Optional[dict]
