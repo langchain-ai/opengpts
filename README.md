@@ -117,14 +117,10 @@ pyenv activate opengpts
 Once your Python environment is set up, you can install the project dependencies:
 
 The backend service uses [poetry](https://python-poetry.org/docs/#installation) to manage dependencies.
-It assumes libmagic to be [installed](https://github.com/ahupp/python-magic?tab=readme-ov-file#installation) in your 
-host system.
 
 ```shell 
 pip install poetry
-pip install libmagic
 pip install langchain-community
-brew install libmagic
 ```
 
 ### Persistence Layer
@@ -412,9 +408,9 @@ this.
 
 If you want to use some preconfigured tools, these include:
 
-**_Robocorp Action Server_**
+**_Sema4.ai Action Server_**
 
-Run AI Python based actions with [Robocorp Action Server](https://github.com/robocorp/robocorp).
+Run AI Python based actions with [Sema4.ai Action Server](https://github.com/Sema4AI/actions).
 Does not require a service API key, but it requires the credentials for a running Action Server instance to be defined.
 These you set while creating an assistant.
 
