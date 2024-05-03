@@ -139,7 +139,13 @@ export function ChatList(props: {
                     role="menuitem"
                     onClick={(event) => {
                       event.preventDefault();
-                      props.deleteChat(chat.thread_id);
+                      if (
+                        window.confirm(
+                          `Are you sure you want to delete chat "${chat.name}"?`,
+                        )
+                      ) {
+                        props.deleteChat(chat.thread_id);
+                      }
                     }}
                   >
                     Delete
