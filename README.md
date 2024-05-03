@@ -109,14 +109,10 @@ pyenv activate opengpts
 Once your Python environment is set up, you can install the project dependencies:
 
 The backend service uses [poetry](https://python-poetry.org/docs/#installation) to manage dependencies.
-It assumes libmagic to be [installed](https://github.com/ahupp/python-magic?tab=readme-ov-file#installation) in your 
-host system.
 
 ```shell 
 pip install poetry
-pip install libmagic
 pip install langchain-community
-brew install libmagic
 ```
 
 **Install Postgres and the Postgres Vector Extension**
