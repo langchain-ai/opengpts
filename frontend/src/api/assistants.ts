@@ -4,7 +4,7 @@ export async function getAssistant(
   assistantId: string,
 ): Promise<Config | null> {
   try {
-    const response = await fetch(`/assistants/${assistantId}`);
+    const response = await fetch(`/api/v1/assistants/${assistantId}`);
     if (!response.ok) {
       return null;
     }

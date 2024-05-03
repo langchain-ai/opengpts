@@ -14,16 +14,16 @@ async def ok():
 
 router.include_router(
     assistants_router,
-    prefix="/assistants",
+    prefix="/api/v1/assistants",
     tags=["assistants"],
 )
 router.include_router(
     runs_router,
-    prefix="/runs",
+    prefix="/api/v1/runs",
     tags=["runs"],
 )
 router.include_router(
     threads_router,
-    prefix="/threads",
+    prefix="/api/v1/threads",
     tags=["threads"],
 )

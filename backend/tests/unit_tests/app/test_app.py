@@ -24,7 +24,7 @@ async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
 
     async with get_client() as client:
         response = await client.get(
-            "/assistants/",
+            "/api/v1/assistants/",
             headers=headers,
         )
         assert response.status_code == 200
@@ -33,7 +33,7 @@ async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
 
         # Create an assistant
         response = await client.put(
-            f"/assistants/{aid}",
+            f"/api/v1/assistants/{aid}",
             json={"name": "bobby", "config": {}, "public": False},
             headers=headers,
         )
@@ -47,7 +47,7 @@ async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
         async with pool.acquire() as conn:
             assert len(await conn.fetch("SELECT * FROM assistant;")) == 1
 
-        response = await client.get("/assistants/", headers=headers)
+        response = await client.get("/api/v1/assistants/", headers=headers)
         assert [
             _project(d, exclude_keys=["updated_at", "user_id"]) for d in response.json()
         ] == [
@@ -60,7 +60,7 @@ async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
         ]
 
         response = await client.put(
-            f"/assistants/{aid}",
+            f"/api/v1/assistants/{aid}",
             json={"name": "bobby", "config": {}, "public": False},
             headers=headers,
         )
@@ -74,7 +74,7 @@ async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
 
         # Check not visible to other users
         headers = {"Cookie": "opengpts_user_id=2"}
-        response = await client.get("/assistants/", headers=headers)
+        response = await client.get("/api/v1/assistants/", headers=headers)
         assert response.status_code == 200, response.text
         assert response.json() == []
 
@@ -87,7 +87,7 @@ async def test_threads() -> None:
 
     async with get_client() as client:
         response = await client.put(
-            f"/assistants/{aid}",
+            f"/api/v1/assistants/{aid}",
             json={
                 "name": "assistant",
                 "config": {"configurable": {"type": "chatbot"}},
@@ -97,17 +97,17 @@ async def test_threads() -> None:
         )
 
         response = await client.put(
-            f"/threads/{tid}",
+            f"/api/v1/threads/{tid}",
             json={"name": "bobby", "assistant_id": aid},
             headers=headers,
         )
         assert response.status_code == 200, response.text
 
-        response = await client.get(f"/threads/{tid}/state", headers=headers)
+        response = await client.get(f"/api/v1/threads/{tid}/state", headers=headers)
         assert response.status_code == 200
         assert response.json() == {"values": None, "next": []}
 
-        response = await client.get("/threads/", headers=headers)
+        response = await client.get("/api/v1/threads/", headers=headers)
 
         assert response.status_code == 200
         assert [
@@ -115,7 +115,7 @@ async def test_threads() -> None:
         ] == [{"assistant_id": aid, "name": "bobby", "thread_id": tid}]
 
         response = await client.put(
-            f"/threads/{tid}",
+            f"/api/v1/threads/{tid}",
             headers={"Cookie": "opengpts_user_id=2"},
         )
         assert response.status_code == 422

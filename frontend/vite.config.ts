@@ -9,7 +9,7 @@ export default defineConfig({
       usePolling: true
     },
     proxy: {
-      "^/(assistants|threads|ingest|runs)": {
+      "^/api/v1/(assistants|threads|ingest|runs)": {
         target: process.env.VITE_BACKEND_URL || "http://127.0.0.1:8100",
         changeOrigin: true,
         rewrite: (path) => path.replace("/____LANGSERVE_BASE_URL", ""),

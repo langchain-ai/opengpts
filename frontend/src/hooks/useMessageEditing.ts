@@ -13,7 +13,7 @@ export function useMessageEditing(
   }, []);
   const commitEdits = useCallback(async () => {
     if (!threadId) return;
-    fetch(`/threads/${threadId}/state`, {
+    fetch(`/api/v1/threads/${threadId}/state`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ values: Object.values(editing) }),
