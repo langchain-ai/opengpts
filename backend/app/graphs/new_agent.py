@@ -26,9 +26,9 @@ from app.tools import RETRIEVAL_DESCRIPTION, AvailableTools, TOOLS, get_retrieva
 class LLMType(str, Enum):
     GPT_35_TURBO = "GPT 3.5 Turbo"
     GPT_4 = "GPT 4 Turbo"
+    GPT_4O = "GPT 4o"
     AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
     CLAUDE2 = "Claude 2"
-    BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
     GEMINI = "GEMINI"
     MIXTRAL = "Mixtral"
     OLLAMA = "Ollama"
@@ -40,13 +40,13 @@ def get_llm(
     if llm_type == LLMType.GPT_35_TURBO:
         llm = get_openai_llm()
     elif llm_type == LLMType.GPT_4:
-        llm = get_openai_llm(gpt_4=True)
+        llm = get_openai_llm(model="gpt-4-turbo")
+    elif llm_type == LLMType.GPT_4O:
+        llm = get_openai_llm(model="gpt-4o")
     elif llm_type == LLMType.AZURE_OPENAI:
         llm = get_openai_llm(azure=True)
     elif llm_type == LLMType.CLAUDE2:
         llm = get_anthropic_llm()
-    elif llm_type == LLMType.BEDROCK_CLAUDE2:
-        llm = get_anthropic_llm(bedrock=True)
     elif llm_type == LLMType.GEMINI:
         llm = get_google_llm()
     elif llm_type == LLMType.MIXTRAL:
