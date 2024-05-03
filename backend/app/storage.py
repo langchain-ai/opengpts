@@ -71,7 +71,7 @@ async def put_assistant(
     """
     assistant = await get_langserve().assistants.upsert(
         assistant_id,
-        "agent",
+        config["configurable"]["type"],
         config,
         metadata={"user_id": user_id, "public": public, "name": name},
     )
@@ -146,7 +146,7 @@ async def update_thread_state(
 
 async def get_thread_history(*, user_id: str, thread_id: str, assistant: Assistant):
     """Get the history of a thread."""
-    raise NotImplementedError
+    return await get_langserve().threads.get_history(thread_id)
 
 
 async def put_thread(

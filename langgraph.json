@@ -1,0 +1,10 @@
+{
+  "dependencies": [
+    "./backend"
+  ],
+  "graphs": {
+    "chatbot": "app.new_chatbot:graph",
+    "agent": "app.new_agent:graph"
+  },
+  "env": ".env"
+}

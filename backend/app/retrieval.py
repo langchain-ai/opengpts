@@ -10,8 +10,9 @@ from langchain_core.runnables import chain
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph import END
 from langgraph.graph.state import StateGraph
+from langgraph.graph.message import add_messages
 
-from app.message_types import LiberalToolMessage, add_messages_liberal
+from app.message_types import LiberalToolMessage
 
 search_prompt = PromptTemplate.from_template(
     """Given the conversation below, come up with a search query to look up.
@@ -42,7 +43,7 @@ def get_retrieval_executor(
     checkpoint: BaseCheckpointSaver,
 ):
     class AgentState(TypedDict):
-        messages: Annotated[List[BaseMessage], add_messages_liberal]
+        messages: Annotated[List[BaseMessage], add_messages]
         msg_count: Annotated[int, operator.add]
 
     def _get_messages(messages):

@@ -1,19 +1,6 @@
 services:
   postgres:
     image: pgvector/pgvector:pg16
-  langserve:
-    # Prefer the build section below
-    pull_policy: build
-    # Add langchain_community to the image
-    build:
-      dockerfile_inline: |
-        FROM langchain/langserve
-        COPY ./backend /opengpts
-        RUN pip install -e /opengpts
-    environment:
-      LANGSERVE_GRAPHS: '{"agent": "app.agent:hack"}'
-    env_file:
-      - .env
   postgres-setup:
     image: migrate/migrate
     depends_on:
@@ -23,16 +10,24 @@ services:
       - ./backend/migrations:/migrations
     env_file:
       - .env
-    command: ["-path", "/migrations", "-database", "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:$POSTGRES_PORT/$POSTGRES_DB?sslmode=disable", "up"]
+    command:
+      [
+        "-path",
+        "/migrations",
+        "-database",
+        "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:$POSTGRES_PORT/$POSTGRES_DB?sslmode=disable",
+        "up",
+      ]
   backend:
     container_name: opengpts-backend
+    pull_policy: build
     build:
       context: backend
     ports:
       - "8100:8000" # Backend is accessible on localhost:8100
     depends_on:
-      # langserve:
-      #   condition: service_healthy
+      langserve:
+        condition: service_healthy
       postgres-setup:
         condition: service_completed_successfully
     env_file:
@@ -57,4 +52,3 @@ services:
       - "5173:5173" # Frontend is accessible on localhost:5173
     environment:
       VITE_BACKEND_URL: "http://backend:8000"
-

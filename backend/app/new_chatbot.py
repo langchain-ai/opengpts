@@ -1,9 +1,10 @@
-from langchain_core.messages import SystemMessage
-from langgraph.graph import StateGraph, END
-from typing import TypedDict, Annotated, Sequence
-import operator
-from langchain_core.messages import BaseMessage
 from enum import Enum
+from typing import TypedDict, Annotated, Sequence
+
+from langchain_core.messages import BaseMessage, SystemMessage
+from langgraph.graph import StateGraph, END
+from langgraph.graph.message import add_messages
+
 from app.llms import (
     get_anthropic_llm,
     get_google_llm,
@@ -11,6 +12,7 @@ from app.llms import (
     get_ollama_llm,
     get_openai_llm,
 )
+
 
 class LLMType(str, Enum):
     GPT_35_TURBO = "GPT 3.5 Turbo"
@@ -48,18 +50,21 @@ def get_llm(
 
 
 class AgentState(TypedDict):
-    messages: Annotated[Sequence[BaseMessage], operator.add]
+    messages: Annotated[Sequence[BaseMessage], add_messages]
 
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
 
 def _call_model(state, config):
-    m = get_llm(config['configurable'].get('model', LLMType.GPT_35_TURBO))
-    system_message = config['configurable'].get("system_message", DEFAULT_SYSTEM_MESSAGE)
-    messages = [SystemMessage(content=system_message)] + state['messages']
+    m = get_llm(config["configurable"].get("type==chatbot/llm", LLMType.GPT_35_TURBO))
+    system_message = config["configurable"].get(
+        "type==chatbot/system_message", DEFAULT_SYSTEM_MESSAGE
+    )
+    messages = [SystemMessage(content=system_message)] + state["messages"]
     response = m.invoke(messages)
     return {"messages": [response]}
+
 
 # Define a new graph
 workflow = StateGraph(AgentState)

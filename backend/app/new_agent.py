@@ -1,7 +1,6 @@
+from enum import Enum
 from typing import cast
 
-from langchain.tools import BaseTool
-from langchain_core.language_models.base import LanguageModelLike
 from langchain_core.messages import (
     AIMessage,
     FunctionMessage,
@@ -9,16 +8,11 @@ from langchain_core.messages import (
     SystemMessage,
     ToolMessage,
 )
-from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph import END
 from langgraph.graph.message import MessageGraph
 from langgraph.prebuilt import ToolExecutor, ToolInvocation
-from app.tools import (
-    RETRIEVAL_DESCRIPTION, AvailableTools, TOOLS, get_retrieval_tool
-)
 
 from app.message_types import LiberalToolMessage
-from enum import Enum
 from app.llms import (
     get_anthropic_llm,
     get_google_llm,
@@ -26,6 +20,9 @@ from app.llms import (
     get_ollama_llm,
     get_openai_llm,
 )
+from app.tools import RETRIEVAL_DESCRIPTION, AvailableTools, TOOLS, get_retrieval_tool
+
+
 class LLMType(str, Enum):
     GPT_35_TURBO = "GPT 3.5 Turbo"
     GPT_4 = "GPT 4 Turbo"
@@ -60,6 +57,7 @@ def get_llm(
         raise ValueError
     return llm
 
+
 async def _get_messages(messages, system_message):
     msgs = []
     for m in messages:
@@ -78,7 +76,11 @@ async def _get_messages(messages, system_message):
 
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
-def get_tools(tools, assistant_id, thread_id, retrieval_description=RETRIEVAL_DESCRIPTION):
+
+
+def get_tools(
+    tools, assistant_id, thread_id, retrieval_description=RETRIEVAL_DESCRIPTION
+):
     _tools = []
     for _tool in tools:
         if _tool["type"] == AvailableTools.RETRIEVAL:
@@ -100,12 +102,17 @@ def get_tools(tools, assistant_id, thread_id, retrieval_description=RETRIEVAL_DE
 
 
 async def agent(messages, config):
-    _config = config['configurable']
-    system_message = _config.get('system_message', DEFAULT_SYSTEM_MESSAGE)
-    llm = get_llm(_config.get('agent_type', LLMType.GPT_35_TURBO))
-    tools = get_tools(_config.get("tools"), _config.get("assistant_id"), _config.get("thread_id"), _config.get("retrieval_description"))
+    _config = config["configurable"]
+    system_message = _config.get("type==agent/system_message", DEFAULT_SYSTEM_MESSAGE)
+    llm = get_llm(_config.get("type==agent/agent_type", LLMType.GPT_35_TURBO))
+    tools = get_tools(
+        _config.get("type==agent/tools"),
+        _config.get("assistant_id"),
+        _config.get("thread_id"),
+        _config.get("type==agent/retrieval_description"),
+    )
     if tools:
-        llm = llm.bind(tools)
+        llm = llm.bind_tools(tools)
     messages = await _get_messages(messages, system_message)
     response = llm.invoke(messages)
     return response
@@ -121,10 +128,16 @@ def should_continue(messages):
     else:
         return "continue"
 
+
 # Define the function to execute tools
-async def call_tool(messages, _config):
-    tools = get_tools(_config.get("tools"), _config.get("assistant_id"), _config.get("thread_id"),
-                      _config.get("retrieval_description"))
+async def call_tool(messages, config):
+    _config = config["configurable"]
+    tools = get_tools(
+        _config.get("type==agent/tools"),
+        _config.get("assistant_id"),
+        _config.get("thread_id"),
+        _config.get("type==agent/retrieval_description"),
+    )
 
     tool_executor = ToolExecutor(tools)
     actions: list[ToolInvocation] = []
@@ -151,6 +164,7 @@ async def call_tool(messages, _config):
         for tool_call, response in zip(last_message.tool_calls, responses)
     ]
     return tool_messages
+
 
 workflow = MessageGraph()
 
@@ -190,4 +204,4 @@ workflow.add_edge("action", "agent")
 # Finally, we compile it!
 # This compiles it into a LangChain Runnable,
 # meaning you can use it as you would any other runnable
-graph =  workflow.compile()
+graph = workflow.compile()

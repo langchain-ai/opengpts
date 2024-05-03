@@ -57,6 +57,7 @@ async def stream_run(
                 thread["assistant_id"],
                 input=payload.input,
                 config=payload.config,
+                stream_mode="messages",
             )
         )
     )
