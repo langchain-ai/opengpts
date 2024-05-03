@@ -44,6 +44,6 @@ def test_mimetype_guessing() -> None:
         "sample.html": "text/html",
         "sample.odt": "application/vnd.oasis.opendocument.text",
         "sample.pdf": "application/pdf",
-        "sample.rtf": "text/rtf",
+        "sample.rtf": "application/rtf",
         "sample.txt": "text/plain",
     } == name_to_mime
