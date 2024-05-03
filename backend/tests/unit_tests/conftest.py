@@ -74,7 +74,7 @@ async def pool():
     await _create_test_db()
     _migrate_test_db()
     async with lifespan(app):
-        yield storage.get_pg_pool()
+        yield storage.get_pool()
     await _drop_test_db()
 
 

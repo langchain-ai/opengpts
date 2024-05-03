@@ -58,7 +58,7 @@ class PostgresCheckpointer(BaseCheckpointSaver):
         raise NotImplementedError
 
     async def alist(self, config: RunnableConfig) -> AsyncIterator[CheckpointTuple]:
-        async with storage.get_pg_pool().acquire() as db, db.transaction():
+        async with storage.get_pool().acquire() as db, db.transaction():
             thread_id = config["configurable"]["thread_id"]
             async for value in db.cursor(
                 "SELECT checkpoint, thread_ts, parent_ts FROM checkpoints WHERE thread_id = $1 ORDER BY thread_ts DESC",
@@ -85,7 +85,7 @@ class PostgresCheckpointer(BaseCheckpointSaver):
     async def aget_tuple(self, config: RunnableConfig) -> Optional[CheckpointTuple]:
         thread_id = config["configurable"]["thread_id"]
         thread_ts = config["configurable"].get("thread_ts")
-        async with storage.get_pg_pool().acquire() as conn:
+        async with storage.get_pool().acquire() as conn:
             if thread_ts:
                 if value := await conn.fetchrow(
                     "SELECT checkpoint, parent_ts FROM checkpoints WHERE thread_id = $1 AND thread_ts = $2",
@@ -129,7 +129,7 @@ class PostgresCheckpointer(BaseCheckpointSaver):
 
     async def aput(self, config: RunnableConfig, checkpoint: Checkpoint) -> None:
         thread_id = config["configurable"]["thread_id"]
-        async with storage.get_pg_pool().acquire() as conn:
+        async with storage.get_pool().acquire() as conn:
             await conn.execute(
                 """
                 INSERT INTO checkpoints (thread_id, thread_ts, parent_ts, checkpoint)

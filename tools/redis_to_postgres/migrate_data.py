@@ -266,7 +266,7 @@ async def migrate_embeddings(conn: asyncpg.Connection) -> None:
 
 async def migrate_data():
     logger.info("Starting to migrate data from Redis to Postgres.")
-    async with storage.get_pg_pool().acquire() as conn, conn.transaction():
+    async with storage.get_pool().acquire() as conn, conn.transaction():
         await migrate_assistants(conn)
         await migrate_threads(conn)
         await migrate_checkpoints()
