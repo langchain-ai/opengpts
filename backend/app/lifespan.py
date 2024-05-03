@@ -5,7 +5,7 @@ import asyncpg
 import orjson
 import structlog
 from fastapi import FastAPI
-from app.langserve.client import LangServeClient, get_client
+from langgraph_sdk.client import LangServeClient, get_client
 
 _pg_pool = None
 _langserve = None
