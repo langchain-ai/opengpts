@@ -6,7 +6,7 @@ ARG TARGETARCH
 ARG TARGETVARIANT
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y libmagic1 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && rm -rf /var/lib/apt/lists/*
 RUN wget -O golang-migrate.deb https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.${TARGETOS}-${TARGETARCH}${TARGETVARIANT}.deb \
     && dpkg -i golang-migrate.deb \
     && rm golang-migrate.deb
