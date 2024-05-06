@@ -1,12 +1,12 @@
-import logging
 from typing import Any, AsyncIterator, Dict, Optional, Sequence, Union
 
 import orjson
+import structlog
 from langchain_core.messages import AnyMessage, BaseMessage, message_chunk_to_message
 from langchain_core.runnables import Runnable, RunnableConfig
 from langserve.serialization import WellKnownLCSerializer
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 MessagesStream = AsyncIterator[Union[list[AnyMessage], str]]
 

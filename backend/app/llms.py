@@ -1,17 +1,17 @@
-import logging
 import os
 from functools import lru_cache
 from urllib.parse import urlparse
 
 import boto3
 import httpx
+import structlog
 from langchain_anthropic import ChatAnthropic
 from langchain_community.chat_models import BedrockChat, ChatFireworks
 from langchain_community.chat_models.ollama import ChatOllama
 from langchain_google_vertexai import ChatVertexAI
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 @lru_cache(maxsize=4)
