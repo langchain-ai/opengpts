@@ -34,20 +34,29 @@
             "backupCount": 1
         }
     },
+    "root": {
+        "handlers": [
+            "default",
+            "file"
+        ],
+        "level": "INFO"
+    },
     "loggers": {
         "app": {
             "handlers": [
                 "default",
                 "file"
             ],
-            "level": "INFO"
+            "level": "INFO",
+            "propagate": false
         },
         "uvicorn": {
             "handlers": [
                 "default",
                 "file"
             ],
-            "level": "INFO"
+            "level": "INFO",
+            "propagate": false
         },
         "uvicorn.access": {
             "handlers": [
