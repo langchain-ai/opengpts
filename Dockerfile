@@ -45,4 +45,4 @@ COPY ./backend .
 # Copy the frontend build
 COPY --from=builder /frontend/dist ./ui
 
-ENTRYPOINT [ "uvicorn", "app.server:app", "--host", "0.0.0.0" ]
+ENTRYPOINT [ "uvicorn", "app.server:app", "--host", "0.0.0.0", "--log-config", "log_config.json" ]
