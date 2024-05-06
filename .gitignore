@@ -53,7 +53,7 @@ package-lock.json
 *.temp
 
 # Log files
-*.log
+*.log*
 logs/
 npm-debug.log*
 yarn-debug.log*
