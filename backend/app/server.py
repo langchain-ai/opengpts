@@ -1,8 +1,8 @@
-import logging
 import os
 from pathlib import Path
 
 import orjson
+import structlog
 from fastapi import FastAPI, Form, UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -13,7 +13,7 @@ from app.auth.handlers import AuthedUser
 from app.lifespan import lifespan
 from app.upload import convert_ingestion_input_to_blob, ingest_runnable
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 app = FastAPI(title="OpenGPTs API", lifespan=lifespan)
 

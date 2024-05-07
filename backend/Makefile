@@ -14,7 +14,7 @@ build_ui:
 TEST_FILE ?= tests/unit_tests/
 
 start:
-	poetry run uvicorn app.server:app --reload --port 8100
+	poetry run uvicorn app.server:app --reload --port 8100 --log-config log_config.json
 
 migrate:
 	migrate -database postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable -path ./migrations up
