@@ -15,7 +15,7 @@ services:
         "-path",
         "/migrations",
         "-database",
-        "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:$POSTGRES_PORT/$POSTGRES_DB?sslmode=disable",
+        "postgres://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable",
         "up",
       ]
   backend:
@@ -35,7 +35,7 @@ services:
     volumes:
       - ./backend:/backend
     environment:
-      POSTGRES_HOST: "postgres"
+      POSTGRES_URI: "postgres://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable&search_path=langgraph"
       LANGSERVE_URL: "http://langserve:8000"
     command:
       - --reload
