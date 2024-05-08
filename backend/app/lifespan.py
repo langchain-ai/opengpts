@@ -55,14 +55,10 @@ async def lifespan(app: FastAPI):
     global _pg_pool, _langserve
 
     _pg_pool = await asyncpg.create_pool(
-        database=os.environ["POSTGRES_DB"],
-        user=os.environ["POSTGRES_USER"],
-        password=os.environ["POSTGRES_PASSWORD"],
-        host=os.environ["POSTGRES_HOST"],
-        port=os.environ["POSTGRES_PORT"],
+        os.environ["POSTGRES_URI"],
         init=_init_connection,
     )
-    _langserve = get_client(url=os.environ["LANGSERVE_URL"])
+    _langserve = get_client(url=os.environ["LANGGRAPH_URL"])
     yield
     await _pg_pool.close()
     await _langserve.http.client.aclose()

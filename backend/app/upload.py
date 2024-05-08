@@ -85,13 +85,13 @@ def convert_ingestion_input_to_blob(file: UploadFile) -> Blob:
 def get_vectorstore() -> PGVector:
     if os.environ.get("OPENAI_API_KEY"):
         return PGVector(
-            connection_string=os.environ["POSTGRES_URI"],
+            connection_string=os.environ["PGVECTOR_URI"],
             embedding_function=OpenAIEmbeddings(),
             use_jsonb=True,
         )
     if os.environ.get("AZURE_OPENAI_API_KEY"):
         return PGVector(
-            connection_string=os.environ["POSTGRES_URI"],
+            connection_string=os.environ["PGVECTOR_URI"],
             embedding_function=AzureOpenAIEmbeddings(
                 azure_endpoint=os.environ.get("AZURE_OPENAI_API_BASE"),
                 azure_deployment=os.environ.get(
