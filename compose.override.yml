@@ -1,10 +1,13 @@
 services:
-  postgres:
+  langgraph-api:
+    environment:
+      PGVECTOR_URI: "postgresql+psycopg2://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable"
+  langgraph-postgres:
     image: pgvector/pgvector:pg16
   postgres-setup:
     image: migrate/migrate
     depends_on:
-      postgres:
+      langgraph-postgres:
         condition: service_healthy
     volumes:
       - ./backend/migrations:/migrations
@@ -26,7 +29,7 @@ services:
     ports:
       - "8100:8000" # Backend is accessible on localhost:8100
     depends_on:
-      langserve:
+      langgraph-api:
         condition: service_healthy
       postgres-setup:
         condition: service_completed_successfully
@@ -35,8 +38,9 @@ services:
     volumes:
       - ./backend:/backend
     environment:
-      POSTGRES_URI: "postgres://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable&search_path=langgraph"
-      LANGSERVE_URL: "http://langserve:8000"
+      POSTGRES_URI: "postgres://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable"
+      PGVECTOR_URI: "postgresql+psycopg2://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable"
+      LANGGRAPH_URL: "http://langgraph-api:8000"
     command:
       - --reload
   frontend:
