@@ -76,6 +76,16 @@ async def put_assistant(
     }
 
 
+async def delete_assistant(user_id: str, assistant_id: str) -> None:
+    """Delete an assistant by ID."""
+    async with get_pg_pool().acquire() as conn:
+        await conn.execute(
+            "DELETE FROM assistant WHERE assistant_id = $1 AND user_id = $2",
+            assistant_id,
+            user_id,
+        )
+
+
 async def list_threads(user_id: str) -> List[Thread]:
     """List all threads for the current user."""
     async with get_pg_pool().acquire() as conn:
@@ -189,17 +199,6 @@ async def put_thread(
         }
 
 
-async def get_or_create_user(sub: str) -> tuple[User, bool]:
-    """Returns a tuple of the user and a boolean indicating whether the user was created."""
-    async with get_pg_pool().acquire() as conn:
-        if user := await conn.fetchrow('SELECT * FROM "user" WHERE sub = $1', sub):
-            return user, False
-        user = await conn.fetchrow(
-            'INSERT INTO "user" (sub) VALUES ($1) RETURNING *', sub
-        )
-        return user, True
-
-
 async def delete_thread(user_id: str, thread_id: str):
     """Delete a thread by ID."""
     async with get_pg_pool().acquire() as conn:
@@ -210,11 +209,12 @@ async def delete_thread(user_id: str, thread_id: str):
         )
 
 
-async def delete_assistant(user_id: str, assistant_id: str) -> None:
-    """Delete an assistant by ID."""
+async def get_or_create_user(sub: str) -> tuple[User, bool]:
+    """Returns a tuple of the user and a boolean indicating whether the user was created."""
     async with get_pg_pool().acquire() as conn:
-        await conn.execute(
-            "DELETE FROM assistant WHERE assistant_id = $1 AND user_id = $2",
-            assistant_id,
-            user_id,
+        if user := await conn.fetchrow('SELECT * FROM "user" WHERE sub = $1', sub):
+            return user, False
+        user = await conn.fetchrow(
+            'INSERT INTO "user" (sub) VALUES ($1) RETURNING *', sub
         )
+        return user, True
