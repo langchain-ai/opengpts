@@ -26,10 +26,9 @@ async def list_assistants(user_id: str) -> List[Assistant]:
 async def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
     """Get an assistant by ID."""
     assistant = await get_langserve().assistants.get(assistant_id)
-    if (
-        assistant["metadata"]["user_id"] != user_id
-        and not assistant["metadata"]["public"]
-    ):
+    if assistant["metadata"].get("user_id") != user_id and not assistant[
+        "metadata"
+    ].get("public"):
         return None
     else:
         return Assistant(
@@ -116,7 +115,7 @@ async def list_threads(user_id: str) -> List[Thread]:
 async def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
     """Get a thread by ID."""
     thread = await get_langserve().threads.get(thread_id)
-    if thread["metadata"]["user_id"] != user_id:
+    if thread["metadata"].get("user_id") != user_id:
         return None
     else:
         return Thread(
