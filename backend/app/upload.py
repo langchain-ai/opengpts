@@ -85,13 +85,13 @@ def convert_ingestion_input_to_blob(file: UploadFile) -> Blob:
 def get_vectorstore() -> PGVector:
     if os.environ.get("OPENAI_API_KEY"):
         return PGVector(
-            connection_string=PG_CONNECTION_STRING,
+            connection_string=os.environ["POSTGRES_URI"],
             embedding_function=OpenAIEmbeddings(),
             use_jsonb=True,
         )
     if os.environ.get("AZURE_OPENAI_API_KEY"):
         return PGVector(
-            connection_string=PG_CONNECTION_STRING,
+            connection_string=os.environ["POSTGRES_URI"],
             embedding_function=AzureOpenAIEmbeddings(
                 azure_endpoint=os.environ.get("AZURE_OPENAI_API_BASE"),
                 azure_deployment=os.environ.get(
@@ -144,14 +144,6 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
         return out
 
 
-PG_CONNECTION_STRING = PGVector.connection_string_from_db_params(
-    driver="psycopg2",
-    host=os.environ["POSTGRES_HOST"],
-    port=int(os.environ["POSTGRES_PORT"]),
-    database=os.environ["POSTGRES_DB"],
-    user=os.environ["POSTGRES_USER"],
-    password=os.environ["POSTGRES_PASSWORD"],
-)
 vstore = get_vectorstore()
 
 
