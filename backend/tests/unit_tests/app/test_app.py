@@ -112,7 +112,14 @@ async def test_threads() -> None:
         assert response.status_code == 200
         assert [
             _project(d, exclude_keys=["updated_at", "user_id"]) for d in response.json()
-        ] == [{"assistant_id": aid, "name": "bobby", "thread_id": tid}]
+        ] == [
+            {
+                "assistant_id": aid,
+                "name": "bobby",
+                "thread_id": tid,
+                "metadata": {"assistant_type": "chatbot"},
+            }
+        ]
 
         response = await client.put(
             f"/threads/{tid}",

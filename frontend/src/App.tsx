@@ -16,12 +16,13 @@ import { MessageWithFiles } from "./utils/formTypes.ts";
 import { useNavigate } from "react-router-dom";
 import { useThreadAndAssistant } from "./hooks/useThreadAndAssistant.ts";
 import { Message } from "./types.ts";
+import { OrphanChat } from "./components/OrphanChat.tsx";
 
 function App(props: { edit?: boolean }) {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { chats, createChat, deleteChat } = useChatList();
-  const { configs, saveConfig } = useConfigList();
+  const { chats, createChat, updateChat, deleteChat } = useChatList();
+  const { configs, saveConfig, deleteConfig } = useConfigList();
   const { startStream, stopStream, stream } = useStreamState();
   const { configSchema, configDefaults } = useSchemas();
 
@@ -145,6 +146,9 @@ function App(props: { edit?: boolean }) {
       {currentChat && assistantConfig && (
         <Chat startStream={startTurn} stopStream={stopStream} stream={stream} />
       )}
+      {currentChat && !assistantConfig && (
+        <OrphanChat chat={currentChat} updateChat={updateChat} />
+      )}
       {!currentChat && assistantConfig && !props.edit && (
         <NewChat
           startChat={startChat}
@@ -153,6 +157,7 @@ function App(props: { edit?: boolean }) {
           configs={configs}
           saveConfig={saveConfig}
           enterConfig={selectConfig}
+          deleteConfig={deleteConfig}
         />
       )}
       {!currentChat && assistantConfig && props.edit && (

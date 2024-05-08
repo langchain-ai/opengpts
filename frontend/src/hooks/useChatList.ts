@@ -4,10 +4,11 @@ import { Chat } from "../types";
 
 export interface ChatListProps {
   chats: Chat[] | null;
-  createChat: (
+  createChat: (name: string, assistant_id: string) => Promise<Chat>;
+  updateChat: (
     name: string,
-    assistant_id: string,
-    thread_id?: string,
+    thread_id: string,
+    assistant_id: string | null,
   ) => Promise<Chat>;
   deleteChat: (thread_id: string) => Promise<void>;
 }
@@ -57,6 +58,23 @@ export function useChatList(): ChatListProps {
     return saved;
   }, []);
 
+  const updateChat = useCallback(
+    async (thread_id: string, name: string, assistant_id: string | null) => {
+      const response = await fetch(`/threads/${thread_id}`, {
+        method: "PUT",
+        body: JSON.stringify({ assistant_id, name }),
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      });
+      const saved = await response.json();
+      setChats(saved);
+      return saved;
+    },
+    [],
+  );
+
   const deleteChat = useCallback(
     async (thread_id: string) => {
       await fetch(`/threads/${thread_id}`, {
@@ -73,6 +91,7 @@ export function useChatList(): ChatListProps {
   return {
     chats,
     createChat,
+    updateChat,
     deleteChat,
   };
 }

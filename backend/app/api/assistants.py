@@ -75,3 +75,13 @@ async def upsert_assistant(
         config=payload.config,
         public=payload.public,
     )
+
+
+@router.delete("/{aid}")
+async def delete_assistant(
+    user: AuthedUser,
+    aid: AssistantID,
+):
+    """Delete an assistant by ID."""
+    await storage.delete_assistant(user["user_id"], aid)
+    return {"status": "ok"}

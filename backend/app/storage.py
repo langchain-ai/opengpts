@@ -76,6 +76,16 @@ async def put_assistant(
     }
 
 
+async def delete_assistant(user_id: str, assistant_id: str) -> None:
+    """Delete an assistant by ID."""
+    async with get_pg_pool().acquire() as conn:
+        await conn.execute(
+            "DELETE FROM assistant WHERE assistant_id = $1 AND user_id = $2",
+            assistant_id,
+            user_id,
+        )
+
+
 async def list_threads(user_id: str) -> List[Thread]:
     """List all threads for the current user."""
     async with get_pg_pool().acquire() as conn:
@@ -92,15 +102,14 @@ async def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
         )
 
 
-async def get_thread_state(*, user_id: str, thread_id: str, assistant_id: str):
+async def get_thread_state(*, user_id: str, thread_id: str, assistant: Assistant):
     """Get state for a thread."""
-    assistant = await get_assistant(user_id, assistant_id)
     state = await agent.aget_state(
         {
             "configurable": {
                 **assistant["config"]["configurable"],
                 "thread_id": thread_id,
-                "assistant_id": assistant_id,
+                "assistant_id": assistant["assistant_id"],
             }
         }
     )
@@ -115,25 +124,23 @@ async def update_thread_state(
     values: Union[Sequence[AnyMessage], dict[str, Any]],
     *,
     user_id: str,
-    assistant_id: str,
+    assistant: Assistant,
 ):
     """Add state to a thread."""
-    assistant = await get_assistant(user_id, assistant_id)
     await agent.aupdate_state(
         {
             "configurable": {
                 **assistant["config"]["configurable"],
                 **config["configurable"],
-                "assistant_id": assistant_id,
+                "assistant_id": assistant["assistant_id"],
             }
         },
         values,
     )
 
 
-async def get_thread_history(*, user_id: str, thread_id: str, assistant_id: str):
+async def get_thread_history(*, user_id: str, thread_id: str, assistant: Assistant):
     """Get the history of a thread."""
-    assistant = await get_assistant(user_id, assistant_id)
     return [
         {
             "values": c.values,
@@ -146,7 +153,7 @@ async def get_thread_history(*, user_id: str, thread_id: str, assistant_id: str)
                 "configurable": {
                     **assistant["config"]["configurable"],
                     "thread_id": thread_id,
-                    "assistant_id": assistant_id,
+                    "assistant_id": assistant["assistant_id"],
                 }
             }
         )
@@ -158,21 +165,29 @@ async def put_thread(
 ) -> Thread:
     """Modify a thread."""
     updated_at = datetime.now(timezone.utc)
+    assistant = await get_assistant(user_id, assistant_id)
+    metadata = (
+        {"assistant_type": assistant["config"]["configurable"]["type"]}
+        if assistant
+        else None
+    )
     async with get_pg_pool().acquire() as conn:
         await conn.execute(
             (
-                "INSERT INTO thread (thread_id, user_id, assistant_id, name, updated_at) VALUES ($1, $2, $3, $4, $5) "
+                "INSERT INTO thread (thread_id, user_id, assistant_id, name, updated_at, metadata) VALUES ($1, $2, $3, $4, $5, $6) "
                 "ON CONFLICT (thread_id) DO UPDATE SET "
                 "user_id = EXCLUDED.user_id,"
                 "assistant_id = EXCLUDED.assistant_id, "
                 "name = EXCLUDED.name, "
-                "updated_at = EXCLUDED.updated_at;"
+                "updated_at = EXCLUDED.updated_at, "
+                "metadata = EXCLUDED.metadata;"
             ),
             thread_id,
             user_id,
             assistant_id,
             name,
             updated_at,
+            metadata,
         )
         return {
             "thread_id": thread_id,
@@ -180,7 +195,18 @@ async def put_thread(
             "assistant_id": assistant_id,
             "name": name,
             "updated_at": updated_at,
+            "metadata": metadata,
         }
+
+
+async def delete_thread(user_id: str, thread_id: str):
+    """Delete a thread by ID."""
+    async with get_pg_pool().acquire() as conn:
+        await conn.execute(
+            "DELETE FROM thread WHERE thread_id = $1 AND user_id = $2",
+            thread_id,
+            user_id,
+        )
 
 
 async def get_or_create_user(sub: str) -> tuple[User, bool]:
@@ -192,13 +218,3 @@ async def get_or_create_user(sub: str) -> tuple[User, bool]:
             'INSERT INTO "user" (sub) VALUES ($1) RETURNING *', sub
         )
         return user, True
-
-
-async def delete_thread(user_id: str, thread_id: str):
-    """Delete a thread by ID."""
-    async with get_pg_pool().acquire() as conn:
-        await conn.execute(
-            "DELETE FROM thread WHERE thread_id = $1 AND user_id = $2",
-            thread_id,
-            user_id,
-        )

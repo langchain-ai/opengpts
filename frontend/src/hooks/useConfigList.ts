@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useReducer } from "react";
 import orderBy from "lodash/orderBy";
+import { getAssistants } from "../api/assistants";
 
 export interface Config {
   assistant_id: string;
@@ -29,6 +30,7 @@ export interface ConfigListProps {
     isPublic: boolean,
     assistantId?: string,
   ) => Promise<string>;
+  deleteConfig: (assistantId: string) => Promise<void>;
 }
 
 function configsReducer(
@@ -51,14 +53,10 @@ export function useConfigList(): ConfigListProps {
 
   useEffect(() => {
     async function fetchConfigs() {
-      const myConfigs = await fetch("/assistants/", {
-        headers: {
-          Accept: "application/json",
-        },
-      })
-        .then((r) => r.json())
-        .then((li) => li.map((c: Config) => ({ ...c, mine: true })));
-      setConfigs(myConfigs);
+      const assistants = await getAssistants();
+      setConfigs(
+        assistants ? assistants.map((c) => ({ ...c, mine: true })) : [],
+      );
     }
 
     fetchConfigs();
@@ -105,8 +103,22 @@ export function useConfigList(): ConfigListProps {
     [],
   );
 
+  const deleteConfig = useCallback(
+    async (assistantId: string): Promise<void> => {
+      await fetch(`/assistants/${assistantId}`, {
+        method: "DELETE",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+      setConfigs((configs || []).filter((c) => c.assistant_id !== assistantId));
+    },
+    [configs],
+  );
+
   return {
     configs,
     saveConfig,
+    deleteConfig,
   };
 }

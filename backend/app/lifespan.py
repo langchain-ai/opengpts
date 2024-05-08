@@ -21,6 +21,12 @@ async def _init_connection(conn) -> None:
         schema="pg_catalog",
     )
     await conn.set_type_codec(
+        "jsonb",
+        encoder=lambda v: orjson.dumps(v).decode(),
+        decoder=orjson.loads,
+        schema="pg_catalog",
+    )
+    await conn.set_type_codec(
         "uuid", encoder=lambda v: str(v), decoder=lambda v: v, schema="pg_catalog"
     )
 

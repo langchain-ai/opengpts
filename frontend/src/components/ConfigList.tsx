@@ -1,13 +1,14 @@
 import { TYPES } from "../constants";
 import { Config, ConfigListProps } from "../hooks/useConfigList";
 import { cn } from "../utils/cn";
-import { PencilSquareIcon } from "@heroicons/react/24/outline";
+import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 
 function ConfigItem(props: {
   config: Config;
   currentConfig: Config | null;
   enterConfig: (id: string | null) => void;
+  deleteConfig: (id: string) => void;
 }) {
   return (
     <li key={props.config.assistant_id}>
@@ -50,6 +51,22 @@ function ConfigItem(props: {
         >
           <PencilSquareIcon />
         </Link>
+        <Link
+          className="w-5"
+          to="#"
+          onClick={(event) => {
+            event.preventDefault();
+            if (
+              window.confirm(
+                `Are you sure you want to delete bot "${props.config.name}?"`,
+              )
+            ) {
+              props.deleteConfig(props.config.assistant_id);
+            }
+          }}
+        >
+          <TrashIcon />
+        </Link>
       </div>
     </li>
   );
@@ -59,6 +76,7 @@ export function ConfigList(props: {
   configs: ConfigListProps["configs"];
   currentConfig: Config | null;
   enterConfig: (id: string | null) => void;
+  deleteConfig: (id: string) => void;
 }) {
   return (
     <>
@@ -74,6 +92,7 @@ export function ConfigList(props: {
               config={assistant}
               currentConfig={props.currentConfig}
               enterConfig={props.enterConfig}
+              deleteConfig={props.deleteConfig}
             />
           )) ?? (
           <li className="leading-6 p-2 animate-pulse font-black text-gray-400 text-lg">
@@ -94,6 +113,7 @@ export function ConfigList(props: {
               config={assistant}
               currentConfig={props.currentConfig}
               enterConfig={props.enterConfig}
+              deleteConfig={props.deleteConfig}
             />
           )) ?? (
           <li className="leading-6 p-2 animate-pulse font-black text-gray-400 text-lg">
