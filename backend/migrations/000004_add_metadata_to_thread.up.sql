@@ -1,5 +1,5 @@
 ALTER TABLE thread
-ADD COLUMN metadata JSON;
+ADD COLUMN metadata JSONB;
 
 UPDATE thread
 SET metadata = json_build_object(
