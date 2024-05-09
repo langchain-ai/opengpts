@@ -44,5 +44,8 @@ COPY ./backend .
 
 # Copy the frontend build
 COPY --from=builder /frontend/dist ./ui
+COPY --from=builder /frontend/dist/index.html ./ui/404.html
 
-ENTRYPOINT [ "uvicorn", "app.server:app", "--host", "0.0.0.0", "--log-config", "log_config.json" ]
+ENV PORT=8000
+
+ENTRYPOINT uvicorn app.server:app --host 0.0.0.0 --port $PORT --log-config log_config.json

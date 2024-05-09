@@ -45,6 +45,7 @@ services:
       - --reload
   frontend:
     container_name: opengpts-frontend
+    pull_policy: build
     build:
       context: frontend
     depends_on:

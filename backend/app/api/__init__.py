@@ -1,5 +1,9 @@
-from fastapi import APIRouter
+import orjson
+from fastapi import APIRouter, Form, UploadFile, HTTPException
 
+import app.storage as storage
+from app.auth.handlers import AuthedUser
+from app.upload import convert_ingestion_input_to_blob, ingest_runnable
 from app.api.assistants import router as assistants_router
 from app.api.runs import router as runs_router
 from app.api.threads import router as threads_router
@@ -7,9 +11,27 @@ from app.api.threads import router as threads_router
 router = APIRouter()
 
 
-@router.get("/ok")
-async def ok():
-    return {"ok": True}
+@router.post("/ingest", description="Upload files to the given assistant.")
+async def ingest_files(
+    files: list[UploadFile], user: AuthedUser, config: str = Form(...)
+) -> None:
+    """Ingest a list of files."""
+    config = orjson.loads(config)
+
+    assistant_id = config["configurable"].get("assistant_id")
+    if assistant_id is not None:
+        assistant = await storage.get_assistant(user["user_id"], assistant_id)
+        if assistant is None:
+            raise HTTPException(status_code=404, detail="Assistant not found.")
+
+    thread_id = config["configurable"].get("thread_id")
+    if thread_id is not None:
+        thread = await storage.get_thread(user["user_id"], thread_id)
+        if thread is None:
+            raise HTTPException(status_code=404, detail="Thread not found.")
+
+    file_blobs = [convert_ingestion_input_to_blob(file) for file in files]
+    return ingest_runnable.batch(file_blobs, config)
 
 
 router.include_router(

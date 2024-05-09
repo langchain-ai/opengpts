@@ -1,19 +1,18 @@
 import os
 from pathlib import Path
+from typing import Any, MutableMapping
 
-from fastapi.exception_handlers import http_exception_handler
 import httpx
-import orjson
 import structlog
-from fastapi import FastAPI, Form, UploadFile
+from fastapi import FastAPI
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.exceptions import HTTPException
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import Response
 
-import app.storage as storage
 from app.api import router as api_router
-from app.auth.handlers import AuthedUser
 from app.lifespan import lifespan
-from app.upload import convert_ingestion_input_to_blob, ingest_runnable
 
 logger = structlog.get_logger(__name__)
 
@@ -31,41 +30,29 @@ async def httpx_http_status_error_handler(request, exc: httpx.HTTPStatusError):
 ROOT = Path(__file__).parent.parent
 
 
-app.include_router(api_router)
+@app.get("/ok")
+async def ok():
+    return {"ok": True}
 
 
-@app.post("/ingest", description="Upload files to the given assistant.")
-async def ingest_files(
-    files: list[UploadFile], user: AuthedUser, config: str = Form(...)
-) -> None:
-    """Ingest a list of files."""
-    config = orjson.loads(config)
-
-    assistant_id = config["configurable"].get("assistant_id")
-    if assistant_id is not None:
-        assistant = await storage.get_assistant(user["user_id"], assistant_id)
-        if assistant is None:
-            raise HTTPException(status_code=404, detail="Assistant not found.")
-
-    thread_id = config["configurable"].get("thread_id")
-    if thread_id is not None:
-        thread = await storage.get_thread(user["user_id"], thread_id)
-        if thread is None:
-            raise HTTPException(status_code=404, detail="Thread not found.")
-
-    file_blobs = [convert_ingestion_input_to_blob(file) for file in files]
-    return ingest_runnable.batch(file_blobs, config)
-
-
-@app.get("/health")
-async def health() -> dict:
-    return {"status": "ok"}
+app.include_router(api_router, prefix="/api")
 
 
 ui_dir = str(ROOT / "ui")
 
+
+class StaticFilesSpa(StaticFiles):
+    async def get_response(
+        self, path: str, scope: MutableMapping[str, Any]
+    ) -> Response:
+        res = await super().get_response(path, scope)
+        if isinstance(res, FileResponse) and res.status_code == 404:
+            res.status_code = 200
+        return res
+
+
 if os.path.exists(ui_dir):
-    app.mount("", StaticFiles(directory=ui_dir, html=True), name="ui")
+    app.mount("", StaticFilesSpa(directory=ui_dir, html=True), name="ui")
 else:
     logger.warn("No UI directory found, serving API only.")
 
