@@ -176,8 +176,11 @@ async def get_or_create_user(sub: str) -> tuple[User, bool]:
     async with get_pg_pool().acquire() as conn:
         if user := await conn.fetchrow('SELECT * FROM "user" WHERE sub = $1', sub):
             return user, False
-        user = await conn.fetchrow(
+        if user := await conn.fetchrow(
             'INSERT INTO "user" (sub) VALUES ($1) ON CONFLICT (sub) DO NOTHING RETURNING *',
             sub,
-        )
-        return user, True
+        ):
+            return user, True
+        if user := await conn.fetchrow('SELECT * FROM "user" WHERE sub = $1', sub):
+            return user, False
+        raise RuntimeError("User creation failed.")

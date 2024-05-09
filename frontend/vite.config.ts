@@ -6,10 +6,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     watch: {
-      usePolling: true
+      usePolling: true,
     },
     proxy: {
-      "^/(assistants|threads|ingest|runs)": {
+      "/api": {
         target: process.env.VITE_BACKEND_URL || "http://127.0.0.1:8100",
         changeOrigin: true,
         rewrite: (path) => path.replace("/____LANGSERVE_BASE_URL", ""),
