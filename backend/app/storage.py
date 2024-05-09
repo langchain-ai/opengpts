@@ -177,6 +177,7 @@ async def get_or_create_user(sub: str) -> tuple[User, bool]:
         if user := await conn.fetchrow('SELECT * FROM "user" WHERE sub = $1', sub):
             return user, False
         user = await conn.fetchrow(
-            'INSERT INTO "user" (sub) VALUES ($1) RETURNING *', sub
+            'INSERT INTO "user" (sub) VALUES ($1) ON CONFLICT (sub) DO NOTHING RETURNING *',
+            sub,
         )
         return user, True
