@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "user" (
-    user_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     sub VARCHAR(255) UNIQUE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')
 );
