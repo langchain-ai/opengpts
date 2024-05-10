@@ -1892,28 +1892,6 @@ files = [
 langchain-core = ">=0.1.42,<0.2.0"
 
 [[package]]
-name = "langserve"
-version = "0.0.32"
-description = ""
-optional = false
-python-versions = ">=3.8.1,<4.0.0"
-files = [
-    {file = "langserve-0.0.32-py3-none-any.whl", hash = "sha256:41cc522fcec22f1d4e2ec05bd8952783a297fbf57c65eb2ab5ad29dff03caa86"},
-    {file = "langserve-0.0.32.tar.gz", hash = "sha256:8773fe87ec27c263756d4f2dcd2f0fc8a970ac90e475a517703821bd5ae1836d"},
-]
-
-[package.dependencies]
-httpx = ">=0.23.0"
-langchain = ">=0.0.333"
-orjson = ">=2"
-pydantic = ">=1"
-
-[package.extras]
-all = ["fastapi (>=0.90.1,<1)", "httpx-sse (>=0.3.1)", "sse-starlette (>=1.3.0,<2.0.0)"]
-client = ["httpx-sse (>=0.3.1)"]
-server = ["fastapi (>=0.90.1,<1)", "sse-starlette (>=1.3.0,<2.0.0)"]
-
-[[package]]
 name = "langsmith"
 version = "0.1.5"
 description = "Client library to connect to the LangSmith LLM Tracing and Evaluation Platform."
@@ -4245,4 +4223,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9.0,<3.12"
-content-hash = "b7d0f0b5e51111723047cfbc8122c71d33e6f15f71f8243d5734bd09c8ee12a1"
+content-hash = "292cde0456ddc756bdf0ff44741c80e41f87edf36fce55b8899c634080bbab34"
