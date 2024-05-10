@@ -1,4 +1,5 @@
 from typing import Any, Dict, Optional, Sequence, Union
+from uuid import UUID
 
 import langsmith.client
 from fastapi import APIRouter, BackgroundTasks, HTTPException
@@ -101,7 +102,7 @@ async def config_schema() -> dict:
 if tracing_is_enabled():
     langsmith_client = langsmith.client.Client()
 
-    class BaseFeedback(BaseModel):
+    class FeedbackCreateRequest(BaseModel):
         """
         Shared information between create requests of feedback and feedback objects
         """
