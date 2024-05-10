@@ -1,4 +1,5 @@
 from typing import Any, Dict, Optional, Sequence, Union
+from uuid import UUID
 
 import langsmith.client
 from fastapi import APIRouter, BackgroundTasks, HTTPException
@@ -6,7 +7,6 @@ from fastapi.exceptions import RequestValidationError
 from langchain.pydantic_v1 import ValidationError
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import RunnableConfig
-from langserve.schema import FeedbackCreateRequest
 from langsmith.utils import tracing_is_enabled
 from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
@@ -101,6 +101,26 @@ async def config_schema() -> dict:
 
 if tracing_is_enabled():
     langsmith_client = langsmith.client.Client()
+
+    class FeedbackCreateRequest(BaseModel):
+        """
+        Shared information between create requests of feedback and feedback objects
+        """
+
+        run_id: UUID
+        """The associated run ID this feedback is logged for."""
+
+        key: str
+        """The metric name, tag, or aspect to provide feedback on."""
+
+        score: Optional[Union[float, int, bool]] = None
+        """Value or score to assign the run."""
+
+        value: Optional[Union[float, int, bool, str, Dict]] = None
+        """The display value for the feedback if not a metric."""
+
+        comment: Optional[str] = None
+        """Comment or explanation for the feedback."""
 
     @router.post("/feedback")
     def create_run_feedback(feedback_create_req: FeedbackCreateRequest) -> dict:
