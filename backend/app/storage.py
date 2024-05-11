@@ -103,10 +103,11 @@ async def list_threads(user_id: str) -> List[Thread]:
     return [
         Thread(
             thread_id=t["thread_id"],
-            user_id=t["metadata"]["user_id"],
-            assistant_id=t["metadata"]["assistant_id"],
-            name=t["metadata"]["name"],
+            user_id=t["metadata"].pop("user_id"),
+            assistant_id=t["metadata"].pop("assistant_id"),
+            name=t["metadata"].pop("name"),
             updated_at=t["updated_at"],
+            metadata=t["metadata"],
         )
         for t in threads
     ]
@@ -120,10 +121,11 @@ async def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
     else:
         return Thread(
             thread_id=thread["thread_id"],
-            user_id=thread["metadata"]["user_id"],
-            assistant_id=thread["metadata"]["assistant_id"],
-            name=thread["metadata"]["name"],
+            user_id=thread["metadata"].pop("user_id"),
+            assistant_id=thread["metadata"].pop("assistant_id"),
+            name=thread["metadata"].pop("name"),
             updated_at=thread["updated_at"],
+            metadata=thread["metadata"],
         )
 
 
