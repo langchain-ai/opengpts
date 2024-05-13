@@ -10,17 +10,19 @@ export interface StreamState {
 }
 
 export interface StreamStateProps {
-  stream: StreamState | null;
+  streams: {
+    [tid: string]: StreamState;
+  };
   startStream: (
     input: Message[] | Record<string, any> | null,
     thread_id: string,
     config?: Record<string, unknown>,
   ) => Promise<void>;
-  stopStream?: (clear?: boolean) => void;
+  stopStream?: (thread_id: string, clear?: boolean) => void;
 }
 
 export function useStreamState(): StreamStateProps {
-  const [current, setCurrent] = useState<StreamState | null>(null);
+  const [current, setCurrent] = useState<{ [tid: string]: StreamState }>({});
   const [controller, setController] = useState<AbortController | null>(null);
 
   const startStream = useCallback(
@@ -31,7 +33,10 @@ export function useStreamState(): StreamStateProps {
     ) => {
       const controller = new AbortController();
       setController(controller);
-      setCurrent({ status: "inflight", messages: input || [] });
+      setCurrent((threads) => ({
+        ...threads,
+        [thread_id]: { status: "inflight", messages: input || [] },
+      }));
 
       await fetchEventSource("/runs/stream", {
         signal: controller.signal,
@@ -42,39 +47,60 @@ export function useStreamState(): StreamStateProps {
         onmessage(msg) {
           if (msg.event === "data") {
             const messages = JSON.parse(msg.data);
-            setCurrent((current) => ({
-              status: "inflight" as StreamState["status"],
-              messages: mergeMessagesById(current?.messages, messages),
-              run_id: current?.run_id,
+            setCurrent((threads) => ({
+              ...threads,
+              [thread_id]: {
+                status: "inflight" as StreamState["status"],
+                messages: mergeMessagesById(
+                  threads[thread_id]?.messages,
+                  messages,
+                ),
+                run_id: threads[thread_id]?.run_id,
+              },
             }));
           } else if (msg.event === "metadata") {
             const { run_id } = JSON.parse(msg.data);
-            setCurrent((current) => ({
-              status: "inflight",
-              messages: current?.messages,
-              run_id: run_id,
+            setCurrent((threads) => ({
+              ...threads,
+              [thread_id]: {
+                status: "inflight" as StreamState["status"],
+                messages: threads[thread_id]?.messages,
+                run_id,
+              },
             }));
           } else if (msg.event === "error") {
-            setCurrent((current) => ({
-              status: "error",
-              messages: current?.messages,
-              run_id: current?.run_id,
+            setCurrent((threads) => ({
+              ...threads,
+              [thread_id]: {
+                status: "error",
+                messages: threads[thread_id]?.messages,
+                run_id: threads[thread_id]?.run_id,
+              },
             }));
           }
         },
         onclose() {
-          setCurrent((current) => ({
-            status: current?.status === "error" ? current.status : "done",
-            messages: current?.messages,
-            run_id: current?.run_id,
+          setCurrent((threads) => ({
+            ...threads,
+            [thread_id]: {
+              status:
+                threads[thread_id]?.status === "error"
+                  ? threads[thread_id].status
+                  : "done",
+              messages: threads[thread_id]?.messages,
+              run_id: threads[thread_id]?.run_id,
+            },
           }));
           setController(null);
         },
         onerror(error) {
-          setCurrent((current) => ({
-            status: "error",
-            messages: current?.messages,
-            run_id: current?.run_id,
+          setCurrent((threads) => ({
+            ...threads,
+            [thread_id]: {
+              status: "error",
+              messages: threads[thread_id]?.messages,
+              run_id: threads[thread_id]?.run_id,
+            },
           }));
           setController(null);
           throw error;
@@ -85,19 +111,25 @@ export function useStreamState(): StreamStateProps {
   );
 
   const stopStream = useCallback(
-    (clear: boolean = false) => {
+    (thread_id: string, clear: boolean = false) => {
       controller?.abort();
       setController(null);
       if (clear) {
-        setCurrent((current) => ({
-          status: "done",
-          run_id: current?.run_id,
+        setCurrent((threads) => ({
+          ...threads,
+          [thread_id]: {
+            status: "done",
+            run_id: threads[thread_id]?.run_id,
+          },
         }));
       } else {
-        setCurrent((current) => ({
-          status: "done",
-          messages: current?.messages,
-          run_id: current?.run_id,
+        setCurrent((threads) => ({
+          ...threads,
+          [thread_id]: {
+            status: "done",
+            messages: threads[thread_id]?.messages,
+            run_id: threads[thread_id]?.run_id,
+          },
         }));
       }
     },
@@ -107,7 +139,7 @@ export function useStreamState(): StreamStateProps {
   return {
     startStream,
     stopStream,
-    stream: current,
+    streams: current,
   };
 }
 
