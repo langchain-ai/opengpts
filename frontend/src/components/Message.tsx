@@ -66,6 +66,7 @@ export const MessageViewer = memo(function (
     runId?: string;
     startEditing?: () => void;
     alwaysShowControls?: boolean;
+    threadId: string;
   },
 ) {
   const [open, setOpen] = useState(false);
@@ -116,7 +117,7 @@ export const MessageViewer = memo(function (
       </div>
       {props.runId && (
         <div className="mt-2 pl-[148px]">
-          <LangSmithActions runId={props.runId} />
+          <LangSmithActions runId={props.runId} threadId={props.threadId}/>
         </div>
       )}
     </div>

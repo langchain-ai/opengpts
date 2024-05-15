@@ -6,19 +6,17 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 
-export function LangSmithActions(props: { runId: string }) {
+export function LangSmithActions(props: { runId: string, threadId: string }) {
   const [state, setState] = useState<{
     score: number;
     inflight: boolean;
   } | null>(null);
   const sendFeedback = async (score: number) => {
     setState({ score, inflight: true });
-    await fetch(`/runs/feedback`, {
-      method: "POST",
+    await fetch(`/threads/${props.threadId}/state`, {
+      method: "PATCH",
       body: JSON.stringify({
-        run_id: props.runId,
-        key: "user_score",
-        score: score,
+        metadata: {score: score},
       }),
       headers: {
         "Content-Type": "application/json",

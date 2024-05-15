@@ -29,6 +29,13 @@ class ThreadPostRequest(BaseModel):
     config: Optional[Dict[str, Any]] = None
 
 
+class ThreadPatchRequest(BaseModel):
+    """Payload for patching thread state."""
+
+    metdata: Dict[str, Any]
+    config: Optional[Dict[str, Any]] = None
+
+
 @router.get("/")
 async def list_threads(user: AuthedUser) -> List[Thread]:
     """List all threads for the current user."""
@@ -72,6 +79,26 @@ async def add_thread_state(
         payload.values,
         user_id=user["user_id"],
         assistant=assistant,
+    )
+
+
+@router.patch("/{tid}/state")
+async def patch_thread_state(
+    user: AuthedUser,
+    tid: ThreadID,
+    payload: ThreadPatchRequest,
+):
+    """Patch state for a thread."""
+    thread = await storage.get_thread(user["user_id"], tid)
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found")
+    assistant = await storage.get_assistant(user["user_id"], thread["assistant_id"])
+    if not assistant:
+        raise HTTPException(status_code=400, detail="Thread has no assistant")
+
+    return await storage.patch_thread_state(
+        payload.config or {"configurable": {"thread_id": tid}},
+        payload.metdata,
     )
 
 

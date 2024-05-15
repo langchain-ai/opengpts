@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import RunnableConfig
@@ -144,6 +144,13 @@ async def update_thread_state(
     """Add state to a thread."""
     return await get_langserve().threads.update_state(config, values)
 
+
+async def patch_thread_state(
+    config: RunnableConfig,
+    metadata: Dict[str, Any],
+):
+    """Patch state of a thread."""
+    return await get_langserve().threads.patch_state(config, metadata)
 
 async def get_thread_history(*, user_id: str, thread_id: str, assistant: Assistant):
     """Get the history of a thread."""
