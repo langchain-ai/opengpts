@@ -152,6 +152,7 @@ async def patch_thread_state(
     """Patch state of a thread."""
     return await get_langserve().threads.patch_state(config, metadata)
 
+
 async def get_thread_history(*, user_id: str, thread_id: str, assistant: Assistant):
     """Get the history of a thread."""
     return await get_langserve().threads.get_history(thread_id)

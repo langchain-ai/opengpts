@@ -67,8 +67,11 @@ function App(props: { edit?: boolean }) {
           },
         ];
 
-        if (assistantType === "chat_retrieval" || assistantType === "chatbot" || assistantType === "learning" || assistantType === "agent") {
-          // The RAG assistant type requires an object with a `messages` field.
+        if (
+          assistantType === "chat_retrieval" ||
+          assistantType === "chatbot" ||
+          assistantType === "agent"
+        ) {
           input = {
             messages: input,
           };

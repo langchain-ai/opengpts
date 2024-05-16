@@ -6,7 +6,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 
-export function LangSmithActions(props: { runId: string, threadId: string }) {
+export function LangSmithActions(props: { runId: string; threadId: string }) {
   const [state, setState] = useState<{
     score: number;
     inflight: boolean;
@@ -34,7 +34,7 @@ export function LangSmithActions(props: { runId: string, threadId: string }) {
     await fetch(`/api/threads/${props.threadId}/state`, {
       method: "PATCH",
       body: JSON.stringify({
-        metadata: {score: fewShotScore},
+        metadata: { score: fewShotScore },
       }),
       headers: {
         "Content-Type": "application/json",

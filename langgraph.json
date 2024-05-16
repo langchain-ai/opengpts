@@ -6,8 +6,7 @@
   "graphs": {
     "chatbot": "app.graphs.new_chatbot:graph",
     "chat_retrieval": "app.graphs.new_rag:graph",
-    "agent": "app.graphs.new_agent:graph",
-    "learning": "app.graphs.new_learning:graph"
+    "agent": "app.graphs.new_agent:graph"
   },
   "env": ".env"
 }

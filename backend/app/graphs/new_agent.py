@@ -1,26 +1,19 @@
 from enum import Enum
-from typing import cast
+from typing import Annotated, TypedDict, cast
 
 from langchain_core.messages import (
     AIMessage,
+    AnyMessage,
     FunctionMessage,
     HumanMessage,
     SystemMessage,
     ToolMessage,
 )
-from typing import TypedDict, Annotated
-
-from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemMessage, ToolMessage
-from langchain_openai import ChatOpenAI
-from langgraph.graph import StateGraph, END
+from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.managed.few_shot import FewShotExamples
-from langgraph.prebuilt import ToolNode
-from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolExecutor, ToolInvocation
 
-from app.message_types import LiberalToolMessage
 from app.llms import (
     get_anthropic_llm,
     get_google_llm,
@@ -28,11 +21,14 @@ from app.llms import (
     get_ollama_llm,
     get_openai_llm,
 )
-from app.tools import RETRIEVAL_DESCRIPTION, AvailableTools, TOOLS, get_retrieval_tool
+from app.message_types import LiberalToolMessage
+from app.tools import RETRIEVAL_DESCRIPTION, TOOLS, AvailableTools, get_retrieval_tool
+
 
 class BaseState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     examples: Annotated[list, FewShotExamples]
+
 
 def _render_message(m):
     if isinstance(m, HumanMessage):
@@ -51,6 +47,7 @@ def _render_message(m):
 def _render_messages(ms):
     m_string = [_render_message(m) for m in ms]
     return "\n".join(m_string)
+
 
 class LLMType(str, Enum):
     GPT_35_TURBO = "GPT 3.5 Turbo"
@@ -105,14 +102,15 @@ async def _get_messages(messages, system_message, examples):
                 for i, e in enumerate(examples)
             ]
         )
-        system_message = system_message + """ Below are some examples of interactions you had with users. \
+        system_message = (
+            system_message
+            + """ Below are some examples of interactions you had with users. \
 These were good interactions where the final result they got was the desired one. As much as possible, you should learn from these interactions and mimic them in the future. \
 Pay particularly close attention to when tools are called, and what the inputs are.!
 
 {examples}
 
-Assist the user as they require!""".format(
-            examples=_examples
+Assist the user as they require!""".format(examples=_examples)
         )
 
     return [SystemMessage(content=system_message)] + msgs
@@ -145,8 +143,8 @@ def get_tools(
 
 
 async def agent(state, config):
-    messages = state['messages']
-    examples = state.get('examples', [])
+    messages = state["messages"]
+    examples = state.get("examples", [])
     _config = config["configurable"]
     system_message = _config.get("type==agent/system_message", DEFAULT_SYSTEM_MESSAGE)
     llm = get_llm(_config.get("type==agent/agent_type", LLMType.GPT_35_TURBO))
@@ -167,7 +165,7 @@ async def agent(state, config):
 
 # Define the function that determines whether to continue or not
 def should_continue(state):
-    messages = state['messages']
+    messages = state["messages"]
     last_message = messages[-1]
     # If there is no function call, then we finish
     if not last_message.tool_calls:
@@ -179,7 +177,7 @@ def should_continue(state):
 
 # Define the function to execute tools
 async def call_tool(state, config):
-    messages = state['messages']
+    messages = state["messages"]
     _config = config["configurable"]
     tools = get_tools(
         _config.get("type==agent/tools"),

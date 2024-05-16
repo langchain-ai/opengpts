@@ -117,7 +117,7 @@ export const MessageViewer = memo(function (
       </div>
       {props.runId && (
         <div className="mt-2 pl-[148px]">
-          <LangSmithActions runId={props.runId} threadId={props.threadId}/>
+          <LangSmithActions runId={props.runId} threadId={props.threadId} />
         </div>
       )}
     </div>

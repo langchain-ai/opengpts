@@ -13,8 +13,7 @@
       "enum": [
         "chatbot",
         "chat_retrieval",
-        "agent",
-        "learning"
+        "agent"
       ],
       "type": "string"
     },
