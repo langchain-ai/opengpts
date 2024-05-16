@@ -212,7 +212,9 @@ async def call_tool(state, config):
         )
         for tool_call, response in zip(last_message.tool_calls, responses)
     ]
-    return tool_messages
+
+    # graph state is a dict, so return type must be dict
+    return {"messages": tool_messages}
 
 
 workflow = StateGraph(BaseState)
