@@ -16,7 +16,8 @@ export function useMessageEditing(
     fetch(`/api/threads/${threadId}/state`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ values: Object.values(editing) }),
+      // TODO: not sure if this will work for all bots. need to verify
+      body: JSON.stringify({ values: { messages: Object.values(editing) } }),
     })
       .then((res) => {
         if (res.ok) {
