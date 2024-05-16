@@ -92,9 +92,6 @@ async def patch_thread_state(
     thread = await storage.get_thread(user["user_id"], tid)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
-    assistant = await storage.get_assistant(user["user_id"], thread["assistant_id"])
-    if not assistant:
-        raise HTTPException(status_code=400, detail="Thread has no assistant")
 
     return await storage.patch_thread_state(
         payload.config or {"configurable": {"thread_id": tid}},
