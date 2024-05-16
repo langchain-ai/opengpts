@@ -37,6 +37,8 @@ export function OrphanChat(props: {
         return "RAG";
       case "agent":
         return "Assistant";
+      case "learning":
+        return "Self-Learning Assistant";
       default:
         return botType;
     }

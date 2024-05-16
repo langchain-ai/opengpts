@@ -1,3 +1,4 @@
+import logging
 from typing import TypedDict, Annotated
 
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -75,9 +76,11 @@ Pay particularly close attention to when tools are called, and what the inputs a
 Assist the user as they require!""".format(
             examples=_examples
         )
+        logging.error("System message with examples:", system_message)
 
     else:
         system_message = """You are a helpful assistant"""
+        logging.error("Using regular system message")
     output = model.invoke([SystemMessage(content=system_message)] + state["messages"])
     return {"messages": [output]}
 
