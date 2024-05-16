@@ -1,12 +1,12 @@
 import orjson
-from fastapi import APIRouter, Form, UploadFile, HTTPException
+from fastapi import APIRouter, Form, HTTPException, UploadFile
 
 import app.storage as storage
-from app.auth.handlers import AuthedUser
-from app.upload import convert_ingestion_input_to_blob, ingest_runnable
 from app.api.assistants import router as assistants_router
 from app.api.runs import router as runs_router
 from app.api.threads import router as threads_router
+from app.auth.handlers import AuthedUser
+from app.upload import convert_ingestion_input_to_blob, ingest_runnable
 
 router = APIRouter()
 
