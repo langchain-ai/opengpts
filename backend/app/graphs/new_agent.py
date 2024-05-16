@@ -105,7 +105,7 @@ async def _get_messages(messages, system_message, examples):
                 for i, e in enumerate(examples)
             ]
         )
-        system_message = {system_message} + """ Below are some examples of interactions you had with users. \
+        system_message = system_message + """ Below are some examples of interactions you had with users. \
 These were good interactions where the final result they got was the desired one. As much as possible, you should learn from these interactions and mimic them in the future. \
 Pay particularly close attention to when tools are called, and what the inputs are.!
 
@@ -160,7 +160,9 @@ async def agent(state, config):
         llm = llm.bind_tools(tools)
     messages = await _get_messages(messages, system_message, examples)
     response = llm.invoke(messages)
-    return response
+
+    # graph state is a dict, so return type must be dict
+    return {"messages": [response]}
 
 
 # Define the function that determines whether to continue or not
