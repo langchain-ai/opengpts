@@ -1773,13 +1773,13 @@ extended-testing = ["aiosqlite (>=0.19.0,<0.20.0)", "aleph-alpha-client (>=2.15.
 
 [[package]]
 name = "langchain-core"
-version = "0.1.50"
+version = "0.1.52"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_core-0.1.50-py3-none-any.whl", hash = "sha256:19d57477de5ebcb55febc3bc94c6c9aac62a6199b0802cfa326ca718d84d985e"},
-    {file = "langchain_core-0.1.50.tar.gz", hash = "sha256:a01e3149a117ed00ef086cc74d8d1b9437d650a0a3c80c8a3786f4dcbb8d1ef9"},
+    {file = "langchain_core-0.1.52-py3-none-any.whl", hash = "sha256:62566749c92e8a1181c255c788548dc16dbc319d896cd6b9c95dc17af9b2a6db"},
+    {file = "langchain_core-0.1.52.tar.gz", hash = "sha256:084c3fc452f5a6966c28ab3ec5dbc8b8d26fc3f63378073928f4e29d90b6393f"},
 ]
 
 [package.dependencies]
@@ -1879,27 +1879,27 @@ six = "*"
 
 [[package]]
 name = "langgraph"
-version = "0.0.41"
+version = "0.0.49"
 description = "langgraph"
 optional = false
 python-versions = "<4.0,>=3.9.0"
 files = [
-    {file = "langgraph-0.0.41-py3-none-any.whl", hash = "sha256:f28381263bee2ddffd21c5855cee6f710953a03b8281205b9fe0914136c8afd8"},
-    {file = "langgraph-0.0.41.tar.gz", hash = "sha256:04430712a851524d05c5b1d834b385ca2f5bc85b02d78fee98413b85b745a4b4"},
+    {file = "langgraph-0.0.49-py3-none-any.whl", hash = "sha256:229f29959d44c6bc4cec9f42ba68766cadedd25f0b3052afb2a43cbfac4f8d4d"},
+    {file = "langgraph-0.0.49.tar.gz", hash = "sha256:fa10cf938b1fbc270e2f597d79fbb7ab196f9c0a56d6a96a479e65879729d70e"},
 ]
 
 [package.dependencies]
-langchain-core = ">=0.1.46,<0.2.0"
+langchain-core = ">=0.1.52,<0.2.0"
 
 [[package]]
 name = "langgraph-cli"
-version = "0.1.11"
+version = "0.1.14"
 description = ""
 optional = false
 python-versions = "<4.0.0,>=3.9.0"
 files = [
-    {file = "langgraph_cli-0.1.11-py3-none-any.whl", hash = "sha256:36999b3025fe85002d4cd50f659d488bfe54c55415ee4f2db90ea0378ff23d18"},
-    {file = "langgraph_cli-0.1.11.tar.gz", hash = "sha256:33418d20b8739028e8dc29856ac789a44caf9715c42f9259b5f99b3f85b62c3e"},
+    {file = "langgraph_cli-0.1.14-py3-none-any.whl", hash = "sha256:58b464d5edd04010ff3a19a63e19ace01aad66ae3f1a16c5dea2399031e99297"},
+    {file = "langgraph_cli-0.1.14.tar.gz", hash = "sha256:ee2622e1a2c73eb3a8175378eeaff70cfe353eeb6f531732b177b8975c8c385a"},
 ]
 
 [package.dependencies]
@@ -1907,13 +1907,13 @@ click = ">=8.1.7,<9.0.0"
 
 [[package]]
 name = "langgraph-sdk"
-version = "0.1.6"
+version = "0.1.9"
 description = ""
 optional = false
 python-versions = "<4.0.0,>=3.9.0"
 files = [
-    {file = "langgraph_sdk-0.1.6-py3-none-any.whl", hash = "sha256:2a6c9d723d58e0cb980be3f828aaa3b3453330669c34861d5e00813689f6d645"},
-    {file = "langgraph_sdk-0.1.6.tar.gz", hash = "sha256:e39388edd8aad13fde762faf180212a4f082bf00fffd57bd84d617f5fa5e88e6"},
+    {file = "langgraph_sdk-0.1.9-py3-none-any.whl", hash = "sha256:ffc4d857bbef7cc5348deddcb1c2e7f71a72ed156f19d049ea3e5a1aa2307dbe"},
+    {file = "langgraph_sdk-0.1.9.tar.gz", hash = "sha256:129f2ecfc1f24d325ca819050e7aa8bc78eb16e1fc3fc16c77b05f5101e300e5"},
 ]
 
 [package.dependencies]
@@ -4254,4 +4254,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9.0,<3.12"
-content-hash = "90ba03238d321363d2b21633295dac22e7e005a9b18bc6c3f627df400036b87b"
+content-hash = "ad217da4038643c9f78705676e889560ebfcbbcf6a46314ed495d1f5653908c4"

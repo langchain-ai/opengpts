@@ -1,7 +1,7 @@
 from typing import Any
 
-from langchain_core.messages import FunctionMessage, ToolMessage
 from langchain_core.load.load import ALL_SERIALIZABLE_MAPPINGS
+from langchain_core.messages import FunctionMessage, ToolMessage
 
 
 class LiberalFunctionMessage(FunctionMessage):

@@ -7,11 +7,9 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import chain
 from langgraph.graph import END
-from langgraph.graph.state import StateGraph
 from langgraph.graph.message import add_messages
+from langgraph.graph.state import StateGraph
 
-from app.message_types import LiberalToolMessage
-from app.tools import get_retriever
 from app.llms import (
     get_anthropic_llm,
     get_google_llm,
@@ -19,6 +17,8 @@ from app.llms import (
     get_ollama_llm,
     get_openai_llm,
 )
+from app.message_types import LiberalToolMessage
+from app.tools import get_retriever
 
 
 class LLMType(str, Enum):
