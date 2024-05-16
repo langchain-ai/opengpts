@@ -38,7 +38,6 @@ async def lifespan(app: FastAPI):
             structlog.stdlib.filter_by_level,
             structlog.stdlib.PositionalArgumentsFormatter(),
             structlog.processors.StackInfoRenderer(),
-            structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
             structlog.stdlib.render_to_log_kwargs,
         ],
