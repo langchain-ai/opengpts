@@ -32,7 +32,7 @@ class ThreadPostRequest(BaseModel):
 class ThreadPatchRequest(BaseModel):
     """Payload for patching thread state."""
 
-    metdata: Dict[str, Any]
+    metadata: Dict[str, Any]
     config: Optional[Dict[str, Any]] = None
 
 
@@ -98,7 +98,7 @@ async def patch_thread_state(
 
     return await storage.patch_thread_state(
         payload.config or {"configurable": {"thread_id": tid}},
-        payload.metdata,
+        payload.metadata,
     )
 
 

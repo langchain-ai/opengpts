@@ -13,7 +13,7 @@ export function LangSmithActions(props: { runId: string, threadId: string }) {
   } | null>(null);
   const sendFeedback = async (score: number) => {
     setState({ score, inflight: true });
-    await fetch(`/threads/${props.threadId}/state`, {
+    await fetch(`/api/threads/${props.threadId}/state`, {
       method: "PATCH",
       body: JSON.stringify({
         metadata: {score: score},
