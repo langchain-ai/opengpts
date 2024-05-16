@@ -15,7 +15,7 @@ logger = structlog.get_logger(__name__)
 
 
 @lru_cache(maxsize=4)
-def get_openai_llm(gpt_4: bool = False, azure: bool = False):
+def get_openai_llm(model: str = "gpt-3.5-turbo", azure: bool = False):
     proxy_url = os.getenv("PROXY_URL")
     http_client = None
     if proxy_url:
@@ -27,7 +27,7 @@ def get_openai_llm(gpt_4: bool = False, azure: bool = False):
 
     if not azure:
         try:
-            openai_model = "gpt-4-turbo-preview" if gpt_4 else "gpt-3.5-turbo"
+            openai_model = model
             llm = ChatOpenAI(
                 http_client=http_client,
                 model=openai_model,

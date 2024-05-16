@@ -64,6 +64,7 @@ Tool = Union[
 class AgentType(str, Enum):
     GPT_35_TURBO = "GPT 3.5 Turbo"
     GPT_4 = "GPT 4 Turbo"
+    GPT_4O = "GPT 4o"
     AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
     CLAUDE2 = "Claude 2"
     BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
@@ -88,7 +89,12 @@ def get_agent_executor(
             tools, llm, system_message, interrupt_before_action, CHECKPOINTER
         )
     elif agent == AgentType.GPT_4:
-        llm = get_openai_llm(gpt_4=True)
+        llm = get_openai_llm(model="gpt-4-turbo")
+        return get_tools_agent_executor(
+            tools, llm, system_message, interrupt_before_action, CHECKPOINTER
+        )
+    elif agent == AgentType.GPT_4O:
+        llm = get_openai_llm(model="gpt-4o")
         return get_tools_agent_executor(
             tools, llm, system_message, interrupt_before_action, CHECKPOINTER
         )
@@ -182,6 +188,7 @@ class ConfigurableAgent(RunnableBinding):
 class LLMType(str, Enum):
     GPT_35_TURBO = "GPT 3.5 Turbo"
     GPT_4 = "GPT 4 Turbo"
+    GPT_4O = "GPT 4o"
     AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
     CLAUDE2 = "Claude 2"
     BEDROCK_CLAUDE2 = "Claude 2 (Amazon Bedrock)"
@@ -277,7 +284,9 @@ class ConfigurableRetrieval(RunnableBinding):
         if llm_type == LLMType.GPT_35_TURBO:
             llm = get_openai_llm()
         elif llm_type == LLMType.GPT_4:
-            llm = get_openai_llm(gpt_4=True)
+            llm = get_openai_llm(model="gpt-4-turbo")
+        elif llm_type == LLMType.GPT_4O:
+            llm = get_openai_llm(model="gpt-4o")
         elif llm_type == LLMType.AZURE_OPENAI:
             llm = get_openai_llm(azure=True)
         elif llm_type == LLMType.CLAUDE2:
