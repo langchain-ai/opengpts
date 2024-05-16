@@ -13,15 +13,34 @@ export function LangSmithActions(props: { runId: string, threadId: string }) {
   } | null>(null);
   const sendFeedback = async (score: number) => {
     setState({ score, inflight: true });
-    await fetch(`/api/threads/${props.threadId}/state`, {
-      method: "PATCH",
+
+    // send feedback to LangSmith
+    // this is a no-op if tracing is disabled in the backend
+    await fetch(`/runs/feedback`, {
+      method: "POST",
       body: JSON.stringify({
-        metadata: {score: score},
+        run_id: props.runId,
+        key: "user_score",
+        score: score,
       }),
       headers: {
         "Content-Type": "application/json",
       },
     });
+
+    // score thread, thread will be used as few shot example
+    // few shot score must be 1 or 0
+    const fewShotScore = score > 0 ? 1 : 0;
+    await fetch(`/api/threads/${props.threadId}/state`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        metadata: {score: fewShotScore},
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
     setState({ score, inflight: false });
   };
   return (
