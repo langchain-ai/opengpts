@@ -8,8 +8,16 @@ from langchain_core.messages import (
     SystemMessage,
     ToolMessage,
 )
-from langgraph.graph import END
-from langgraph.graph.message import MessageGraph
+from typing import TypedDict, Annotated
+
+from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemMessage, ToolMessage
+from langchain_openai import ChatOpenAI
+from langgraph.graph import StateGraph, END
+from langgraph.graph.message import add_messages
+from langgraph.managed.few_shot import FewShotExamples
+from langgraph.prebuilt import ToolNode
+from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolExecutor, ToolInvocation
 
 from app.message_types import LiberalToolMessage
@@ -22,6 +30,27 @@ from app.llms import (
 )
 from app.tools import RETRIEVAL_DESCRIPTION, AvailableTools, TOOLS, get_retrieval_tool
 
+class BaseState(TypedDict):
+    messages: Annotated[list[AnyMessage], add_messages]
+    examples: Annotated[list, FewShotExamples]
+
+def _render_message(m):
+    if isinstance(m, HumanMessage):
+        return "Human: " + m.content
+    elif isinstance(m, AIMessage):
+        _m = "AI: " + m.content
+        if len(m.tool_calls) > 0:
+            _m += f" Tools: {m.tool_calls}"
+        return _m
+    elif isinstance(m, ToolMessage):
+        return "Tool Result: ..."
+    else:
+        raise ValueError
+
+
+def _render_messages(ms):
+    m_string = [_render_message(m) for m in ms]
+    return "\n".join(m_string)
 
 class LLMType(str, Enum):
     GPT_35_TURBO = "GPT 3.5 Turbo"
@@ -55,7 +84,7 @@ def get_llm(
     return llm
 
 
-async def _get_messages(messages, system_message):
+async def _get_messages(messages, system_message, examples):
     msgs = []
     for m in messages:
         if isinstance(m, LiberalToolMessage):
@@ -68,6 +97,23 @@ async def _get_messages(messages, system_message):
             msgs.append(HumanMessage(content=str(m.content)))
         else:
             msgs.append(m)
+
+    if len(examples) > 0:
+        _examples = "\n\n".join(
+            [
+                f"Example {i}: " + _render_messages(e["messages"])
+                for i, e in enumerate(examples)
+            ]
+        )
+        system_message = {system_message} + """ Below are some examples of interactions you had with users. \
+These were good interactions where the final result they got was the desired one. As much as possible, you should learn from these interactions and mimic them in the future. \
+Pay particularly close attention to when tools are called, and what the inputs are.!
+
+{examples}
+
+Assist the user as they require!""".format(
+            examples=_examples
+        )
 
     return [SystemMessage(content=system_message)] + msgs
 
@@ -98,7 +144,9 @@ def get_tools(
     return _tools
 
 
-async def agent(messages, config):
+async def agent(state, config):
+    messages = state['messages']
+    examples = state.get('examples', [])
     _config = config["configurable"]
     system_message = _config.get("type==agent/system_message", DEFAULT_SYSTEM_MESSAGE)
     llm = get_llm(_config.get("type==agent/agent_type", LLMType.GPT_35_TURBO))
@@ -110,13 +158,14 @@ async def agent(messages, config):
     )
     if tools:
         llm = llm.bind_tools(tools)
-    messages = await _get_messages(messages, system_message)
+    messages = await _get_messages(messages, system_message, examples)
     response = llm.invoke(messages)
     return response
 
 
 # Define the function that determines whether to continue or not
-def should_continue(messages):
+def should_continue(state):
+    messages = state['messages']
     last_message = messages[-1]
     # If there is no function call, then we finish
     if not last_message.tool_calls:
@@ -127,7 +176,8 @@ def should_continue(messages):
 
 
 # Define the function to execute tools
-async def call_tool(messages, config):
+async def call_tool(state, config):
+    messages = state['messages']
     _config = config["configurable"]
     tools = get_tools(
         _config.get("type==agent/tools"),
@@ -163,7 +213,7 @@ async def call_tool(messages, config):
     return tool_messages
 
 
-workflow = MessageGraph()
+workflow = StateGraph(BaseState)
 
 # Define the two nodes we will cycle between
 workflow.add_node("agent", agent)
