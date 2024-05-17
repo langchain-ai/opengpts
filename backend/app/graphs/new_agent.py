@@ -84,7 +84,7 @@ def get_llm(
     return llm
 
 
-async def _get_messages(messages, system_message, examples):
+def _get_messages(messages, system_message, examples):
     msgs = []
     for m in messages:
         if isinstance(m, LiberalToolMessage):
@@ -159,8 +159,8 @@ async def agent(state, config):
     )
     if tools:
         llm = llm.bind_tools(tools)
-    messages = await _get_messages(messages, system_message, examples)
-    response = llm.invoke(messages)
+    messages = _get_messages(messages, system_message, examples)
+    response = await llm.ainvoke(messages)
 
     # graph state is a dict, so return type must be dict
     return {"messages": [response]}
