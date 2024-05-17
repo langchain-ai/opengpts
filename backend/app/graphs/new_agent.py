@@ -27,7 +27,10 @@ from app.tools import RETRIEVAL_DESCRIPTION, TOOLS, AvailableTools, get_retrieva
 
 class BaseState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
-    examples: Annotated[list, FewShotExamples]
+    # graph_id corresponds to graph IDs specified in langgraph.json
+    examples: Annotated[
+        list, FewShotExamples.configure(metadata_filter={"graph_id": "agent"})
+    ]
 
 
 def _render_message(m):
