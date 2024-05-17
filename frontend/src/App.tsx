@@ -32,7 +32,7 @@ function App(props: { edit?: boolean }) {
     async (
       message: MessageWithFiles | null,
       thread_id: string,
-      assistantType: string,
+      _assistantType: string,
       config?: Record<string, unknown>,
     ) => {
       const files = message?.files || [];
