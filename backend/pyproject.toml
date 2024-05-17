@@ -15,13 +15,12 @@ fastapi = "^0.103.2"
 # Uncomment if you need to work from a development branch
 # This will only work for local development though!
 # langchain = { git = "git@github.com:langchain-ai/langchain.git/", branch = "nc/subclass-runnable-binding" , subdirectory = "libs/langchain"}
-orjson = "^3.9.10"
+orjson = ">=3.9.10"
 python-multipart = "^0.0.6"
-tiktoken = "^0.5.1"
-langchain = ">=0.0.338"
-langgraph = "^0.0.49"
+langchain = ">=0.2.0"
+langgraph = ">=0.0.50"
 pydantic = "<2.0"
-langchain-openai = "^0.1.3"
+langchain-openai = ">=0.1.3"
 beautifulsoup4 = "^4.12.3"
 boto3 = "^1.34.28"
 duckduckgo-search = "^5.3.0"
@@ -29,23 +28,23 @@ arxiv = "^2.1.0"
 kay = "^0.1.2"
 xmltodict = "^0.13.0"
 wikipedia = "^1.4.0"
-langchain-google-vertexai = "^1.0.1"
+langchain-google-vertexai = ">=1.0.1"
 setuptools = "^69.0.3"
 pdfminer-six = "^20231228"
-langchain-robocorp = "^0.0.8"
+langchain-robocorp = ">=0.0.5"
 fireworks-ai = "^0.11.2"
-httpx = { version = "0.25.2", extras = ["socks"] }
+httpx = { version = ">=0.25.2", extras = ["socks"] }
 unstructured = {extras = ["doc", "docx"], version = "^0.12.5"}
 pgvector = "^0.2.5"
 psycopg2-binary = "^2.9.9"
 asyncpg = "^0.29.0"
-langchain-core = "^0.1.50"
 pyjwt = {extras = ["crypto"], version = "^2.8.0"}
-langchain-anthropic = "^0.1.8"
+langchain-anthropic = ">=0.1.8"
 structlog = "^24.1.0"
 python-json-logger = "^2.0.7"
-langgraph-sdk = "^0.1.9"
-langgraph-cli = "^0.1.14"
+langgraph-sdk = ">=0.1.9"
+langgraph-cli = ">=0.1.18"
+langchain-community = "^0.2.0"
 
 [tool.poetry.group.dev.dependencies]
 uvicorn = "^0.23.2"
