@@ -9,6 +9,7 @@ from langchain_core.messages import (
     SystemMessage,
     ToolMessage,
 )
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.managed.few_shot import FewShotExamples
@@ -25,11 +26,14 @@ from app.message_types import LiberalToolMessage
 from app.tools import RETRIEVAL_DESCRIPTION, TOOLS, AvailableTools, get_retrieval_tool
 
 
+def filter_by_assistant_id(config: RunnableConfig):
+    return {"assistant_id": config["configurable"]["assistant_id"]}
+
+
 class BaseState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
-    # graph_id corresponds to graph IDs specified in langgraph.json
     examples: Annotated[
-        list, FewShotExamples.configure(metadata_filter={"graph_id": "agent"})
+        list, FewShotExamples.configure(metadata_filter=filter_by_assistant_id)
     ]
 
 
