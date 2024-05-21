@@ -1876,28 +1876,28 @@ six = "*"
 
 [[package]]
 name = "langgraph"
-version = "0.0.50"
+version = "0.0.54"
 description = "langgraph"
 optional = false
 python-versions = "<4.0,>=3.9.0"
 files = [
-    {file = "langgraph-0.0.50-py3-none-any.whl", hash = "sha256:a65c929118f026e5548aba36b6828cec630e7b20fd6fa9b6482a78aa86f53d74"},
-    {file = "langgraph-0.0.50.tar.gz", hash = "sha256:9cee33b1bdf107fb77b9d6fd7bb8d8d770273472f328bf1314bf32f401e37a64"},
+    {file = "langgraph-0.0.54-py3-none-any.whl", hash = "sha256:c1c4e98f9e587c1134227d0b4300ee2e32ef561b246f7a611703eaaf33617798"},
+    {file = "langgraph-0.0.54.tar.gz", hash = "sha256:d4a2b59c2483b1be0ae873a5a27a0108843755919d88cfd9da5f23b47427a448"},
 ]
 
 [package.dependencies]
-langchain-core = ">=0.1.52,<0.3"
+langchain-core = ">=0.2,<0.3"
 uuid6 = ">=2024.1.12,<2025.0.0"
 
 [[package]]
 name = "langgraph-cli"
-version = "0.1.18"
+version = "0.1.21"
 description = ""
 optional = false
 python-versions = "<4.0.0,>=3.9.0"
 files = [
-    {file = "langgraph_cli-0.1.18-py3-none-any.whl", hash = "sha256:1255d12ec2105fb0f1c884e02195a76cfcdfd582a4a705c319520a409288b246"},
-    {file = "langgraph_cli-0.1.18.tar.gz", hash = "sha256:636e104f039585db5fe9d9865a954dea07f53f32eaa32eee1cfc6701e33dd13d"},
+    {file = "langgraph_cli-0.1.21-py3-none-any.whl", hash = "sha256:3e8d6df554bf8054ff7edd2a0a5a79854a8debbe642da2f07d3ecd5bee651267"},
+    {file = "langgraph_cli-0.1.21.tar.gz", hash = "sha256:83af68c923425fbf25be6db76b412581f5bb93b4322d0c1df18ff2178f427415"},
 ]
 
 [package.dependencies]
@@ -4252,4 +4252,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9.0,<3.12"
-content-hash = "e17d7381eb7101d747dc4ace489e68587a1c46bbbe43059c5af43c0896b6271e"
+content-hash = "682c7736440532200f35e5d400c86b7568894b1d045c05d7a8be42171759d56c"
