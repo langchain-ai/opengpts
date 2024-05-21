@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Annotated, TypedDict, cast
+from typing import Annotated, Any, Dict, TypedDict, cast
 
 from langchain_core.messages import (
     AIMessage,
@@ -9,6 +9,7 @@ from langchain_core.messages import (
     SystemMessage,
     ToolMessage,
 )
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.managed.few_shot import FewShotExamples
@@ -25,9 +26,18 @@ from app.message_types import LiberalToolMessage
 from app.tools import RETRIEVAL_DESCRIPTION, TOOLS, AvailableTools, get_retrieval_tool
 
 
+def filter_by_assistant_id(config: RunnableConfig) -> Dict[str, Any]:
+    if "assistant_id" in config["configurable"]:
+        return {"assistant_id": config["configurable"]["assistant_id"]}
+    else:
+        return {}
+
+
 class BaseState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
-    examples: Annotated[list, FewShotExamples]
+    examples: Annotated[
+        list, FewShotExamples.configure(metadata_filter=filter_by_assistant_id)
+    ]
 
 
 def _render_message(m):

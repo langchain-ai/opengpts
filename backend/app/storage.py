@@ -142,7 +142,10 @@ async def update_thread_state(
     assistant: Assistant,
 ):
     """Add state to a thread."""
-    return await get_langserve().threads.update_state(config, values)
+    # thread_id (str) must be passed to update_state() instead of config
+    # (dict) so that default configs are applied in LangGraph API.
+    thread_id = config["configurable"]["thread_id"]
+    return await get_langserve().threads.update_state(thread_id, values)
 
 
 async def patch_thread_state(
