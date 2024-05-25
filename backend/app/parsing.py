@@ -1,5 +1,9 @@
 """Module contains logic for parsing binary blobs into text."""
-from langchain_community.document_loaders.parsers import BS4HTMLParser, PDFMinerParser, MarkdownParser
+from langchain_community.document_loaders.parsers import (
+    BS4HTMLParser,
+    MarkdownParser,
+    PDFMinerParser,
+)
 from langchain_community.document_loaders.parsers.generic import MimeTypeBasedParser
 from langchain_community.document_loaders.parsers.msword import MsWordParser
 from langchain_community.document_loaders.parsers.txt import TextParser
