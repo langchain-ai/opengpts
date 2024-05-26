@@ -1,4 +1,6 @@
 """Module contains logic for parsing binary blobs into text."""
+from typing import Iterator
+from langchain_core.document_loaders.blob_loaders import Blob
 from langchain.text_splitter import MarkdownHeaderTextSplitter
 from langchain_community.document_loaders.parsers import (
     BS4HTMLParser,
