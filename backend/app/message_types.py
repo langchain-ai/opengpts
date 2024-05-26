@@ -18,7 +18,7 @@ class LiberalToolMessage(ToolMessage):
 
 
 def _convert_pydantic_dict_to_message(
-    data: MessageLikeRepresentation
+    data: MessageLikeRepresentation,
 ) -> MessageLikeRepresentation:
     if (
         isinstance(data, dict)
