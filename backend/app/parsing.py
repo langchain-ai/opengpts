@@ -60,7 +60,6 @@ class MimeTypeParser(BaseBlobParser):
         """Load documents from a blob."""
         mimetype = blob.mimetype
 
-
         if mimetype is None:
             if blob.path.name.endswith(".md"):
                 mimetype = "text/markdown"
@@ -75,6 +74,8 @@ class MimeTypeParser(BaseBlobParser):
                 yield from self.fallback_parser.lazy_parse(blob)
             else:
                 raise ValueError(f"Unsupported mime type: {mimetype}")
+
+
 class MarkdownParser(BaseBlobParser):
     """Parser for Markdown blobs."""
 
@@ -88,7 +89,9 @@ class MarkdownParser(BaseBlobParser):
             ("####", "Header 5"),
             ("#####", "Header 6"),
         ]
-        splitter = MarkdownHeaderTextSplitter(headers_to_split_on, return_each_line=True)
+        splitter = MarkdownHeaderTextSplitter(
+            headers_to_split_on, return_each_line=True
+        )
         for doc in splitter.split_text(blob.as_string()):
             yield doc
 
