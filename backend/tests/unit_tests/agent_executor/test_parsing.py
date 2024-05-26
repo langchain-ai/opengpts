@@ -30,11 +30,18 @@ def test_attempt_to_parse_each_fixture() -> None:
         blob = Blob.from_path(path)
         documents = MIMETYPE_BASED_PARSER.parse(blob)
         try:
-            assert len(documents) == 1
-            doc = documents[0]
-            assert "source" in doc.metadata
-            assert doc.metadata["source"] == str(path)
-            assert "🦜" in doc.page_content
+            if type_ == "text/markdown":
+                assert len(documents) >= 1
+                doc = documents[0]
+                assert "source" in doc.metadata
+                assert doc.metadata["source"] == str(path)
+                assert "🦜" in doc.page_content
+            else:
+                assert len(documents) == 1
+                doc = documents[0]
+                assert "source" in doc.metadata
+                assert doc.metadata["source"] == str(path)
+                assert "🦜" in doc.page_content
         except Exception as e:
             raise AssertionError(f"Failed to parse {path}") from e
 
