@@ -12,7 +12,8 @@ from langchain_core.document_loaders import BaseBlobParser
 from langchain_core.document_loaders.blob_loaders import Blob
 from langchain_core.documents import Document
 
-class MimeTypeBasedParser(BaseBlobParser):
+
+class MimeTypeParser(BaseBlobParser):
     """Parser that uses `mime`-types to parse a blob.
 
     This parser is useful for simple pipelines where the mime-type is sufficient
@@ -87,7 +88,7 @@ class MarkdownParser(BaseBlobParser):
             ("####", "Header 5"),
             ("#####", "Header 6"),
         ]
-        splitter = MarkdownHeaderTextSplitter(headers_to_split_on)
+        splitter = MarkdownHeaderTextSplitter(headers_to_split_on, return_each_line=True)
         for doc in splitter.split_text(blob.as_string()):
             yield doc
 
@@ -107,7 +108,7 @@ SUPPORTED_MIMETYPES = sorted(HANDLERS.keys())
 
 # PUBLIC API
 
-MIMETYPE_BASED_PARSER = MimeTypeBasedParser(
+MIMETYPE_BASED_PARSER = MimeTypeParser(
     handlers=HANDLERS,
     fallback_parser=None,
 )
