@@ -14,8 +14,8 @@ def test_list_of_supported_mimetypes() -> None:
         "application/pdf",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "text/html",
-        "text/plain",
         "text/markdown",
+        "text/plain",
     ]
 
 
