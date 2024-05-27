@@ -21,6 +21,9 @@ class ThreadPostRequest(BaseModel):
 
     name: str = Field(..., description="The name of the thread.")
     assistant_id: str = Field(..., description="The ID of the assistant to use.")
+    starting_message: Optional[str] = Field(
+        None, description="The starting AI message for the thread."
+    )
 
 
 class ThreadPutRequest(BaseModel):
@@ -120,12 +123,25 @@ async def create_thread(
     payload: ThreadPostRequest,
 ) -> Thread:
     """Create a thread."""
-    return await storage.put_thread(
+    assistant = await storage.get_assistant(user["user_id"], payload.assistant_id)
+    if not assistant:
+        raise HTTPException(status_code=404, detail="Assistant not found")
+    thread = await storage.put_thread(
         user["user_id"],
         str(uuid4()),
         assistant_id=payload.assistant_id,
         name=payload.name,
     )
+    if payload.starting_message is not None:
+        message = AIMessage(id=str(uuid4()), content=payload.starting_message)
+        chat_retrieval = assistant["config"]["configurable"]["type"] == "chat_retrieval"
+        await storage.update_thread_state(
+            {"configurable": {"thread_id": thread["thread_id"]}},
+            {"messages": [message]} if chat_retrieval else [message],
+            user_id=user["user_id"],
+            assistant=assistant,
+        )
+    return thread
 
 
 @router.put("/{tid}")
