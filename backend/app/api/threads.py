@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path
 from langchain.schema.messages import AnyMessage
+from langchain_core.messages import AIMessage
 from pydantic import BaseModel, Field
 
 import app.storage as storage
@@ -15,14 +16,21 @@ router = APIRouter()
 ThreadID = Annotated[str, Path(description="The ID of the thread.")]
 
 
-class ThreadPutRequest(BaseModel):
+class ThreadPostRequest(BaseModel):
     """Payload for creating a thread."""
 
     name: str = Field(..., description="The name of the thread.")
     assistant_id: str = Field(..., description="The ID of the assistant to use.")
 
 
-class ThreadPostRequest(BaseModel):
+class ThreadPutRequest(BaseModel):
+    """Payload for updating a thread."""
+
+    name: str = Field(..., description="The name of the thread.")
+    assistant_id: str = Field(..., description="The ID of the assistant to use.")
+
+
+class ThreadStatePostRequest(BaseModel):
     """Payload for adding state to a thread."""
 
     values: Union[Sequence[AnyMessage], Dict[str, Any]]
@@ -58,7 +66,7 @@ async def get_thread_state(
 async def add_thread_state(
     user: AuthedUser,
     tid: ThreadID,
-    payload: ThreadPostRequest,
+    payload: ThreadStatePostRequest,
 ):
     """Add state to a thread."""
     thread = await storage.get_thread(user["user_id"], tid)
@@ -109,14 +117,14 @@ async def get_thread(
 @router.post("")
 async def create_thread(
     user: AuthedUser,
-    thread_put_request: ThreadPutRequest,
+    payload: ThreadPostRequest,
 ) -> Thread:
     """Create a thread."""
     return await storage.put_thread(
         user["user_id"],
         str(uuid4()),
-        assistant_id=thread_put_request.assistant_id,
-        name=thread_put_request.name,
+        assistant_id=payload.assistant_id,
+        name=payload.name,
     )
 
 
@@ -124,14 +132,14 @@ async def create_thread(
 async def upsert_thread(
     user: AuthedUser,
     tid: ThreadID,
-    thread_put_request: ThreadPutRequest,
+    payload: ThreadPutRequest,
 ) -> Thread:
     """Update a thread."""
     return await storage.put_thread(
         user["user_id"],
         tid,
-        assistant_id=thread_put_request.assistant_id,
-        name=thread_put_request.name,
+        assistant_id=payload.assistant_id,
+        name=payload.name,
     )
 
 
