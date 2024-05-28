@@ -1,7 +1,8 @@
 from io import BytesIO
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from fastapi import UploadFile
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
 from app.upload import IngestRunnable, _guess_mimetype, convert_ingestion_input_to_blob
 from tests.unit_tests.fixtures import get_sample_paths
 from tests.unit_tests.utils import InMemoryVectorStore
@@ -46,4 +47,5 @@ def test_mimetype_guessing() -> None:
         "sample.pdf": "application/pdf",
         "sample.rtf": "application/rtf",
         "sample.txt": "text/plain",
+        "sample.md": "text/markdown",
     } == name_to_mime
