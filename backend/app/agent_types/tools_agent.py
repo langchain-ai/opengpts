@@ -10,10 +10,10 @@ from langchain_core.messages import (
     ToolMessage,
 )
 from langgraph.checkpoint import BaseCheckpointSaver
-from langgraph.graph import END
 from langgraph.graph.message import MessageGraph
 from langgraph.prebuilt import ToolExecutor, ToolInvocation
 
+from app.agent_types.constants import FINISH_NODE_ACTION, FINISH_NODE_KEY
 from app.message_types import LiberalToolMessage
 
 
@@ -89,10 +89,12 @@ def get_tools_agent_executor(
     # Define the two nodes we will cycle between
     workflow.add_node("agent", agent)
     workflow.add_node("action", call_tool)
+    workflow.add_node(FINISH_NODE_KEY, FINISH_NODE_ACTION)
 
     # Set the entrypoint as `agent`
     # This means that this node is the first one called
     workflow.set_entry_point("agent")
+    workflow.set_finish_point(FINISH_NODE_KEY)
 
     # We now add a conditional edge
     workflow.add_conditional_edges(
@@ -111,7 +113,7 @@ def get_tools_agent_executor(
             # If `tools`, then we call the tool node.
             "continue": "action",
             # Otherwise we finish.
-            "end": END,
+            "end": FINISH_NODE_KEY,
         },
     )
 

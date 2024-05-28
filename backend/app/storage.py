@@ -5,6 +5,7 @@ from langchain_core.messages import AnyMessage
 from langchain_core.runnables import RunnableConfig
 
 from app.agent import agent
+from app.agent_types.constants import FINISH_NODE_KEY
 from app.lifespan import get_pg_pool
 from app.schema import Assistant, Thread, User
 
@@ -125,6 +126,7 @@ async def update_thread_state(
     *,
     user_id: str,
     assistant: Assistant,
+    as_node: Optional[str] = FINISH_NODE_KEY,
 ):
     """Add state to a thread."""
     await agent.aupdate_state(
@@ -136,6 +138,7 @@ async def update_thread_state(
             }
         },
         values,
+        as_node=as_node,
     )
 
 

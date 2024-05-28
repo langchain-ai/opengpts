@@ -8,9 +8,9 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.runnables import chain
 from langgraph.checkpoint import BaseCheckpointSaver
-from langgraph.graph import END
 from langgraph.graph.state import StateGraph
 
+from app.agent_types.constants import FINISH_NODE_ACTION, FINISH_NODE_KEY
 from app.message_types import LiberalToolMessage, add_messages_liberal
 
 search_prompt = PromptTemplate.from_template(
@@ -132,9 +132,11 @@ def get_retrieval_executor(
     workflow.add_node("invoke_retrieval", invoke_retrieval)
     workflow.add_node("retrieve", retrieve)
     workflow.add_node("response", call_model)
+    workflow.add_node(FINISH_NODE_KEY, FINISH_NODE_ACTION)
     workflow.set_entry_point("invoke_retrieval")
+    workflow.set_finish_point(FINISH_NODE_KEY)
     workflow.add_edge("invoke_retrieval", "retrieve")
     workflow.add_edge("retrieve", "response")
-    workflow.add_edge("response", END)
+    workflow.add_edge("response", FINISH_NODE_KEY)
     app = workflow.compile(checkpointer=checkpoint)
     return app
