@@ -287,7 +287,11 @@ def _get_tavily_answer():
 
 
 def _get_action_server(**kwargs: ActionServerConfig):
-    toolkit = ActionServerToolkit(url=kwargs["url"], api_key=kwargs["api_key"])
+    toolkit = ActionServerToolkit(
+        url=kwargs["url"],
+        api_key=kwargs["api_key"],
+        additional_headers=kwargs.get("additional_headers", {}),
+    )
     tools = toolkit.get_tools()
     return tools
 

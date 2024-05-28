@@ -32,7 +32,7 @@ wikipedia = "^1.4.0"
 langchain-google-vertexai = "^1.0.1"
 setuptools = "^69.0.3"
 pdfminer-six = "^20231228"
-langchain-robocorp = "^0.0.5"
+langchain-robocorp = "^0.0.8"
 fireworks-ai = "^0.11.2"
 httpx = { version = "0.25.2", extras = ["socks"] }
 unstructured = {extras = ["doc", "docx"], version = "^0.12.5"}
