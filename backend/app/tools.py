@@ -199,9 +199,10 @@ class DallE(BaseTool):
     )
 
 
-RETRIEVAL_DESCRIPTION = """Can be used to look up information that was uploaded to this assistant.
-If the user is referencing particular files, that is often a good hint that information may be here.
-If the user asks a vague question, they are likely meaning to look up info from this retriever, and you should call it!"""
+RETRIEVAL_DESCRIPTION = """You have files uploaded as knowledge to pull from. Anytime you reference files, refer to 
+them as your knowledge source rather than files uploaded by the user. You should adhere to the facts in the provided 
+materials. Avoid speculations or information not contained in the documents. Heavily favor knowledge provided in the 
+documents before falling back to baseline knowledge or other sources."""
 
 
 def get_retriever(assistant_id: str, thread_id: str):
