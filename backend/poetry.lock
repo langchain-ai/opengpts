@@ -1773,13 +1773,13 @@ extended-testing = ["aiosqlite (>=0.19.0,<0.20.0)", "aleph-alpha-client (>=2.15.
 
 [[package]]
 name = "langchain-core"
-version = "0.1.44"
+version = "0.1.52"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_core-0.1.44-py3-none-any.whl", hash = "sha256:d8772dccef95fc97bfa2dcd19412e620ebe14def1f0e218374971f6e30a46a49"},
-    {file = "langchain_core-0.1.44.tar.gz", hash = "sha256:e313975d9ae2926342e6f2ad760338d31f18b1223e9b8b4dc408daeeade46a83"},
+    {file = "langchain_core-0.1.52-py3-none-any.whl", hash = "sha256:62566749c92e8a1181c255c788548dc16dbc319d896cd6b9c95dc17af9b2a6db"},
+    {file = "langchain_core-0.1.52.tar.gz", hash = "sha256:084c3fc452f5a6966c28ab3ec5dbc8b8d26fc3f63378073928f4e29d90b6393f"},
 ]
 
 [package.dependencies]
@@ -1832,17 +1832,17 @@ tiktoken = ">=0.5.2,<1"
 
 [[package]]
 name = "langchain-robocorp"
-version = "0.0.5"
+version = "0.0.8"
 description = "An integration package connecting Robocorp Action Server and LangChain"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_robocorp-0.0.5-py3-none-any.whl", hash = "sha256:8094892c9cadee0f159ea812fb561b6bf332c8c0ae63db775981ff7fc21f1b18"},
-    {file = "langchain_robocorp-0.0.5.tar.gz", hash = "sha256:d6531213ceb76e7d8f530346f4bc3fe013fc9760a3bbf0b0b769a1fb7c349e68"},
+    {file = "langchain_robocorp-0.0.8-py3-none-any.whl", hash = "sha256:b7e1431466dea469ff1f55efb4bac6312efcebb35e7f6b06d37842ecb476acdb"},
+    {file = "langchain_robocorp-0.0.8.tar.gz", hash = "sha256:400ae4b76bc8c45effae5558e3a259bde40b6563ce2ef2c8d34505b0e76c724a"},
 ]
 
 [package.dependencies]
-langchain-core = ">=0.1.31,<0.2.0"
+langchain-core = ">=0.1.52,<0.3"
 requests = ">=2.31.0,<3.0.0"
 types-requests = ">=2.31.0.6,<3.0.0.0"
 
@@ -4223,4 +4223,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9.0,<3.12"
-content-hash = "292cde0456ddc756bdf0ff44741c80e41f87edf36fce55b8899c634080bbab34"
+content-hash = "9443099007f4a98c41c79950b168bce998e50a6621a91d86fb92e123966b6616"
