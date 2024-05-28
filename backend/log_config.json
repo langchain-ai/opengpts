@@ -11,7 +11,8 @@
             "fmt": "%(asctime)s - %(name)s - %(levelprefix)s  %(client_addr)s - \"%(request_line)s\" %(status_code)s"
         },
         "json": {
-            "()": "pythonjsonlogger.jsonlogger.JsonFormatter"
+            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "fmt": "%(asctime)s - %(name)s - %(levelname)s %(message)s"
         }
     },
     "handlers": {
