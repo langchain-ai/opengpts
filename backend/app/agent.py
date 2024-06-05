@@ -40,6 +40,8 @@ from app.tools import (
     TavilyAnswer,
     Wikipedia,
     YouSearch,
+    Serper,
+    SerperResult,
     get_retrieval_tool,
     get_retriever,
 )
@@ -50,6 +52,8 @@ Tool = Union[
     DDGSearch,
     Arxiv,
     YouSearch,
+    Serper,
+    SerperResult,
     SecFilings,
     PressReleases,
     PubMed,
