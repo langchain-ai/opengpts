@@ -52,7 +52,9 @@ jobs:
         run: |
           poetry install --with test
       - name: Start the service
-        run: poetry run langgraph up -c ../langgraph.json -d ../compose.override.yml --postgres-uri 'postgres://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable' --verbose --wait
+        run: |
+          touch ../.env
+          poetry run langgraph up -c ../langgraph.json -d ../compose.override.yml --postgres-uri 'postgres://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable' --verbose --wait
       - name: Run tests
         env:
           POSTGRES_HOST: localhost
