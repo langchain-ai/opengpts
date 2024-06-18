@@ -1,5 +1,4 @@
 from typing import Annotated, Any, Dict, List, Optional, Sequence, Union
-from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path
 from langchain.schema.messages import AnyMessage
@@ -136,22 +135,21 @@ async def create_thread(
     thread_put_request: ThreadPutRequest,
 ) -> Thread:
     """Create a thread."""
-    return await storage.put_thread(
+    return await storage.create_thread(
         user["user_id"],
-        str(uuid4()),
         assistant_id=thread_put_request.assistant_id,
         name=thread_put_request.name,
     )
 
 
-@router.put("/{tid}")
+@router.patch("/{tid}")
 async def upsert_thread(
     user: AuthedUser,
     tid: ThreadID,
     thread_put_request: ThreadPutRequest,
 ) -> Thread:
     """Update a thread."""
-    return await storage.put_thread(
+    return await storage.patch_thread(
         user["user_id"],
         tid,
         assistant_id=thread_put_request.assistant_id,

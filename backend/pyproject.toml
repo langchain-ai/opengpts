@@ -8,13 +8,10 @@ packages = [{include = "app"}]
 
 [tool.poetry.dependencies]
 python = "^3.9.0,<3.12"
-sse-starlette = "^1.6.5"
+sse-starlette = ">=2.1.0"
 tomli-w = "^1.0.0"
-uvicorn = "^0.23.2"
-fastapi = "^0.103.2"
-# Uncomment if you need to work from a development branch
-# This will only work for local development though!
-# langchain = { git = "git@github.com:langchain-ai/langchain.git/", branch = "nc/subclass-runnable-binding" , subdirectory = "libs/langchain"}
+uvicorn = ">=0.23.2"
+fastapi-slim = ">=0.103.2"
 orjson = ">=3.9.10"
 python-multipart = "^0.0.6"
 langchain = ">=0.2.0"
@@ -37,7 +34,6 @@ httpx = { version = ">=0.25.2", extras = ["socks"] }
 unstructured = {extras = ["doc", "docx"], version = "^0.12.5"}
 pgvector = "^0.2.5"
 psycopg2-binary = "^2.9.9"
-asyncpg = "^0.29.0"
 pyjwt = {extras = ["crypto"], version = "^2.8.0"}
 langchain-anthropic = ">=0.1.8"
 structlog = "^24.1.0"

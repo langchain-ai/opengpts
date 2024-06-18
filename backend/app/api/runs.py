@@ -1,4 +1,3 @@
-import json
 import pathlib
 from typing import Any, Dict, Optional, Sequence, Union
 from uuid import UUID
@@ -13,7 +12,7 @@ from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
 
 from app.auth.handlers import AuthedUser
-from app.lifespan import get_langserve
+from app.lifespan import get_api_client
 from app.storage import get_assistant, get_thread
 
 router = APIRouter()
@@ -33,7 +32,7 @@ async def create_run(payload: CreateRunPayload, user: AuthedUser):
     thread = await get_thread(user["user_id"], payload.thread_id)
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
-    return await get_langserve().runs.create(
+    return await get_api_client().runs.create(
         payload.thread_id,
         thread["assistant_id"],
         input=payload.input,
@@ -53,21 +52,27 @@ async def stream_run(
     assistant = await get_assistant(user["user_id"], thread["assistant_id"])
     if not assistant:
         raise HTTPException(status_code=404, detail="Assistant not found")
+    interrupt_before = (
+        ["action"]
+        if assistant["config"]["configurable"].get(
+            "type==agent/interrupt_before_action"
+        )
+        else None
+    )
 
     return EventSourceResponse(
         (
-            {"event": e.event, "data": json.dumps(e.data)}
-            async for e in get_langserve().runs.stream(
+            {
+                "event": "data" if e.event.startswith("messages") else e.event,
+                "data": orjson.dumps(e.data).decode(),
+            }
+            async for e in get_api_client().runs.stream(
                 payload.thread_id,
                 thread["assistant_id"],
                 input=payload.input,
                 config=payload.config,
                 stream_mode="messages",
-                interrupt_before=["action"]
-                if assistant["config"]["configurable"].get(
-                    "type==agent/interrupt_before_action"
-                )
-                else None,
+                interrupt_before=interrupt_before,
             )
         )
     )

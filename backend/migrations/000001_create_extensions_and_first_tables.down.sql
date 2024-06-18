@@ -1,3 +1,0 @@
-DROP TABLE IF EXISTS thread;
-DROP TABLE IF EXISTS assistant;
-DROP TABLE IF EXISTS checkpoints;

@@ -1,5 +1,4 @@
 from typing import Annotated, List
-from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path
 from pydantic import BaseModel, Field
@@ -52,23 +51,22 @@ async def create_assistant(
     payload: AssistantPayload,
 ) -> Assistant:
     """Create an assistant."""
-    return await storage.put_assistant(
+    return await storage.create_assistant(
         user["user_id"],
-        str(uuid4()),
         name=payload.name,
         config=payload.config,
         public=payload.public,
     )
 
 
-@router.put("/{aid}")
+@router.patch("/{aid}")
 async def upsert_assistant(
     user: AuthedUser,
     aid: AssistantID,
     payload: AssistantPayload,
 ) -> Assistant:
     """Create or update an assistant."""
-    return await storage.put_assistant(
+    return await storage.patch_assistant(
         user["user_id"],
         aid,
         name=payload.name,

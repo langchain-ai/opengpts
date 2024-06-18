@@ -1,26 +1,26 @@
+volumes:
+  langgraph-data:
+    driver: local
 services:
   langgraph-api:
     environment:
       PGVECTOR_URI: "postgresql+psycopg2://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable"
   langgraph-postgres:
     image: pgvector/pgvector:pg16
-  postgres-setup:
-    image: migrate/migrate
-    depends_on:
-      langgraph-postgres:
-        condition: service_healthy
+    restart: on-failure
+    ports:
+        - "5433:5432"
+    environment:
+        POSTGRES_DB: postgres
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
     volumes:
-      - ./backend/migrations:/migrations
-    env_file:
-      - .env
-    command:
-      [
-        "-path",
-        "/migrations",
-        "-database",
-        "postgres://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable",
-        "up",
-      ]
+        - langgraph-data:/var/lib/postgresql/data
+    healthcheck:
+        test: pg_isready -U postgres
+        start_period: 10s
+        timeout: 1s
+        retries: 5
   backend:
     container_name: opengpts-backend
     pull_policy: build
@@ -29,14 +29,13 @@ services:
     ports:
       - "8100:8000" # Backend is accessible on localhost:8100
     depends_on:
-      postgres-setup:
-        condition: service_completed_successfully
+      langgraph-postgres:
+        condition: service_healthy
     env_file:
       - .env
     volumes:
       - ./backend:/backend
     environment:
-      POSTGRES_URI: "postgres://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable"
       PGVECTOR_URI: "postgresql+psycopg2://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable"
       LANGGRAPH_URL: "http://langgraph-api:8000"
     command:

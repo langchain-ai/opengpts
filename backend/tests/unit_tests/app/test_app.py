@@ -3,8 +3,6 @@
 from typing import Optional, Sequence
 from uuid import uuid4
 
-import asyncpg
-
 from tests.unit_tests.app.helpers import get_client
 
 
@@ -14,13 +12,10 @@ def _project(d: dict, *, exclude_keys: Optional[Sequence[str]]) -> dict:
     return {k: v for k, v in d.items() if k not in _exclude}
 
 
-async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
+async def test_list_and_create_assistants() -> None:
     """Test list and create assistants."""
     headers = {"Cookie": "opengpts_user_id=1"}
     aid = str(uuid4())
-
-    async with pool.acquire() as conn:
-        assert len(await conn.fetch("SELECT * FROM assistant;")) == 0
 
     async with get_client() as client:
         response = await client.get(
@@ -44,8 +39,6 @@ async def test_list_and_create_assistants(pool: asyncpg.pool.Pool) -> None:
             "name": "bobby",
             "public": False,
         }
-        async with pool.acquire() as conn:
-            assert len(await conn.fetch("SELECT * FROM assistant;")) == 1
 
         response = await client.get("/assistants/", headers=headers)
         assert [

@@ -61,7 +61,7 @@ export function useChatList(): ChatListProps {
   const updateChat = useCallback(
     async (thread_id: string, name: string, assistant_id: string | null) => {
       const response = await fetch(`/threads/${thread_id}`, {
-        method: "PUT",
+        method: "PATCH",
         body: JSON.stringify({ assistant_id, name }),
         headers: {
           "Content-Type": "application/json",

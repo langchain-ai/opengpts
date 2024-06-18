@@ -73,7 +73,7 @@ export function useConfigList(): ConfigListProps {
       const confResponse = await fetch(
         assistantId ? `/api/assistants/${assistantId}` : "/api/assistants",
         {
-          method: assistantId ? "PUT" : "POST",
+          method: assistantId ? "PATCH" : "POST",
           body: JSON.stringify({ name, config, public: isPublic }),
           headers: {
             "Content-Type": "application/json",

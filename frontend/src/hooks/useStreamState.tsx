@@ -40,6 +40,7 @@ export function useStreamState(): StreamStateProps {
         body: JSON.stringify({ input, thread_id, config }),
         openWhenHidden: true,
         onmessage(msg) {
+          console.log(msg);
           if (msg.event === "data") {
             const messages = JSON.parse(msg.data);
             setCurrent((current) => ({
