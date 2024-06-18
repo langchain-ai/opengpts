@@ -1942,13 +1942,13 @@ uuid6 = ">=2024.1.12,<2025.0.0"
 
 [[package]]
 name = "langgraph-cli"
-version = "0.1.36"
+version = "0.1.37"
 description = "CLI for interacting with LangGraph API"
 optional = false
 python-versions = "<4.0.0,>=3.9.0"
 files = [
-    {file = "langgraph_cli-0.1.36-py3-none-any.whl", hash = "sha256:aa6cc4fc4d76e8235d5d30b33fe8049fca4982581a0fcc1c95cd177e3da77b2d"},
-    {file = "langgraph_cli-0.1.36.tar.gz", hash = "sha256:a5e914fe4d7e48419ff0c569b5b792da59663884dfd1c7656c87310a28a55d05"},
+    {file = "langgraph_cli-0.1.37-py3-none-any.whl", hash = "sha256:c9b4b0db22300bb4e1fdb8377b50442f804c42702b46e77c30d7683ced6face4"},
+    {file = "langgraph_cli-0.1.37.tar.gz", hash = "sha256:906b858102f96d5773da26258b5095348fcb300c151aa7e9a879873a8feb4871"},
 ]
 
 [package.dependencies]
@@ -4412,4 +4412,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9.0,<3.12"
-content-hash = "5cff3ebc38cdfc15aadf17e33db955600529f979f49a468a963668dfc606f0fb"
+content-hash = "9bfbc8b6ba4fcb2e4943d3bc7cb44809bafa8e846fb59cc14f91d18f5df47ceb"

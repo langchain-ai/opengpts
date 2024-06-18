@@ -39,7 +39,7 @@ langchain-anthropic = ">=0.1.8"
 structlog = "^24.1.0"
 python-json-logger = "^2.0.7"
 langgraph-sdk = ">=0.1.9"
-langgraph-cli = "^0.1.21"
+langgraph-cli = ">=0.1.37"
 langchain-community = "^0.2.0"
 
 [tool.poetry.group.dev.dependencies]
