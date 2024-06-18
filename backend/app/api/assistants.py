@@ -60,7 +60,7 @@ async def create_assistant(
 
 
 @router.patch("/{aid}")
-async def upsert_assistant(
+async def patch_assistant(
     user: AuthedUser,
     aid: AssistantID,
     payload: AssistantPayload,

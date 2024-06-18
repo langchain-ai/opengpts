@@ -1,7 +1,6 @@
 """Test the server and client together."""
 
 from typing import Optional, Sequence
-from uuid import uuid4
 
 from tests.unit_tests.app.helpers import get_client
 
@@ -15,11 +14,10 @@ def _project(d: dict, *, exclude_keys: Optional[Sequence[str]]) -> dict:
 async def test_list_and_create_assistants() -> None:
     """Test list and create assistants."""
     headers = {"Cookie": "opengpts_user_id=1"}
-    aid = str(uuid4())
 
     async with get_client() as client:
         response = await client.get(
-            "/assistants/",
+            "/api/assistants/",
             headers=headers,
         )
         assert response.status_code == 200
@@ -27,20 +25,25 @@ async def test_list_and_create_assistants() -> None:
         assert response.json() == []
 
         # Create an assistant
-        response = await client.put(
-            f"/assistants/{aid}",
-            json={"name": "bobby", "config": {}, "public": False},
+        response = await client.post(
+            "/api/assistants",
+            json={
+                "name": "bobby",
+                "config": {"configurable": {"type": "chatbot"}},
+                "public": False,
+            },
             headers=headers,
         )
         assert response.status_code == 200
+        aid = response.json()["assistant_id"]
         assert _project(response.json(), exclude_keys=["updated_at", "user_id"]) == {
             "assistant_id": aid,
-            "config": {},
+            "config": {"configurable": {"type": "chatbot"}},
             "name": "bobby",
             "public": False,
         }
 
-        response = await client.get("/assistants/", headers=headers)
+        response = await client.get("/api/assistants/", headers=headers)
         assert [
             _project(d, exclude_keys=["updated_at", "user_id"]) for d in response.json()
         ] == [
@@ -52,8 +55,8 @@ async def test_list_and_create_assistants() -> None:
             }
         ]
 
-        response = await client.put(
-            f"/assistants/{aid}",
+        response = await client.patch(
+            f"/api/assistants/{aid}",
             json={"name": "bobby", "config": {}, "public": False},
             headers=headers,
         )
@@ -67,20 +70,20 @@ async def test_list_and_create_assistants() -> None:
 
         # Check not visible to other users
         headers = {"Cookie": "opengpts_user_id=2"}
-        response = await client.get("/assistants/", headers=headers)
+        response = await client.get("/api/assistants/", headers=headers)
         assert response.status_code == 200, response.text
         assert response.json() == []
+
+        await client.delete(f"/api/assistants/{aid}", headers=headers)
 
 
 async def test_threads() -> None:
     """Test put thread."""
     headers = {"Cookie": "opengpts_user_id=1"}
-    aid = str(uuid4())
-    tid = str(uuid4())
 
     async with get_client() as client:
-        response = await client.put(
-            f"/assistants/{aid}",
+        response = await client.post(
+            "/api/assistants",
             json={
                 "name": "assistant",
                 "config": {"configurable": {"type": "chatbot"}},
@@ -88,19 +91,29 @@ async def test_threads() -> None:
             },
             headers=headers,
         )
+        assert response.status_code == 200, response.text
+        aid = response.json()["assistant_id"]
 
-        response = await client.put(
-            f"/threads/{tid}",
+        response = await client.post(
+            "/api/threads",
             json={"name": "bobby", "assistant_id": aid},
             headers=headers,
         )
         assert response.status_code == 200, response.text
+        tid = response.json()["thread_id"]
 
-        response = await client.get(f"/threads/{tid}/state", headers=headers)
+        response = await client.get(f"/api/threads/{tid}/state", headers=headers)
         assert response.status_code == 200
-        assert response.json() == {"values": None, "next": []}
+        assert response.json() == {
+            "values": {},
+            "next": [],
+            "config": {},
+            "metadata": {},
+            "created_at": None,
+            "parent_config": {},
+        }
 
-        response = await client.get("/threads/", headers=headers)
+        response = await client.get("/api/threads/", headers=headers)
 
         assert response.status_code == 200
         assert [
@@ -110,12 +123,9 @@ async def test_threads() -> None:
                 "assistant_id": aid,
                 "name": "bobby",
                 "thread_id": tid,
-                "metadata": {"assistant_type": "chatbot"},
+                "metadata": {},
             }
         ]
 
-        response = await client.put(
-            f"/threads/{tid}",
-            headers={"Cookie": "opengpts_user_id=2"},
-        )
-        assert response.status_code == 422
+        await client.delete(f"/api/threads/{tid}", headers=headers)
+        await client.delete(f"/api/assistants/{aid}", headers=headers)

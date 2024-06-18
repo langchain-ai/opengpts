@@ -143,7 +143,7 @@ async def create_thread(
 
 
 @router.patch("/{tid}")
-async def upsert_thread(
+async def patch_thread(
     user: AuthedUser,
     tid: ThreadID,
     thread_put_request: ThreadPutRequest,
