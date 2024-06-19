@@ -85,7 +85,12 @@ async def create_assistant(
 
 
 async def patch_assistant(
-    user_id: str, assistant_id: str, *, name: str, config: dict, public: bool = False
+    user_id: str,
+    assistant_id: str,
+    *,
+    name: Optional[str],
+    config: Optional[dict],
+    public: Optional[bool],
 ) -> Assistant:
     """Patch an assistant.
 
@@ -101,9 +106,11 @@ async def patch_assistant(
     """
     assistant = await get_api_client().assistants.update(
         assistant_id,
-        graph_id=config["configurable"]["type"],
+        graph_id=config["configurable"]["type"] if config else None,
         config=config,
-        metadata={"user_id": user_id, "public": public, "name": name},
+        metadata={"user_id": user_id, "public": public or False, "name": name}
+        if name or public
+        else None,
     )
     return Assistant(
         assistant_id=assistant["assistant_id"],

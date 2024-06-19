@@ -51,6 +51,10 @@ async def create_assistant(
     payload: AssistantPayload,
 ) -> Assistant:
     """Create an assistant."""
+    if not payload.config.get("configurable", {}).get("type"):
+        raise HTTPException(
+            status_code=400, detail="Assistant config must have configurable.type field"
+        )
     return await storage.create_assistant(
         user["user_id"],
         name=payload.name,
@@ -66,6 +70,10 @@ async def patch_assistant(
     payload: AssistantPayload,
 ) -> Assistant:
     """Create or update an assistant."""
+    if payload.config and not payload.config.get("configurable", {}).get("type"):
+        raise HTTPException(
+            status_code=400, detail="Assistant config must have configurable.type field"
+        )
     return await storage.patch_assistant(
         user["user_id"],
         aid,

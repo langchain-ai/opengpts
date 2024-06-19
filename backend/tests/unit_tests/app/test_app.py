@@ -57,14 +57,14 @@ async def test_list_and_create_assistants() -> None:
 
         response = await client.patch(
             f"/api/assistants/{aid}",
-            json={"name": "bobby", "config": {}, "public": False},
+            json={"name": "hmmmm"},
             headers=headers,
         )
 
         assert _project(response.json(), exclude_keys=["updated_at", "user_id"]) == {
             "assistant_id": aid,
-            "config": {},
-            "name": "bobby",
+            "config": {"configurable": {"type": "chatbot"}},
+            "name": "hmmmm",
             "public": False,
         }
 
