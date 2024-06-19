@@ -43,7 +43,6 @@ langgraph-cli = ">=0.1.37"
 langchain-community = "^0.2.0"
 
 [tool.poetry.group.dev.dependencies]
-uvicorn = "^0.23.2"
 pygithub = "^2.1.1"
 
 [tool.poetry.group.lint.dependencies]

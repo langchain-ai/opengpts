@@ -49,7 +49,7 @@ async def test_list_and_create_assistants() -> None:
         ] == [
             {
                 "assistant_id": aid,
-                "config": {},
+                "config": {"configurable": {"type": "chatbot"}},
                 "name": "bobby",
                 "public": False,
             }
