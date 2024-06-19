@@ -18,6 +18,14 @@ class AssistantPayload(BaseModel):
     public: bool = Field(default=False, description="Whether the assistant is public.")
 
 
+class AssistantPatch(BaseModel):
+    """Payload for creating an assistant."""
+
+    name: str | None = Field(None, description="The name of the assistant.")
+    config: dict | None = Field(None, description="The assistant config.")
+    public: bool | None = Field(None, description="Whether the assistant is public.")
+
+
 AssistantID = Annotated[str, Path(description="The ID of the assistant.")]
 
 
@@ -67,7 +75,7 @@ async def create_assistant(
 async def patch_assistant(
     user: AuthedUser,
     aid: AssistantID,
-    payload: AssistantPayload,
+    payload: AssistantPatch,
 ) -> Assistant:
     """Create or update an assistant."""
     if payload.config and not payload.config.get("configurable", {}).get("type"):
