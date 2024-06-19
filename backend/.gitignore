@@ -1,2 +1,4 @@
 .envrc
 ui
+.venv
+.ruff_cache

@@ -2,7 +2,7 @@ import { Chat } from "../types";
 
 export async function getThread(threadId: string): Promise<Chat | null> {
   try {
-    const response = await fetch(`/threads/${threadId}`);
+    const response = await fetch(`/api/threads/${threadId}`);
     if (!response.ok) {
       return null;
     }

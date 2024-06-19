@@ -1,0 +1,56 @@
+volumes:
+  langgraph-data:
+    driver: local
+services:
+  langgraph-api:
+    environment:
+      PGVECTOR_URI: "postgresql+psycopg2://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable"
+  langgraph-postgres:
+    image: pgvector/pgvector:pg16
+    restart: on-failure
+    ports:
+        - "5433:5432"
+    environment:
+        POSTGRES_DB: postgres
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+    volumes:
+        - langgraph-data:/var/lib/postgresql/data
+    healthcheck:
+        test: pg_isready -U postgres
+        start_period: 10s
+        timeout: 1s
+        retries: 5
+  backend:
+    container_name: opengpts-backend
+    pull_policy: build
+    build:
+      context: backend
+    ports:
+      - "8100:8000" # Backend is accessible on localhost:8100
+    depends_on:
+      langgraph-postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/backend
+    environment:
+      PGVECTOR_URI: "postgresql+psycopg2://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable"
+      LANGGRAPH_URL: "http://langgraph-api:8000"
+    command:
+      - --reload
+  frontend:
+    container_name: opengpts-frontend
+    pull_policy: build
+    build:
+      context: frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./frontend/src:/frontend/src
+    ports:
+      - "5173:5173" # Frontend is accessible on localhost:5173
+    environment:
+      VITE_BACKEND_URL: "http://backend:8000"

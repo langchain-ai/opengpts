@@ -3,7 +3,7 @@ import { Message } from "../types";
 import { StreamState, mergeMessagesById } from "./useStreamState";
 
 async function getState(threadId: string) {
-  const { values, next } = await fetch(`/threads/${threadId}/state`, {
+  const { values, next } = await fetch(`/api/threads/${threadId}/state`, {
     headers: {
       Accept: "application/json",
     },

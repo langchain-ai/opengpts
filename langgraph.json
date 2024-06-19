@@ -1,0 +1,12 @@
+{
+  "python_version": "3.11",
+  "dependencies": [
+    "./backend"
+  ],
+  "graphs": {
+    "chatbot": "app.graphs.new_chatbot:graph",
+    "chat_retrieval": "app.graphs.new_rag:graph",
+    "agent": "app.graphs.new_agent:graph"
+  },
+  "env": ".env"
+}

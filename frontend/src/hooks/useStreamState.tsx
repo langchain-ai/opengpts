@@ -33,13 +33,14 @@ export function useStreamState(): StreamStateProps {
       setController(controller);
       setCurrent({ status: "inflight", messages: input || [] });
 
-      await fetchEventSource("/runs/stream", {
+      await fetchEventSource("/api/runs/stream", {
         signal: controller.signal,
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ input, thread_id, config }),
         openWhenHidden: true,
         onmessage(msg) {
+          console.log(msg);
           if (msg.event === "data") {
             const messages = JSON.parse(msg.data);
             setCurrent((current) => ({

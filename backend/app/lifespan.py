@@ -1,34 +1,15 @@
 import os
 from contextlib import asynccontextmanager
 
-import asyncpg
-import orjson
 import structlog
 from fastapi import FastAPI
+from langgraph_sdk.client import LangGraphClient, get_client
 
-_pg_pool = None
-
-
-def get_pg_pool() -> asyncpg.pool.Pool:
-    return _pg_pool
+_langserve = None
 
 
-async def _init_connection(conn) -> None:
-    await conn.set_type_codec(
-        "json",
-        encoder=lambda v: orjson.dumps(v).decode(),
-        decoder=orjson.loads,
-        schema="pg_catalog",
-    )
-    await conn.set_type_codec(
-        "jsonb",
-        encoder=lambda v: orjson.dumps(v).decode(),
-        decoder=orjson.loads,
-        schema="pg_catalog",
-    )
-    await conn.set_type_codec(
-        "uuid", encoder=lambda v: str(v), decoder=lambda v: v, schema="pg_catalog"
-    )
+def get_api_client() -> LangGraphClient:
+    return _langserve
 
 
 @asynccontextmanager
@@ -46,16 +27,9 @@ async def lifespan(app: FastAPI):
         cache_logger_on_first_use=True,
     )
 
-    global _pg_pool
+    global _langserve
 
-    _pg_pool = await asyncpg.create_pool(
-        database=os.environ["POSTGRES_DB"],
-        user=os.environ["POSTGRES_USER"],
-        password=os.environ["POSTGRES_PASSWORD"],
-        host=os.environ["POSTGRES_HOST"],
-        port=os.environ["POSTGRES_PORT"],
-        init=_init_connection,
-    )
+    _langserve = get_client(url=os.environ["LANGGRAPH_URL"])
     yield
-    await _pg_pool.close()
-    _pg_pool = None
+    await _langserve.http.client.aclose()
+    _langserve = None

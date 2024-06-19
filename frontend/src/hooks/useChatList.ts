@@ -33,7 +33,7 @@ export function useChatList(): ChatListProps {
 
   useEffect(() => {
     async function fetchChats() {
-      const chats = await fetch("/threads/", {
+      const chats = await fetch("/api/threads/", {
         headers: {
           Accept: "application/json",
         },
@@ -45,7 +45,7 @@ export function useChatList(): ChatListProps {
   }, []);
 
   const createChat = useCallback(async (name: string, assistant_id: string) => {
-    const response = await fetch(`/threads`, {
+    const response = await fetch(`/api/threads`, {
       method: "POST",
       body: JSON.stringify({ assistant_id, name }),
       headers: {
@@ -61,7 +61,7 @@ export function useChatList(): ChatListProps {
   const updateChat = useCallback(
     async (thread_id: string, name: string, assistant_id: string | null) => {
       const response = await fetch(`/threads/${thread_id}`, {
-        method: "PUT",
+        method: "PATCH",
         body: JSON.stringify({ assistant_id, name }),
         headers: {
           "Content-Type": "application/json",
@@ -77,7 +77,7 @@ export function useChatList(): ChatListProps {
 
   const deleteChat = useCallback(
     async (thread_id: string) => {
-      await fetch(`/threads/${thread_id}`, {
+      await fetch(`/api/threads/${thread_id}`, {
         method: "DELETE",
         headers: {
           Accept: "application/json",
