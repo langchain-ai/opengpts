@@ -60,6 +60,7 @@ async def test_list_and_create_assistants() -> None:
             json={"name": "hmmmm"},
             headers=headers,
         )
+        assert response.status_code == 200, response.text
 
         assert _project(response.json(), exclude_keys=["updated_at", "user_id"]) == {
             "assistant_id": aid,
