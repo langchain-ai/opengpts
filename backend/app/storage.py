@@ -78,9 +78,7 @@ async def create_assistant(
         assistant_id=assistant["assistant_id"],
         updated_at=assistant["updated_at"],
         config=assistant["config"],
-        name=name,
-        public=public,
-        user_id=user_id,
+        **assistant["metadata"],
     )
 
 
@@ -104,21 +102,22 @@ async def patch_assistant(
     Returns:
         return the assistant model if no exception is raised.
     """
+    metadata = {}
+    if name is not None:
+        metadata["name"] = name
+    if public is not None:
+        metadata["public"] = public
     assistant = await get_api_client().assistants.update(
         assistant_id,
         graph_id=config["configurable"]["type"] if config else None,
         config=config,
-        metadata={"user_id": user_id, "public": public or False, "name": name}
-        if name or public
-        else None,
+        metadata=metadata or None,
     )
     return Assistant(
         assistant_id=assistant["assistant_id"],
         updated_at=assistant["updated_at"],
         config=assistant["config"],
-        name=name,
-        public=public,
-        user_id=user_id,
+        **assistant["metadata"],
     )
 
 

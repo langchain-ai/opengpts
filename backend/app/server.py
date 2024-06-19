@@ -22,7 +22,10 @@ app = FastAPI(title="OpenGPTs API", lifespan=lifespan)
 @app.exception_handler(httpx.HTTPStatusError)
 async def httpx_http_status_error_handler(request, exc: httpx.HTTPStatusError):
     return await http_exception_handler(
-        request, HTTPException(status_code=exc.response.status_code, detail=str(exc))
+        request,
+        HTTPException(
+            status_code=exc.response.status_code, detail=", ".join(exc.__notes__)
+        ),
     )
 
 

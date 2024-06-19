@@ -82,6 +82,7 @@ async def patch_assistant(
         raise HTTPException(
             status_code=400, detail="Assistant config must have configurable.type field"
         )
+
     return await storage.patch_assistant(
         user["user_id"],
         aid,
