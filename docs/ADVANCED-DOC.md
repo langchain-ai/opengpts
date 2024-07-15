@@ -23,15 +23,15 @@ The OpenGPTs project is primarily written in Python for the backend and TypeScri
 
 ```mermaid
 graph LR
-    Frontend[Frontend (React)] --> API[Backend API (FastAPI)]
-    API --> Agent[Agent Executor (LangGraph)]
-    Agent --> LLM[LLM (LangChain)]
-    Agent --> Tools[Tools (LangChain)]
-    Agent --> Retriever[Retriever (LangChain)]
-    Retriever --> VectorDB[Vector Database (Postgres)]
-    API --> Storage[Persistence Layer (Postgres)]
+    Frontend["Frontend (React)"] --> API["Backend API (FastAPI)"]
+    API --> Agent["Agent Executor (LangGraph)"]
+    Agent --> LLM["LLM (LangChain)"]
+    Agent --> Tools["Tools (LangChain)"]
+    Agent --> Retriever["Retriever (LangChain)"]
+    Retriever --> VectorDB["Vector Database (Postgres)"]
+    API --> Storage["Persistence Layer (Postgres)"]
     subgraph Monitoring
-        API --> LangSmith[LangSmith]
+        API --> LangSmith["LangSmith"]
     end
 ```
 
