@@ -71,9 +71,9 @@ export function useConfigList(): ConfigListProps {
       assistantId?: string,
     ): Promise<string> => {
       const confResponse = await fetch(
-        assistantId ? `/assistants/${assistantId}` : "/assistants",
+        assistantId ? `/api/assistants/${assistantId}` : "/api/assistants",
         {
-          method: assistantId ? "PUT" : "POST",
+          method: assistantId ? "PATCH" : "POST",
           body: JSON.stringify({ name, config, public: isPublic }),
           headers: {
             "Content-Type": "application/json",
@@ -92,7 +92,7 @@ export function useConfigList(): ConfigListProps {
           "config",
           JSON.stringify({ configurable: { assistant_id } }),
         );
-        await fetch(`/ingest`, {
+        await fetch(`/api/ingest`, {
           method: "POST",
           body: formData,
         });

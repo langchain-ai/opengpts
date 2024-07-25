@@ -32,7 +32,7 @@ function App(props: { edit?: boolean }) {
     async (
       message: MessageWithFiles | null,
       thread_id: string,
-      assistantType: string,
+      _assistantType: string,
       config?: Record<string, unknown>,
     ) => {
       const files = message?.files || [];
@@ -55,24 +55,19 @@ function App(props: { edit?: boolean }) {
       let input: Message[] | Record<string, any> | null = null;
 
       if (message) {
-        // Set the input to an array of messages. This is the default input
+        // Set the input to an dict of messages. This is the default input
         // format for all assistant types.
-        input = [
-          {
-            content: message.message,
-            additional_kwargs: {},
-            type: "human",
-            example: false,
-            id: `human-${Math.random()}`,
-          },
-        ];
-
-        if (assistantType === "chat_retrieval") {
-          // The RAG assistant type requires an object with a `messages` field.
-          input = {
-            messages: input,
-          };
-        }
+        input = {
+          messages: [
+            {
+              content: message.message,
+              additional_kwargs: {},
+              role: "human",
+              example: false,
+              id: `human-${Math.random()}`,
+            },
+          ],
+        };
       }
 
       await startStream(input, thread_id, config);

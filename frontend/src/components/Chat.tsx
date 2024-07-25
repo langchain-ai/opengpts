@@ -111,6 +111,7 @@ export function Chat(props: ChatProps) {
             }
             startEditing={() => recordEdits(msg)}
             alwaysShowControls={i === messages.length - 1}
+            threadId={currentChat.thread_id}
           />
         ),
       )}

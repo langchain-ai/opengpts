@@ -16,17 +16,13 @@ TEST_FILE ?= tests/unit_tests/
 start:
 	poetry run uvicorn app.server:app --reload --port 8100 --log-config log_config.json
 
-migrate:
-	migrate -database postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable -path ./migrations up
-
 test:
 	# We need to update handling of env variables for tests
-	YDC_API_KEY=placeholder OPENAI_API_KEY=placeholder poetry run pytest $(TEST_FILE)
-
+	YDC_API_KEY=placeholder OPENAI_API_KEY=placeholder LANGGRAPH_URL=http://localhost:8123 PGVECTOR_URI=postgresql+psycopg2://postgres:postgres@localhost:5433/postgres?sslmode=disable poetry run pytest $(TEST_FILE)
 
 test_watch:
 	# We need to update handling of env variables for tests
-	YDC_API_KEY=placeholder OPENAI_API_KEY=placeholder poetry run ptw . -- $(TEST_FILE)
+	YDC_API_KEY=placeholder OPENAI_API_KEY=placeholder LANGGRAPH_URL=http://localhost:8123 PGVECTOR_URI=postgresql+psycopg2://postgres:postgres@localhost:5433/postgres?sslmode=disable poetry run ptw . -- $(TEST_FILE)
 
 ######################
 # LINTING AND FORMATTING

@@ -1,5 +1,4 @@
 from typing import Annotated, List
-from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path
 from pydantic import BaseModel, Field
@@ -17,6 +16,14 @@ class AssistantPayload(BaseModel):
     name: str = Field(..., description="The name of the assistant.")
     config: dict = Field(..., description="The assistant config.")
     public: bool = Field(default=False, description="Whether the assistant is public.")
+
+
+class AssistantPatch(BaseModel):
+    """Payload for creating an assistant."""
+
+    name: str | None = Field(None, description="The name of the assistant.")
+    config: dict | None = Field(None, description="The assistant config.")
+    public: bool | None = Field(None, description="Whether the assistant is public.")
 
 
 AssistantID = Annotated[str, Path(description="The ID of the assistant.")]
@@ -52,23 +59,31 @@ async def create_assistant(
     payload: AssistantPayload,
 ) -> Assistant:
     """Create an assistant."""
-    return await storage.put_assistant(
+    if not payload.config.get("configurable", {}).get("type"):
+        raise HTTPException(
+            status_code=400, detail="Assistant config must have configurable.type field"
+        )
+    return await storage.create_assistant(
         user["user_id"],
-        str(uuid4()),
         name=payload.name,
         config=payload.config,
         public=payload.public,
     )
 
 
-@router.put("/{aid}")
-async def upsert_assistant(
+@router.patch("/{aid}")
+async def patch_assistant(
     user: AuthedUser,
     aid: AssistantID,
-    payload: AssistantPayload,
+    payload: AssistantPatch,
 ) -> Assistant:
     """Create or update an assistant."""
-    return await storage.put_assistant(
+    if payload.config and not payload.config.get("configurable", {}).get("type"):
+        raise HTTPException(
+            status_code=400, detail="Assistant config must have configurable.type field"
+        )
+
+    return await storage.patch_assistant(
         user["user_id"],
         aid,
         name=payload.name,

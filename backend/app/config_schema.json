@@ -1,0 +1,652 @@
+{
+  "title": "RunnableConfigurableAlternativesConfig",
+  "type": "object",
+  "properties": {
+    "configurable": {
+      "$ref": "#/definitions/Configurable"
+    }
+  },
+  "definitions": {
+    "Bot_Type": {
+      "title": "Bot Type",
+      "description": "An enumeration.",
+      "enum": [
+        "chatbot",
+        "chat_retrieval",
+        "agent"
+      ],
+      "type": "string"
+    },
+    "AgentType": {
+      "title": "AgentType",
+      "description": "An enumeration.",
+      "enum": [
+        "GPT 3.5 Turbo",
+        "GPT 4 Turbo",
+        "GPT 4 (Azure OpenAI)",
+        "Claude 2",
+        "GEMINI",
+        "Ollama"
+      ],
+      "type": "string"
+    },
+    "AvailableTools": {
+      "title": "AvailableTools",
+      "description": "An enumeration.",
+      "enum": [
+        "action_server_by_robocorp",
+        "ai_action_runner_by_connery",
+        "ddg_search",
+        "search_tavily",
+        "search_tavily_answer",
+        "retrieval",
+        "arxiv",
+        "you_search",
+        "sec_filings_kai_ai",
+        "press_releases_kai_ai",
+        "pubmed",
+        "wikipedia",
+        "dall_e"
+      ],
+      "type": "string"
+    },
+    "ActionServerConfig": {
+      "title": "ActionServerConfig",
+      "type": "object",
+      "properties": {
+        "url": {
+          "title": "Url",
+          "type": "string"
+        },
+        "api_key": {
+          "title": "Api Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "url",
+        "api_key"
+      ]
+    },
+    "ActionServer": {
+      "title": "ActionServer",
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "action_server_by_robocorp",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AvailableTools"
+            }
+          ]
+        },
+        "name": {
+          "title": "Name",
+          "default": "Action Server by Robocorp",
+          "const": "Action Server by Robocorp",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "default": "Run AI actions with [Robocorp Action Server](https://github.com/robocorp/robocorp).",
+          "const": "Run AI actions with [Robocorp Action Server](https://github.com/robocorp/robocorp).",
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/ActionServerConfig"
+        },
+        "multi_use": {
+          "title": "Multi Use",
+          "default": true,
+          "const": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "config"
+      ]
+    },
+    "ToolConfig": {
+      "title": "ToolConfig",
+      "type": "object",
+      "properties": {}
+    },
+    "Connery": {
+      "title": "Connery",
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "ai_action_runner_by_connery",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AvailableTools"
+            }
+          ]
+        },
+        "name": {
+          "title": "Name",
+          "default": "AI Action Runner by Connery",
+          "const": "AI Action Runner by Connery",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "default": "Connect OpenGPTs to the real world with [Connery](https://github.com/connery-io/connery).",
+          "const": "Connect OpenGPTs to the real world with [Connery](https://github.com/connery-io/connery).",
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/ToolConfig"
+        },
+        "multi_use": {
+          "title": "Multi Use",
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "DDGSearch": {
+      "title": "DDGSearch",
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "ddg_search",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AvailableTools"
+            }
+          ]
+        },
+        "name": {
+          "title": "Name",
+          "default": "DuckDuckGo Search",
+          "const": "DuckDuckGo Search",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "default": "Search the web with [DuckDuckGo](https://pypi.org/project/duckduckgo-search/).",
+          "const": "Search the web with [DuckDuckGo](https://pypi.org/project/duckduckgo-search/).",
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/ToolConfig"
+        },
+        "multi_use": {
+          "title": "Multi Use",
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "Arxiv": {
+      "title": "Arxiv",
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "arxiv",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AvailableTools"
+            }
+          ]
+        },
+        "name": {
+          "title": "Name",
+          "default": "Arxiv",
+          "const": "Arxiv",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "default": "Searches [Arxiv](https://arxiv.org/).",
+          "const": "Searches [Arxiv](https://arxiv.org/).",
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/ToolConfig"
+        },
+        "multi_use": {
+          "title": "Multi Use",
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "YouSearch": {
+      "title": "YouSearch",
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "you_search",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AvailableTools"
+            }
+          ]
+        },
+        "name": {
+          "title": "Name",
+          "default": "You.com Search",
+          "const": "You.com Search",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "default": "Uses [You.com](https://you.com/) search, optimized responses for LLMs.",
+          "const": "Uses [You.com](https://you.com/) search, optimized responses for LLMs.",
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/ToolConfig"
+        },
+        "multi_use": {
+          "title": "Multi Use",
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "SecFilings": {
+      "title": "SecFilings",
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "sec_filings_kai_ai",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AvailableTools"
+            }
+          ]
+        },
+        "name": {
+          "title": "Name",
+          "default": "SEC Filings (Kay.ai)",
+          "const": "SEC Filings (Kay.ai)",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "default": "Searches through SEC filings using [Kay.ai](https://www.kay.ai/).",
+          "const": "Searches through SEC filings using [Kay.ai](https://www.kay.ai/).",
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/ToolConfig"
+        },
+        "multi_use": {
+          "title": "Multi Use",
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "PressReleases": {
+      "title": "PressReleases",
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "press_releases_kai_ai",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AvailableTools"
+            }
+          ]
+        },
+        "name": {
+          "title": "Name",
+          "default": "Press Releases (Kay.ai)",
+          "const": "Press Releases (Kay.ai)",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "default": "Searches through press releases using [Kay.ai](https://www.kay.ai/).",
+          "const": "Searches through press releases using [Kay.ai](https://www.kay.ai/).",
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/ToolConfig"
+        },
+        "multi_use": {
+          "title": "Multi Use",
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "PubMed": {
+      "title": "PubMed",
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "pubmed",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AvailableTools"
+            }
+          ]
+        },
+        "name": {
+          "title": "Name",
+          "default": "PubMed",
+          "const": "PubMed",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "default": "Searches [PubMed](https://pubmed.ncbi.nlm.nih.gov/).",
+          "const": "Searches [PubMed](https://pubmed.ncbi.nlm.nih.gov/).",
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/ToolConfig"
+        },
+        "multi_use": {
+          "title": "Multi Use",
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "Wikipedia": {
+      "title": "Wikipedia",
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "wikipedia",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AvailableTools"
+            }
+          ]
+        },
+        "name": {
+          "title": "Name",
+          "default": "Wikipedia",
+          "const": "Wikipedia",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "default": "Searches [Wikipedia](https://pypi.org/project/wikipedia/).",
+          "const": "Searches [Wikipedia](https://pypi.org/project/wikipedia/).",
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/ToolConfig"
+        },
+        "multi_use": {
+          "title": "Multi Use",
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "Tavily": {
+      "title": "Tavily",
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "search_tavily",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AvailableTools"
+            }
+          ]
+        },
+        "name": {
+          "title": "Name",
+          "default": "Search (Tavily)",
+          "const": "Search (Tavily)",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "default": "Uses the [Tavily](https://app.tavily.com/) search engine. Includes sources in the response.",
+          "const": "Uses the [Tavily](https://app.tavily.com/) search engine. Includes sources in the response.",
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/ToolConfig"
+        },
+        "multi_use": {
+          "title": "Multi Use",
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "TavilyAnswer": {
+      "title": "TavilyAnswer",
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "search_tavily_answer",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AvailableTools"
+            }
+          ]
+        },
+        "name": {
+          "title": "Name",
+          "default": "Search (short answer, Tavily)",
+          "const": "Search (short answer, Tavily)",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "default": "Uses the [Tavily](https://app.tavily.com/) search engine. This returns only the answer, no supporting evidence.",
+          "const": "Uses the [Tavily](https://app.tavily.com/) search engine. This returns only the answer, no supporting evidence.",
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/ToolConfig"
+        },
+        "multi_use": {
+          "title": "Multi Use",
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "Retrieval": {
+      "title": "Retrieval",
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "retrieval",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AvailableTools"
+            }
+          ]
+        },
+        "name": {
+          "title": "Name",
+          "default": "Retrieval",
+          "const": "Retrieval",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "default": "Look up information in uploaded files.",
+          "const": "Look up information in uploaded files.",
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/ToolConfig"
+        },
+        "multi_use": {
+          "title": "Multi Use",
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "DallE": {
+      "title": "DallE",
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "dall_e",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AvailableTools"
+            }
+          ]
+        },
+        "name": {
+          "title": "Name",
+          "default": "Generate Image (Dall-E)",
+          "const": "Generate Image (Dall-E)",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "default": "Generates images from a text description using OpenAI's DALL-E model.",
+          "const": "Generates images from a text description using OpenAI's DALL-E model.",
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/ToolConfig"
+        },
+        "multi_use": {
+          "title": "Multi Use",
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "LLMType": {
+      "title": "LLMType",
+      "description": "An enumeration.",
+      "enum": [
+        "GPT 3.5 Turbo",
+        "GPT 4 Turbo",
+        "GPT 4 (Azure OpenAI)",
+        "Claude 2",
+        "GEMINI",
+        "Mixtral",
+        "Ollama"
+      ],
+      "type": "string"
+    },
+    "Configurable": {
+      "title": "Configurable",
+      "type": "object",
+      "properties": {
+        "assistant_id": {
+          "title": "Assistant ID",
+          "type": "string"
+        },
+        "thread_id": {
+          "title": "Thread ID",
+          "type": "string"
+        },
+        "thread_ts": {
+          "title": "Thread Timestamp",
+          "description": "Pass to fetch a past checkpoint. If None, fetches the latest checkpoint.",
+          "type": "string"
+        },
+        "type": {
+          "title": "Bot Type",
+          "default": "agent",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Bot_Type"
+            }
+          ]
+        },
+        "type==agent/agent_type": {
+          "title": "Agent Type",
+          "default": "GPT 3.5 Turbo",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AgentType"
+            }
+          ]
+        },
+        "type==agent/interrupt_before_action": {
+          "title": "Tool Confirmation",
+          "description": "If Yes, you'll be prompted to continue before each tool is executed.\nIf No, tools will be executed automatically by the agent.",
+          "default": false,
+          "type": "boolean"
+        },
+        "type==agent/retrieval_description": {
+          "title": "Retrieval Description",
+          "default": "Can be used to look up information that was uploaded to this assistant.\nIf the user is referencing particular files, that is often a good hint that information may be here.\nIf the user asks a vague question, they are likely meaning to look up info from this retriever, and you should call it!",
+          "type": "string"
+        },
+        "type==agent/system_message": {
+          "title": "Instructions",
+          "default": "You are a helpful assistant.",
+          "type": "string"
+        },
+        "type==agent/tools": {
+          "title": "Tools",
+          "default": [],
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/ActionServer"
+              },
+              {
+                "$ref": "#/definitions/Connery"
+              },
+              {
+                "$ref": "#/definitions/DDGSearch"
+              },
+              {
+                "$ref": "#/definitions/Arxiv"
+              },
+              {
+                "$ref": "#/definitions/YouSearch"
+              },
+              {
+                "$ref": "#/definitions/SecFilings"
+              },
+              {
+                "$ref": "#/definitions/PressReleases"
+              },
+              {
+                "$ref": "#/definitions/PubMed"
+              },
+              {
+                "$ref": "#/definitions/Wikipedia"
+              },
+              {
+                "$ref": "#/definitions/Tavily"
+              },
+              {
+                "$ref": "#/definitions/TavilyAnswer"
+              },
+              {
+                "$ref": "#/definitions/Retrieval"
+              },
+              {
+                "$ref": "#/definitions/DallE"
+              }
+            ]
+          }
+        },
+        "type==chatbot/llm_type": {
+          "title": "LLM Type",
+          "default": "GPT 3.5 Turbo",
+          "allOf": [
+            {
+              "$ref": "#/definitions/LLMType"
+            }
+          ]
+        },
+        "type==chatbot/system_message": {
+          "title": "Instructions",
+          "default": "You are a helpful assistant.",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

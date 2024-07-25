@@ -1,5 +1,4 @@
 from typing import Annotated, Any, Dict, List, Optional, Sequence, Union
-from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Path
 from langchain.schema.messages import AnyMessage
@@ -26,6 +25,13 @@ class ThreadPostRequest(BaseModel):
     """Payload for adding state to a thread."""
 
     values: Union[Sequence[AnyMessage], Dict[str, Any]]
+    config: Optional[Dict[str, Any]] = None
+
+
+class ThreadPatchRequest(BaseModel):
+    """Payload for patching thread state."""
+
+    metadata: Dict[str, Any]
     config: Optional[Dict[str, Any]] = None
 
 
@@ -75,6 +81,23 @@ async def add_thread_state(
     )
 
 
+@router.patch("/{tid}/state")
+async def patch_thread_state(
+    user: AuthedUser,
+    tid: ThreadID,
+    payload: ThreadPatchRequest,
+):
+    """Patch state for a thread."""
+    thread = await storage.get_thread(user["user_id"], tid)
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found")
+
+    return await storage.patch_thread_state(
+        payload.config or {"configurable": {"thread_id": tid}},
+        payload.metadata,
+    )
+
+
 @router.get("/{tid}/history")
 async def get_thread_history(
     user: AuthedUser,
@@ -112,22 +135,21 @@ async def create_thread(
     thread_put_request: ThreadPutRequest,
 ) -> Thread:
     """Create a thread."""
-    return await storage.put_thread(
+    return await storage.create_thread(
         user["user_id"],
-        str(uuid4()),
         assistant_id=thread_put_request.assistant_id,
         name=thread_put_request.name,
     )
 
 
-@router.put("/{tid}")
-async def upsert_thread(
+@router.patch("/{tid}")
+async def patch_thread(
     user: AuthedUser,
     tid: ThreadID,
     thread_put_request: ThreadPutRequest,
 ) -> Thread:
     """Update a thread."""
-    return await storage.put_thread(
+    return await storage.patch_thread(
         user["user_id"],
         tid,
         assistant_id=thread_put_request.assistant_id,
