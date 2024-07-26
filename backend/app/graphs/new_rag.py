@@ -14,7 +14,6 @@ from app.llms import LLMType, get_llm
 from app.message_types import LiberalToolMessage
 from app.tools import get_retriever
 
-
 search_prompt = PromptTemplate.from_template(
     """Given the conversation below, come up with a search query to look up.
 
