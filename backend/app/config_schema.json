@@ -17,19 +17,6 @@
       ],
       "type": "string"
     },
-    "AgentType": {
-      "title": "AgentType",
-      "description": "An enumeration.",
-      "enum": [
-        "GPT 3.5 Turbo",
-        "GPT 4 Turbo",
-        "GPT 4 (Azure OpenAI)",
-        "Claude 2",
-        "GEMINI",
-        "Ollama"
-      ],
-      "type": "string"
-    },
     "AvailableTools": {
       "title": "AvailableTools",
       "description": "An enumeration.",
@@ -256,13 +243,11 @@
       "title": "LLMType",
       "description": "An enumeration.",
       "enum": [
-        "GPT 3.5 Turbo",
-        "GPT 4 Turbo",
-        "GPT 4 (Azure OpenAI)",
-        "Claude 2",
+        "GPT 4o Mini",
+        "GPT 4o",
+        "Claude 3.5 Sonnet",
         "GEMINI",
-        "Mixtral",
-        "Ollama"
+        "Mixtral"
       ],
       "type": "string"
     },
@@ -293,11 +278,11 @@
           ]
         },
         "type==agent/agent_type": {
-          "title": "Agent Type",
-          "default": "GPT 3.5 Turbo",
+          "title": "LLM Type",
+          "default": "GPT 4o Mini",
           "allOf": [
             {
-              "$ref": "#/definitions/AgentType"
+              "$ref": "#/definitions/LLMType"
             }
           ]
         },
@@ -346,7 +331,7 @@
         },
         "type==chatbot/llm_type": {
           "title": "LLM Type",
-          "default": "GPT 3.5 Turbo",
+          "default": "GPT 4o Mini",
           "allOf": [
             {
               "$ref": "#/definitions/LLMType"
@@ -357,6 +342,15 @@
           "title": "Instructions",
           "default": "You are a helpful assistant.",
           "type": "string"
+        },
+        "type==chat_retrieval/llm_type": {
+          "title": "LLM Type",
+          "default": "GPT 4o Mini",
+          "allOf": [
+            {
+              "$ref": "#/definitions/LLMType"
+            }
+          ]
         }
       }
     }

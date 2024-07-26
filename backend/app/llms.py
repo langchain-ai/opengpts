@@ -1,4 +1,5 @@
 import os
+from enum import Enum
 from functools import lru_cache
 from urllib.parse import urlparse
 
@@ -14,8 +15,17 @@ from langchain_openai import AzureChatOpenAI, ChatOpenAI
 logger = structlog.get_logger(__name__)
 
 
+class LLMType(str, Enum):
+    GPT_4O_MINI = "GPT 4o Mini"
+    GPT_4O = "GPT 4o"
+    CLAUDE_3_5_SONNET = "Claude 3.5 Sonnet"
+    GEMINI = "GEMINI"
+    MIXTRAL = "Mixtral"
+    OLLAMA = "Ollama"
+
+
 @lru_cache(maxsize=4)
-def get_openai_llm(model: str = "gpt-3.5-turbo", azure: bool = False):
+def get_openai_llm(model: str = "gpt-4o-mini", azure: bool = False):
     proxy_url = os.getenv("PROXY_URL")
     http_client = None
     if proxy_url:
@@ -69,7 +79,7 @@ def get_anthropic_llm(bedrock: bool = False):
         model = BedrockChat(model_id="anthropic.claude-v2", client=client)
     else:
         model = ChatAnthropic(
-            model_name="claude-3-haiku-20240307",
+            model_name="claude-3-5-sonnet-20240620",
             max_tokens_to_sample=2000,
             temperature=0,
         )
@@ -98,3 +108,21 @@ def get_ollama_llm():
         ollama_base_url = "http://localhost:11434"
 
     return ChatOllama(model=model_name, base_url=ollama_base_url)
+
+
+def get_llm(
+    llm_type: LLMType,
+):
+    if llm_type == LLMType.GPT_4O_MINI:
+        llm = get_openai_llm(model="gpt-4o-mini")
+    elif llm_type == LLMType.GPT_4O:
+        llm = get_openai_llm(model="gpt-4o")
+    elif llm_type == LLMType.CLAUDE_3_5_SONNET:
+        llm = get_anthropic_llm()
+    elif llm_type == LLMType.GEMINI:
+        llm = get_google_llm()
+    elif llm_type == LLMType.MIXTRAL:
+        llm = get_mixtral_fireworks()
+    else:
+        raise ValueError(f"Unsupported LLM type: '{llm_type}'")
+    return llm
