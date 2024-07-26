@@ -19,9 +19,6 @@ class LLMType(str, Enum):
     GPT_4O_MINI = "GPT 4o Mini"
     GPT_4O = "GPT 4o"
     CLAUDE_3_5_SONNET = "Claude 3.5 Sonnet"
-    GEMINI = "GEMINI"
-    MIXTRAL = "Mixtral"
-    OLLAMA = "Ollama"
 
 
 @lru_cache(maxsize=4)

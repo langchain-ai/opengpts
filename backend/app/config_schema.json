@@ -245,9 +245,7 @@
       "enum": [
         "GPT 4o Mini",
         "GPT 4o",
-        "Claude 3.5 Sonnet",
-        "GEMINI",
-        "Mixtral"
+        "Claude 3.5 Sonnet"
       ],
       "type": "string"
     },
