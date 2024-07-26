@@ -1,5 +1,4 @@
 import operator
-from enum import Enum
 from typing import Annotated, List, Sequence, TypedDict
 from uuid import uuid4
 
