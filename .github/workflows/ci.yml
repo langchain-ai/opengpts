@@ -54,7 +54,7 @@ jobs:
       - name: Start the service
         run: |
           echo "OPENAI_API_KEY=placeholder" >> ../.env
-          poetry run langgraph up -c ../langgraph.json -d ../compose.override.yml --postgres-uri 'postgres://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable' --verbose --wait
+          poetry run langgraph up -c ../langgraph.json -d ../compose.override.test.yml --postgres-uri 'postgres://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable' --verbose --wait
       - name: Run tests
         env:
           POSTGRES_HOST: localhost
