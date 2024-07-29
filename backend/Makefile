@@ -18,11 +18,11 @@ start:
 
 test:
 	# We need to update handling of env variables for tests
-	YDC_API_KEY=placeholder OPENAI_API_KEY=placeholder LANGGRAPH_URL=http://localhost:8123 PGVECTOR_URI=postgresql+psycopg2://postgres:postgres@localhost:5433/postgres?sslmode=disable poetry run pytest $(TEST_FILE)
+	OPENAI_API_KEY=placeholder LANGGRAPH_URL=http://localhost:8123 POSTGRES_URI=postgresql+psycopg2://postgres:postgres@localhost:5433/postgres?sslmode=disable poetry run pytest $(TEST_FILE)
 
 test_watch:
 	# We need to update handling of env variables for tests
-	YDC_API_KEY=placeholder OPENAI_API_KEY=placeholder LANGGRAPH_URL=http://localhost:8123 PGVECTOR_URI=postgresql+psycopg2://postgres:postgres@localhost:5433/postgres?sslmode=disable poetry run ptw . -- $(TEST_FILE)
+	OPENAI_API_KEY=placeholder LANGGRAPH_URL=http://localhost:8123 POSTGRES_URI=postgresql+psycopg2://postgres:postgres@localhost:5433/postgres?sslmode=disable poetry run ptw . -- $(TEST_FILE)
 
 ######################
 # LINTING AND FORMATTING

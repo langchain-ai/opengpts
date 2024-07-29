@@ -36,7 +36,7 @@ services:
     volumes:
       - ./backend:/backend
     environment:
-      PGVECTOR_URI: "postgresql+psycopg2://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable"
+      POSTGRES_URI: "postgresql+psycopg2://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable"
       LANGGRAPH_URL: "http://langgraph-api:8000"
     command:
       - --reload
