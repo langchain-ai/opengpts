@@ -37,17 +37,3 @@ services:
       LANGGRAPH_URL: "http://langgraph-api:8000"
     command:
       - --reload
-  frontend:
-    container_name: opengpts-frontend
-    pull_policy: build
-    build:
-      context: frontend
-    depends_on:
-      backend:
-        condition: service_healthy
-    volumes:
-      - ./frontend/src:/frontend/src
-    ports:
-      - "5173:5173" # Frontend is accessible on localhost:5173
-    environment:
-      VITE_BACKEND_URL: "http://backend:8000"

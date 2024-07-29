@@ -1,5 +1,4 @@
-from enum import Enum
-from typing import Annotated, Any, Dict, TypedDict, cast
+from typing import Annotated, Any, Dict, TypedDict
 
 from langchain_core.messages import (
     AIMessage,
@@ -11,17 +10,11 @@ from langchain_core.messages import (
 )
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, StateGraph
-from langgraph.graph.message import add_messages
+from langgraph.graph.message import Messages, add_messages
 from langgraph.managed.few_shot import FewShotExamples
-from langgraph.prebuilt import ToolExecutor, ToolInvocation
+from langgraph.prebuilt import ToolNode
 
-from app.llms import (
-    get_anthropic_llm,
-    get_google_llm,
-    get_mixtral_fireworks,
-    get_ollama_llm,
-    get_openai_llm,
-)
+from app.llms import LLMType, get_llm
 from app.message_types import LiberalToolMessage
 from app.tools import RETRIEVAL_DESCRIPTION, TOOLS, AvailableTools, get_retrieval_tool
 
@@ -33,8 +26,33 @@ def filter_by_assistant_id(config: RunnableConfig) -> Dict[str, Any]:
         return {}
 
 
+def custom_add_messages(left: Messages, right: Messages):
+    combined_messages = add_messages(left, right)
+    for message in combined_messages:
+        # TODO: handle this correctly in ChatAnthropic.
+        # this is needed to handle content blocks in AIMessageChunk when using
+        # streaming with the graph. if we don't have that, all of the AIMessages
+        # will have list of dicts in the content
+        if (
+            isinstance(message, AIMessage)
+            and isinstance(message.content, list)
+            and (
+                text_content_blocks := [
+                    content_block
+                    for content_block in message.content
+                    if content_block["type"] == "text"
+                ]
+            )
+        ):
+            message.content = "".join(
+                content_block["text"] for content_block in text_content_blocks
+            )
+
+    return combined_messages
+
+
 class BaseState(TypedDict):
-    messages: Annotated[list[AnyMessage], add_messages]
+    messages: Annotated[list[AnyMessage], custom_add_messages]
     examples: Annotated[
         list, FewShotExamples.configure(metadata_filter=filter_by_assistant_id)
     ]
@@ -57,41 +75,6 @@ def _render_message(m):
 def _render_messages(ms):
     m_string = [_render_message(m) for m in ms]
     return "\n".join(m_string)
-
-
-class LLMType(str, Enum):
-    GPT_35_TURBO = "GPT 3.5 Turbo"
-    GPT_4 = "GPT 4 Turbo"
-    GPT_4O = "GPT 4o"
-    AZURE_OPENAI = "GPT 4 (Azure OpenAI)"
-    CLAUDE2 = "Claude 2"
-    GEMINI = "GEMINI"
-    MIXTRAL = "Mixtral"
-    OLLAMA = "Ollama"
-
-
-def get_llm(
-    llm_type: LLMType,
-):
-    if llm_type == LLMType.GPT_35_TURBO:
-        llm = get_openai_llm()
-    elif llm_type == LLMType.GPT_4:
-        llm = get_openai_llm(model="gpt-4-turbo")
-    elif llm_type == LLMType.GPT_4O:
-        llm = get_openai_llm(model="gpt-4o")
-    elif llm_type == LLMType.AZURE_OPENAI:
-        llm = get_openai_llm(azure=True)
-    elif llm_type == LLMType.CLAUDE2:
-        llm = get_anthropic_llm()
-    elif llm_type == LLMType.GEMINI:
-        llm = get_google_llm()
-    elif llm_type == LLMType.MIXTRAL:
-        llm = get_mixtral_fireworks()
-    elif llm_type == LLMType.OLLAMA:
-        llm = get_ollama_llm()
-    else:
-        raise ValueError
-    return llm
 
 
 def _get_messages(messages, system_message, examples):
@@ -160,7 +143,7 @@ async def agent(state, config):
     examples = state.get("examples", [])
     _config = config["configurable"]
     system_message = _config.get("type==agent/system_message", DEFAULT_SYSTEM_MESSAGE)
-    llm = get_llm(_config.get("type==agent/agent_type", LLMType.GPT_35_TURBO))
+    llm = get_llm(_config.get("type==agent/agent_type", LLMType.GPT_4O_MINI))
     tools = get_tools(
         _config.get("type==agent/tools"),
         _config.get("assistant_id"),
@@ -190,7 +173,6 @@ def should_continue(state):
 
 # Define the function to execute tools
 async def call_tool(state, config):
-    messages = state["messages"]
     _config = config["configurable"]
     tools = get_tools(
         _config.get("type==agent/tools"),
@@ -199,33 +181,8 @@ async def call_tool(state, config):
         _config.get("type==agent/retrieval_description"),
     )
 
-    tool_executor = ToolExecutor(tools)
-    actions: list[ToolInvocation] = []
-    # Based on the continue condition
-    # we know the last message involves a function call
-    last_message = cast(AIMessage, messages[-1])
-    for tool_call in last_message.tool_calls:
-        # We construct a ToolInvocation from the function_call
-        actions.append(
-            ToolInvocation(
-                tool=tool_call["name"],
-                tool_input=tool_call["args"],
-            )
-        )
-    # We call the tool_executor and get back a response
-    responses = await tool_executor.abatch(actions)
-    # We use the response to create a ToolMessage
-    tool_messages = [
-        LiberalToolMessage(
-            tool_call_id=tool_call["id"],
-            name=tool_call["name"],
-            content=response,
-        )
-        for tool_call, response in zip(last_message.tool_calls, responses)
-    ]
-
-    # graph state is a dict, so return type must be dict
-    return {"messages": tool_messages}
+    tool_node = ToolNode(tools)
+    return await tool_node.ainvoke(state)
 
 
 workflow = StateGraph(BaseState)

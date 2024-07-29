@@ -82,16 +82,20 @@ def convert_ingestion_input_to_blob(file: UploadFile) -> Blob:
     )
 
 
+def get_sqlalchemy_db_uri(db_uri: str) -> str:
+    return db_uri.replace("postgres://", "postgresql://")
+
+
 def get_vectorstore() -> PGVector:
     if os.environ.get("OPENAI_API_KEY"):
         return PGVector(
-            connection_string=os.environ["PGVECTOR_URI"],
+            connection_string=get_sqlalchemy_db_uri(os.environ["POSTGRES_URI"]),
             embedding_function=OpenAIEmbeddings(),
             use_jsonb=True,
         )
     if os.environ.get("AZURE_OPENAI_API_KEY"):
         return PGVector(
-            connection_string=os.environ["PGVECTOR_URI"],
+            connection_string=get_sqlalchemy_db_uri(os.environ["POSTGRES_URI"]),
             embedding_function=AzureOpenAIEmbeddings(
                 azure_endpoint=os.environ.get("AZURE_OPENAI_API_BASE"),
                 azure_deployment=os.environ.get(

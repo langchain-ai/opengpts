@@ -5,7 +5,7 @@ This allows you to easily integrate it with a different frontend of your choice.
 
 For full API documentation, see [localhost:8100/docs](localhost:8100/docs) after deployment.
 
-If you want to see the API docs before deployment, check out the [hosted docs here](https://opengpts-example-vz4y4ooboq-uc.a.run.app/docs).
+If you want to see the API docs before deployment, check out the [hosted docs here](https://opengpts-backend-ffoprvkqsa-uc.a.run.app/docs).
 
 In the examples below, cookies are used as a mock auth method. For production, we recommend using JWT auth. Refer to the [auth guide for production](auth.md) for more information.
 When using JWT auth, you will need to include the JWT in the `Authorization` header as a Bearer token.
@@ -40,14 +40,14 @@ The config parameters allows you to set the LLM used, the instructions of the as
   "config": {
     "configurable": {
       "type": "agent",
-      "type==agent/agent_type": "GPT 3.5 Turbo",
+      "type==agent/agent_type": "GPT 4o Mini",
       "type==agent/system_message": "You are a helpful assistant",
       "type==agent/tools": ["Wikipedia"]
   },
   "public": True
 }
 ```
-This creates an assistant with the name `"bar"`, with GPT 3.5 Turbo, with a prompt `"You are a helpful assistant"` using the Wikipedia tool , that is public.
+This creates an assistant with the name `"bar"`, with GPT 4o Mini, with a prompt `"You are a helpful assistant"` using the Wikipedia tool , that is public.
 
 Available tools names can be found in the AvailableTools class in backend/packages/gizmo-agent/gizmo_agent/tools.py
 Available llms can be found in GizmoAgentType in backend/packages/gizmo-agent/gizmo_agent/agent_types/__init__.py

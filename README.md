@@ -29,7 +29,7 @@ Because this is open source, if you do not like those architectures or want to m
 
 **Key Links**
 
-- [GPTs: a simple hosted version](https://opengpts-example-vz4y4ooboq-uc.a.run.app/)
+- [GPTs: a simple hosted version](https://opengpts-backend-ffoprvkqsa-uc.a.run.app/)
 - [Assistants API: a getting started guide](API.md)
 - [Auth: a guide for production](auth.md)
 
@@ -281,7 +281,7 @@ the most flexible choice, but they work well with fewer models and can be less r
 
 When creating an assistant, you specify a few things.
 
-First, you choose the language model to use. Only a few language models can be used reliably well: GPT-3.5, GPT-4, 
+First, you choose the language model to use. Only a few language models can be used reliably well: GPT-4,
 Claude, and Gemini.
 
 Second, you choose the tools to use. These can be predefined tools OR a retriever constructed from uploaded files. You 
@@ -339,21 +339,20 @@ You can choose between different LLMs to use.
 This takes advantage of LangChain's many integrations.
 It is important to note that depending on which LLM you use, you may need to change how you are prompting it.
 
-We have exposed four agent types by default:
+We have exposed 3 agent types by default:
 
-- "GPT 3.5 Turbo"
-- "GPT 4"
-- "Azure OpenAI"
-- "Claude 2"
+- "GPT 4o Mini"
+- "GPT 4o"
+- "Claude 3.5 Sonnet"
 
 We will work to add more when we have confidence they can work well.
 
 If you want to add your own LLM or agent configuration, or want to edit the existing ones, you can find them in 
-`backend/app/agent_types`
+`backend/app/llms` (`LLMType`)
 
-#### Claude 2
+#### Claude 3.5 Sonnet
 
-If using Claude 2, you will need to set the following environment variable:
+If using Claude, you will need to set the following environment variable:
 
 ```shell
 export ANTHROPIC_API_KEY=sk-...
