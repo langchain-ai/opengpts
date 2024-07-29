@@ -65,9 +65,7 @@ def _get_messages(messages, system_message=DEFAULT_SYSTEM_MESSAGE):
 @chain
 async def get_search_query(messages: Sequence[BaseMessage], config):
     llm = get_llm(
-        config["configurable"].get(
-            "agent==chat_retrieval/llm_type", LLMType.GPT_35_TURBO
-        )
+        config["configurable"].get("type==chat_retrieval/llm_type", LLMType.GPT_4O_MINI)
     )
     convo = []
     for m in messages:
@@ -137,9 +135,7 @@ async def retrieve(state: AgentState, config):
 def call_model(state: AgentState, config):
     messages = state["messages"]
     llm = get_llm(
-        config["configurable"].get(
-            "agent==chat_retrieval/llm_type", LLMType.GPT_4O_MINI
-        )
+        config["configurable"].get("type==chat_retrieval/llm_type", LLMType.GPT_4O_MINI)
     )
     response = llm.invoke(
         _get_messages(

@@ -10,7 +10,7 @@ from langchain_core.messages import (
 )
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, StateGraph
-from langgraph.graph.message import add_messages
+from langgraph.graph.message import Messages, add_messages
 from langgraph.managed.few_shot import FewShotExamples
 from langgraph.prebuilt import ToolNode
 
@@ -26,8 +26,33 @@ def filter_by_assistant_id(config: RunnableConfig) -> Dict[str, Any]:
         return {}
 
 
+def custom_add_messages(left: Messages, right: Messages):
+    combined_messages = add_messages(left, right)
+    for message in combined_messages:
+        # TODO: handle this correctly in ChatAnthropic.
+        # this is needed to handle content blocks in AIMessageChunk when using
+        # streaming with the graph. if we don't have that, all of the AIMessages
+        # will have list of dicts in the content
+        if (
+            isinstance(message, AIMessage)
+            and isinstance(message.content, list)
+            and (
+                text_content_blocks := [
+                    content_block
+                    for content_block in message.content
+                    if content_block["type"] == "text"
+                ]
+            )
+        ):
+            message.content = "".join(
+                content_block["text"] for content_block in text_content_blocks
+            )
+
+    return combined_messages
+
+
 class BaseState(TypedDict):
-    messages: Annotated[list[AnyMessage], add_messages]
+    messages: Annotated[list[AnyMessage], custom_add_messages]
     examples: Annotated[
         list, FewShotExamples.configure(metadata_filter=filter_by_assistant_id)
     ]

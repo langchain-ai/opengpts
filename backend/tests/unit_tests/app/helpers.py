@@ -1,8 +1,9 @@
 from contextlib import asynccontextmanager
 
-from app.lifespan import lifespan
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 from typing_extensions import AsyncGenerator
+
+from app.lifespan import lifespan
 
 
 @asynccontextmanager
