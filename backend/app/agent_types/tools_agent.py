@@ -9,7 +9,7 @@ from langchain_core.messages import (
     SystemMessage,
     ToolMessage,
 )
-from langgraph.checkpoint import BaseCheckpointSaver
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END
 from langgraph.graph.message import MessageGraph
 from langgraph.prebuilt import ToolExecutor, ToolInvocation

@@ -7,7 +7,7 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from langchain_core.prompts import PromptTemplate
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.runnables import chain
-from langgraph.checkpoint import BaseCheckpointSaver
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END
 from langgraph.graph.state import StateGraph
 

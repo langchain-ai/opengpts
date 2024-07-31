@@ -4,7 +4,7 @@ from typing import AsyncIterator, Optional
 
 from langchain_core.messages import BaseMessage
 from langchain_core.runnables import ConfigurableFieldSpec, RunnableConfig
-from langgraph.checkpoint import BaseCheckpointSaver
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.base import (
     Checkpoint,
     CheckpointAt,

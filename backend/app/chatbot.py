@@ -2,7 +2,7 @@ from typing import Annotated, List
 
 from langchain_core.language_models.base import LanguageModelLike
 from langchain_core.messages import BaseMessage, SystemMessage
-from langgraph.checkpoint import BaseCheckpointSaver
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph.state import StateGraph
 
 from app.message_types import add_messages_liberal

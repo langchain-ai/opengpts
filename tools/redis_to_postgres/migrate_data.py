@@ -13,7 +13,7 @@ import asyncpg
 import orjson
 from langchain.utilities.redis import get_client
 from langchain_core.runnables import ConfigurableFieldSpec, RunnableConfig
-from langgraph.checkpoint import BaseCheckpointSaver
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.base import (
     Checkpoint,
     empty_checkpoint,
