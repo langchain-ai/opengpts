@@ -11,7 +11,6 @@ from langchain_core.messages import (
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, StateGraph
 from langgraph.graph.message import Messages, add_messages
-from langgraph.managed.few_shot import FewShotExamples
 from langgraph.prebuilt import ToolNode
 
 from app.llms import LLMType, get_llm
@@ -53,9 +52,6 @@ def custom_add_messages(left: Messages, right: Messages):
 
 class BaseState(TypedDict):
     messages: Annotated[list[AnyMessage], custom_add_messages]
-    examples: Annotated[
-        list, FewShotExamples.configure(metadata_filter=filter_by_assistant_id)
-    ]
 
 
 def _render_message(m):
@@ -72,16 +68,11 @@ def _render_message(m):
         raise ValueError
 
 
-def _render_messages(ms):
-    m_string = [_render_message(m) for m in ms]
-    return "\n".join(m_string)
-
-
-def _get_messages(messages, system_message, examples):
+def _get_messages(messages, system_message):
     msgs = []
     for m in messages:
         if isinstance(m, LiberalToolMessage):
-            _dict = m.dict()
+            _dict = m.model_dump()
             _dict["content"] = str(_dict["content"])
             m_c = ToolMessage(**_dict)
             msgs.append(m_c)
@@ -90,24 +81,6 @@ def _get_messages(messages, system_message, examples):
             msgs.append(HumanMessage(content=str(m.content)))
         else:
             msgs.append(m)
-
-    if len(examples) > 0:
-        _examples = "\n\n".join(
-            [
-                f"Example {i}: " + _render_messages(e["messages"])
-                for i, e in enumerate(examples)
-            ]
-        )
-        system_message = (
-            system_message
-            + """ Below are some examples of interactions you had with users. \
-These were good interactions where the final result they got was the desired one. As much as possible, you should learn from these interactions and mimic them in the future. \
-Pay particularly close attention to when tools are called, and what the inputs are.!
-
-{examples}
-
-Assist the user as they require!""".format(examples=_examples)
-        )
 
     return [SystemMessage(content=system_message)] + msgs
 
@@ -140,7 +113,6 @@ def get_tools(
 
 async def agent(state, config):
     messages = state["messages"]
-    examples = state.get("examples", [])
     _config = config["configurable"]
     system_message = _config.get("type==agent/system_message", DEFAULT_SYSTEM_MESSAGE)
     llm = get_llm(_config.get("type==agent/agent_type", LLMType.GPT_4O_MINI))
@@ -152,7 +124,7 @@ async def agent(state, config):
     )
     if tools:
         llm = llm.bind_tools(tools)
-    messages = _get_messages(messages, system_message, examples)
+    messages = _get_messages(messages, system_message)
     response = await llm.ainvoke(messages)
 
     # graph state is a dict, so return type must be dict

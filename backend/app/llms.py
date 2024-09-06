@@ -9,7 +9,6 @@ import structlog
 from langchain_anthropic import ChatAnthropic
 from langchain_community.chat_models import BedrockChat, ChatFireworks
 from langchain_community.chat_models.ollama import ChatOllama
-from langchain_google_vertexai import ChatVertexAI
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
 logger = structlog.get_logger(__name__)
@@ -84,13 +83,6 @@ def get_anthropic_llm(bedrock: bool = False):
 
 
 @lru_cache(maxsize=1)
-def get_google_llm():
-    return ChatVertexAI(
-        model_name="gemini-pro", convert_system_message_to_human=True, streaming=True
-    )
-
-
-@lru_cache(maxsize=1)
 def get_mixtral_fireworks():
     return ChatFireworks(model="accounts/fireworks/models/mixtral-8x7b-instruct")
 
@@ -116,10 +108,6 @@ def get_llm(
         llm = get_openai_llm(model="gpt-4o")
     elif llm_type == LLMType.CLAUDE_3_5_SONNET:
         llm = get_anthropic_llm()
-    elif llm_type == LLMType.GEMINI:
-        llm = get_google_llm()
-    elif llm_type == LLMType.MIXTRAL:
-        llm = get_mixtral_fireworks()
     else:
         raise ValueError(f"Unsupported LLM type: '{llm_type}'")
     return llm

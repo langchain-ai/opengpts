@@ -22,7 +22,6 @@ from langchain_community.utilities.arxiv import ArxivAPIWrapper
 from langchain_community.utilities.dalle_image_generator import DallEAPIWrapper
 from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
 from langchain_core.tools import Tool
-from langchain_robocorp import ActionServerToolkit
 from typing_extensions import TypedDict
 
 
@@ -68,25 +67,6 @@ class BaseTool(BaseModel):
     description: Optional[str]
     config: Optional[ToolConfig]
     multi_use: Optional[bool] = False
-
-
-class ActionServerConfig(ToolConfig):
-    url: str
-    api_key: str
-
-
-class ActionServer(BaseTool):
-    type: AvailableTools = Field(AvailableTools.ACTION_SERVER, const=True)
-    name: str = Field("Action Server by Sema4.ai", const=True)
-    description: str = Field(
-        (
-            "Run AI actions with "
-            "[Sema4.ai Action Server](https://github.com/Sema4AI/actions)."
-        ),
-        const=True,
-    )
-    config: ActionServerConfig
-    multi_use: bool = Field(True, const=True)
 
 
 class Connery(BaseTool):
@@ -286,16 +266,6 @@ def _get_tavily_answer():
     return _TavilyAnswer(api_wrapper=tavily_search, name="search_tavily_answer")
 
 
-def _get_action_server(**kwargs: ActionServerConfig):
-    toolkit = ActionServerToolkit(
-        url=kwargs["url"],
-        api_key=kwargs["api_key"],
-        additional_headers=kwargs.get("additional_headers", {}),
-    )
-    tools = toolkit.get_tools()
-    return tools
-
-
 @lru_cache(maxsize=1)
 def _get_connery_actions():
     connery_service = ConneryService()
@@ -314,7 +284,6 @@ def _get_dalle_tools():
 
 
 TOOLS = {
-    AvailableTools.ACTION_SERVER: _get_action_server,
     AvailableTools.CONNERY: _get_connery_actions,
     AvailableTools.DDG_SEARCH: _get_duck_duck_go,
     AvailableTools.ARXIV: _get_arxiv,

@@ -3,7 +3,8 @@ from base64 import b64decode
 from enum import Enum
 from typing import Optional, Union
 
-from pydantic import BaseSettings, root_validator, validator
+from pydantic import field_validator, model_validator
+from pydantic_settings import BaseSettings
 
 
 class AuthType(Enum):
@@ -16,8 +17,8 @@ class JWTSettingsBase(BaseSettings):
     iss: str
     aud: Union[str, list[str]]
 
-    @validator("aud", pre=True, always=True)
-    def set_aud(cls, v, values) -> Union[str, list[str]]:
+    @field_validator("aud", mode="before")
+    def set_aud(cls, v) -> Union[str, list[str]]:
         return v.split(",") if "," in v else v
 
     class Config:
@@ -29,7 +30,7 @@ class JWTSettingsLocal(JWTSettingsBase):
     decode_key: str = None
     alg: str
 
-    @validator("decode_key", pre=True, always=True)
+    @field_validator("decode_key", mode="before")
     def set_decode_key(cls, v, values):
         """
         Key may be a multiline string (e.g. in the case of a public key), so to
@@ -48,7 +49,7 @@ class Settings(BaseSettings):
     jwt_local: Optional[JWTSettingsLocal] = None
     jwt_oidc: Optional[JWTSettingsOIDC] = None
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
     def check_jwt_settings(cls, values):
         auth_type = values.get("auth_type")
         if auth_type == AuthType.JWT_LOCAL and values.get("jwt_local") is None:
