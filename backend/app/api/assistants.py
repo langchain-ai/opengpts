@@ -14,9 +14,9 @@ router = APIRouter()
 class AssistantPayload(BaseModel):
     """Payload for creating an assistant."""
 
-    name: str = Field(..., description="The name of the assistant.")
-    config: dict = Field(..., description="The assistant config.")
-    public: bool = Field(default=False, description="Whether the assistant is public.")
+    name: Annotated[str, Field(description="The name of the assistant.")]
+    config: Annotated[dict, Field(description="The assistant config.")]
+    public: Annotated[bool, Field(default=False, description="Whether the assistant is public.")]
 
 
 AssistantID = Annotated[str, Path(description="The ID of the assistant.")]

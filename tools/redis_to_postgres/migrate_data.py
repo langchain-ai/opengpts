@@ -23,6 +23,8 @@ from redis.client import Redis as RedisType
 from app.checkpoint import PostgresCheckpoint
 from app.lifespan import get_pg_pool, lifespan
 from app.server import app
+from pydantic import ConfigDict
+
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -52,8 +54,7 @@ def load(keys: list[str], values: list[bytes]) -> dict:
 
 
 class RedisCheckpoint(BaseCheckpointSaver):
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True,)
 
     @property
     def config_specs(self) -> list[ConfigurableFieldSpec]:

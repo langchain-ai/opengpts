@@ -1,8 +1,8 @@
 from enum import Enum
 from functools import lru_cache
-from typing import Optional
+from typing import Annotated,Literal, Optional
 
-from langchain.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from langchain.tools.retriever import create_retriever_tool
 from langchain_community.agent_toolkits.connery import ConneryToolkit
 from langchain_community.retrievers.kay import KayAiRetriever
@@ -22,26 +22,24 @@ from langchain_community.utilities.arxiv import ArxivAPIWrapper
 from langchain_community.utilities.dalle_image_generator import DallEAPIWrapper
 from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
 from langchain_core.tools import Tool
-from langchain_robocorp import ActionServerToolkit
 from typing_extensions import TypedDict
 
 from app.upload import vstore
 
-
 class DDGInput(BaseModel):
-    query: str = Field(description="search query to look up")
+    query: Annotated[str, Field(description="search query to look up")]
 
 
 class ArxivInput(BaseModel):
-    query: str = Field(description="search query to look up")
+    query: Annotated[str, Field(description="search query to look up")]
 
 
 class PythonREPLInput(BaseModel):
-    query: str = Field(description="python command to run")
+    query: Annotated[str, Field(description="python command to run")]
 
 
 class DallEInput(BaseModel):
-    query: str = Field(description="image description to generate image from")
+    query: Annotated[str, Field(description="image description to generate image from")]
 
 
 class AvailableTools(str, Enum):
@@ -66,9 +64,9 @@ class ToolConfig(TypedDict):
 
 class BaseTool(BaseModel):
     type: AvailableTools
-    name: Optional[str]
-    description: Optional[str]
-    config: Optional[ToolConfig]
+    name: Optional[str] = None
+    description: Optional[str] = None
+    config: Optional[ToolConfig] = None
     multi_use: Optional[bool] = False
 
 
@@ -78,125 +76,107 @@ class ActionServerConfig(ToolConfig):
 
 
 class ActionServer(BaseTool):
-    type: AvailableTools = Field(AvailableTools.ACTION_SERVER, const=True)
-    name: str = Field("Action Server by Sema4.ai", const=True)
-    description: str = Field(
-        (
+    type: Literal[AvailableTools.ACTION_SERVER] = AvailableTools.ACTION_SERVER
+    name: Literal["Action Server by Sema4.ai"] = "Action Server by Sema4.ai"
+    description: Literal[(
             "Run AI actions with "
             "[Sema4.ai Action Server](https://github.com/Sema4AI/actions)."
-        ),
-        const=True,
-    )
+        )] = (
+            "Run AI actions with "
+            "[Sema4.ai Action Server](https://github.com/Sema4AI/actions)."
+        )
     config: ActionServerConfig
-    multi_use: bool = Field(True, const=True)
+    multi_use: Literal[True] = True
 
 
 class Connery(BaseTool):
-    type: AvailableTools = Field(AvailableTools.CONNERY, const=True)
-    name: str = Field("AI Action Runner by Connery", const=True)
-    description: str = Field(
-        (
+    type: Literal[AvailableTools.CONNERY] = AvailableTools.CONNERY
+    name: Literal["AI Action Runner by Connery"] = "AI Action Runner by Connery"
+    description: Literal[(
             "Connect OpenGPTs to the real world with "
             "[Connery](https://github.com/connery-io/connery)."
-        ),
-        const=True,
-    )
+        )] = (
+            "Connect OpenGPTs to the real world with "
+            "[Connery](https://github.com/connery-io/connery)."
+        )
 
 
 class DDGSearch(BaseTool):
-    type: AvailableTools = Field(AvailableTools.DDG_SEARCH, const=True)
-    name: str = Field("DuckDuckGo Search", const=True)
-    description: str = Field(
-        "Search the web with [DuckDuckGo](https://pypi.org/project/duckduckgo-search/).",
-        const=True,
-    )
+    type: Literal[AvailableTools.DDG_SEARCH] = AvailableTools.DDG_SEARCH
+    name: Literal["DuckDuckGo Search"] = "DuckDuckGo Search"
+    description: Literal["Search the web with [DuckDuckGo](https://pypi.org/project/duckduckgo-search/)."] = "Search the web with [DuckDuckGo](https://pypi.org/project/duckduckgo-search/)."
 
 
 class Arxiv(BaseTool):
-    type: AvailableTools = Field(AvailableTools.ARXIV, const=True)
-    name: str = Field("Arxiv", const=True)
-    description: str = Field("Searches [Arxiv](https://arxiv.org/).", const=True)
+    type: Literal[AvailableTools.ARXIV] = AvailableTools.ARXIV
+    name: Literal["Arxiv"] = "Arxiv"
+    description: Literal["Searches [Arxiv](https://arxiv.org/)."] = "Searches [Arxiv](https://arxiv.org/)."
 
 
 class YouSearch(BaseTool):
-    type: AvailableTools = Field(AvailableTools.YOU_SEARCH, const=True)
-    name: str = Field("You.com Search", const=True)
-    description: str = Field(
-        "Uses [You.com](https://you.com/) search, optimized responses for LLMs.",
-        const=True,
-    )
+    type: Literal[AvailableTools.YOU_SEARCH] = AvailableTools.YOU_SEARCH
+    name: Literal["You.com Search"] = "You.com Search"
+    description: Literal["Uses [You.com](https://you.com/) search, optimized responses for LLMs."] = "Uses [You.com](https://you.com/) search, optimized responses for LLMs."
 
 
 class SecFilings(BaseTool):
-    type: AvailableTools = Field(AvailableTools.SEC_FILINGS, const=True)
-    name: str = Field("SEC Filings (Kay.ai)", const=True)
-    description: str = Field(
-        "Searches through SEC filings using [Kay.ai](https://www.kay.ai/).", const=True
-    )
+    type: Literal[AvailableTools.SEC_FILINGS] = AvailableTools.SEC_FILINGS
+    name: Literal["SEC Filings (Kay.ai)"] = "SEC Filings (Kay.ai)"
+    description: Literal["Searches through SEC filings using [Kay.ai](https://www.kay.ai/)."] = "Searches through SEC filings using [Kay.ai](https://www.kay.ai/)."
 
 
 class PressReleases(BaseTool):
-    type: AvailableTools = Field(AvailableTools.PRESS_RELEASES, const=True)
-    name: str = Field("Press Releases (Kay.ai)", const=True)
-    description: str = Field(
-        "Searches through press releases using [Kay.ai](https://www.kay.ai/).",
-        const=True,
-    )
+    type: Literal[AvailableTools.PRESS_RELEASES] = AvailableTools.PRESS_RELEASES
+    name: Literal["Press Releases (Kay.ai)"] = "Press Releases (Kay.ai)"
+    description: Literal["Searches through press releases using [Kay.ai](https://www.kay.ai/)."] = "Searches through press releases using [Kay.ai](https://www.kay.ai/)."
 
 
 class PubMed(BaseTool):
-    type: AvailableTools = Field(AvailableTools.PUBMED, const=True)
-    name: str = Field("PubMed", const=True)
-    description: str = Field(
-        "Searches [PubMed](https://pubmed.ncbi.nlm.nih.gov/).", const=True
-    )
+    type: Literal[AvailableTools.PUBMED] = AvailableTools.PUBMED
+    name: Literal["PubMed"] = "PubMed"
+    description: Literal["Searches [PubMed](https://pubmed.ncbi.nlm.nih.gov/)."] = "Searches [PubMed](https://pubmed.ncbi.nlm.nih.gov/)."
 
 
 class Wikipedia(BaseTool):
-    type: AvailableTools = Field(AvailableTools.WIKIPEDIA, const=True)
-    name: str = Field("Wikipedia", const=True)
-    description: str = Field(
-        "Searches [Wikipedia](https://pypi.org/project/wikipedia/).", const=True
-    )
+    type: Literal[AvailableTools.WIKIPEDIA] = AvailableTools.WIKIPEDIA
+    name: Literal["Wikipedia"] = "Wikipedia"
+    description: Literal["Searches [Wikipedia](https://pypi.org/project/wikipedia/)."] = "Searches [Wikipedia](https://pypi.org/project/wikipedia/)."
 
 
 class Tavily(BaseTool):
-    type: AvailableTools = Field(AvailableTools.TAVILY, const=True)
-    name: str = Field("Search (Tavily)", const=True)
-    description: str = Field(
-        (
+    type: Literal[AvailableTools.TAVILY] = AvailableTools.TAVILY
+    name: Literal["Search (Tavily)"] = "Search (Tavily)"
+    description: Literal[(
             "Uses the [Tavily](https://app.tavily.com/) search engine. "
             "Includes sources in the response."
-        ),
-        const=True,
-    )
+        )] = (
+            "Uses the [Tavily](https://app.tavily.com/) search engine. "
+            "Includes sources in the response."
+        )
 
 
 class TavilyAnswer(BaseTool):
-    type: AvailableTools = Field(AvailableTools.TAVILY_ANSWER, const=True)
-    name: str = Field("Search (short answer, Tavily)", const=True)
-    description: str = Field(
-        (
+    type: Literal[AvailableTools.TAVILY_ANSWER] = AvailableTools.TAVILY_ANSWER
+    name: Literal["Search (short answer, Tavily)"] = "Search (short answer, Tavily)"
+    description: Literal[(
             "Uses the [Tavily](https://app.tavily.com/) search engine. "
             "This returns only the answer, no supporting evidence."
-        ),
-        const=True,
-    )
+        )] = (
+            "Uses the [Tavily](https://app.tavily.com/) search engine. "
+            "This returns only the answer, no supporting evidence."
+        )
 
 
 class Retrieval(BaseTool):
-    type: AvailableTools = Field(AvailableTools.RETRIEVAL, const=True)
-    name: str = Field("Retrieval", const=True)
-    description: str = Field("Look up information in uploaded files.", const=True)
+    type: Literal[AvailableTools.RETRIEVAL] = AvailableTools.RETRIEVAL
+    name: Literal["Retrieval"] = "Retrieval"
+    description: Literal["Look up information in uploaded files."] = "Look up information in uploaded files."
 
 
 class DallE(BaseTool):
-    type: AvailableTools = Field(AvailableTools.DALL_E, const=True)
-    name: str = Field("Generate Image (Dall-E)", const=True)
-    description: str = Field(
-        "Generates images from a text description using OpenAI's DALL-E model.",
-        const=True,
-    )
+    type: Literal[AvailableTools.DALL_E] = AvailableTools.DALL_E
+    name: Literal["Generate Image (Dall-E)"] = "Generate Image (Dall-E)"
+    description: Literal["Generates images from a text description using OpenAI's DALL-E model."] = "Generates images from a text description using OpenAI's DALL-E model."
 
 
 RETRIEVAL_DESCRIPTION = """Can be used to look up information that was uploaded to this assistant.
@@ -286,16 +266,6 @@ def _get_tavily_answer():
     return _TavilyAnswer(api_wrapper=tavily_search, name="search_tavily_answer")
 
 
-def _get_action_server(**kwargs: ActionServerConfig):
-    toolkit = ActionServerToolkit(
-        url=kwargs["url"],
-        api_key=kwargs["api_key"],
-        additional_headers=kwargs.get("additional_headers", {}),
-    )
-    tools = toolkit.get_tools()
-    return tools
-
-
 @lru_cache(maxsize=1)
 def _get_connery_actions():
     connery_service = ConneryService()
@@ -314,7 +284,6 @@ def _get_dalle_tools():
 
 
 TOOLS = {
-    AvailableTools.ACTION_SERVER: _get_action_server,
     AvailableTools.CONNERY: _get_connery_actions,
     AvailableTools.DDG_SEARCH: _get_duck_duck_go,
     AvailableTools.ARXIV: _get_arxiv,
