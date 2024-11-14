@@ -28,7 +28,7 @@ def get_tools_agent_executor(
         msgs = []
         for m in messages:
             if isinstance(m, LiberalToolMessage):
-                _dict = m.dict()
+                _dict = m.model_dump()
                 _dict["content"] = str(_dict["content"])
                 m_c = ToolMessage(**_dict)
                 msgs.append(m_c)

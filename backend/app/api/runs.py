@@ -34,24 +34,24 @@ async def _run_input_and_config(payload: CreateRunPayload, user_id: str):
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
 
-    assistant = await get_assistant(user_id, str(thread["assistant_id"]))
+    assistant = await get_assistant(user_id, str(thread.assistant_id))
     if not assistant:
         raise HTTPException(status_code=404, detail="Assistant not found")
 
     config: RunnableConfig = {
-        **assistant["config"],
+        **assistant.config,
         "configurable": {
-            **assistant["config"]["configurable"],
+            **assistant.config["configurable"],
             **((payload.config or {}).get("configurable") or {}),
             "user_id": user_id,
-            "thread_id": str(thread["thread_id"]),
-            "assistant_id": str(assistant["assistant_id"]),
+            "thread_id": str(thread.thread_id),
+            "assistant_id": str(assistant.assistant_id),
         },
     }
 
     try:
         if payload.input is not None:
-            agent.get_input_schema(config)(**payload.input)
+            agent.get_input_schema(config).model_validate(payload.input)
     except ValidationError as e:
         raise RequestValidationError(e.errors(), body=payload)
 
@@ -65,7 +65,7 @@ async def create_run(
     background_tasks: BackgroundTasks,
 ):
     """Create a run."""
-    input_, config = await _run_input_and_config(payload, user["user_id"])
+    input_, config = await _run_input_and_config(payload, user.user_id)
     background_tasks.add_task(agent.ainvoke, input_, config)
     return {"status": "ok"}  # TODO add a run id
 
@@ -76,7 +76,7 @@ async def stream_run(
     user: AuthedUser,
 ):
     """Create a run."""
-    input_, config = await _run_input_and_config(payload, user["user_id"])
+    input_, config = await _run_input_and_config(payload, user.user_id)
 
     return EventSourceResponse(to_sse(astream_state(agent, input_, config)))
 

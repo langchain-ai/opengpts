@@ -1,4 +1,3 @@
-import pickle
 from enum import Enum
 from typing import Any, Dict, Mapping, Optional, Sequence, Union
 
@@ -7,14 +6,13 @@ from langchain_core.runnables import (
     ConfigurableField,
     RunnableBinding,
 )
-from langgraph.checkpoint import CheckpointAt
 from langgraph.graph.message import Messages
 from langgraph.pregel import Pregel
 
 from app.agent_types.tools_agent import get_tools_agent_executor
 from app.agent_types.xml_agent import get_xml_agent_executor
 from app.chatbot import get_chatbot_executor
-from app.checkpoint import PostgresCheckpoint
+from app.checkpoint import AsyncPostgresCheckpoint
 from app.llms import (
     get_anthropic_llm,
     get_google_llm,
@@ -74,7 +72,7 @@ class AgentType(str, Enum):
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
-CHECKPOINTER = PostgresCheckpoint(serde=pickle, at=CheckpointAt.END_OF_STEP)
+CHECKPOINTER = AsyncPostgresCheckpoint().get_instance()
 
 
 def get_agent_executor(
@@ -123,7 +121,6 @@ def get_agent_executor(
         return get_tools_agent_executor(
             tools, llm, system_message, interrupt_before_action, CHECKPOINTER
         )
-
     else:
         raise ValueError("Unexpected agent type")
 
@@ -135,7 +132,7 @@ class ConfigurableAgent(RunnableBinding):
     retrieval_description: str = RETRIEVAL_DESCRIPTION
     interrupt_before_action: bool = False
     assistant_id: Optional[str] = None
-    thread_id: Optional[str] = None
+    thread_id: Optional[str] = ''
     user_id: Optional[str] = None
 
     def __init__(
@@ -145,7 +142,7 @@ class ConfigurableAgent(RunnableBinding):
         agent: AgentType = AgentType.GPT_35_TURBO,
         system_message: str = DEFAULT_SYSTEM_MESSAGE,
         assistant_id: Optional[str] = None,
-        thread_id: Optional[str] = None,
+        thread_id: Optional[str] = '',
         retrieval_description: str = RETRIEVAL_DESCRIPTION,
         interrupt_before_action: bool = False,
         kwargs: Optional[Mapping[str, Any]] = None,
@@ -204,7 +201,7 @@ def get_chatbot(
     if llm_type == LLMType.GPT_35_TURBO:
         llm = get_openai_llm()
     elif llm_type == LLMType.GPT_4:
-        llm = get_openai_llm(gpt_4=True)
+        llm = get_openai_llm(model="gpt-4")
     elif llm_type == LLMType.AZURE_OPENAI:
         llm = get_openai_llm(azure=True)
     elif llm_type == LLMType.CLAUDE2:
@@ -265,7 +262,7 @@ class ConfigurableRetrieval(RunnableBinding):
     llm_type: LLMType
     system_message: str = DEFAULT_SYSTEM_MESSAGE
     assistant_id: Optional[str] = None
-    thread_id: Optional[str] = None
+    thread_id: Optional[str] = ''
     user_id: Optional[str] = None
 
     def __init__(
@@ -274,7 +271,7 @@ class ConfigurableRetrieval(RunnableBinding):
         llm_type: LLMType = LLMType.GPT_35_TURBO,
         system_message: str = DEFAULT_SYSTEM_MESSAGE,
         assistant_id: Optional[str] = None,
-        thread_id: Optional[str] = None,
+        thread_id: Optional[str] = '',
         kwargs: Optional[Mapping[str, Any]] = None,
         config: Optional[Mapping[str, Any]] = None,
         **others: Any,
@@ -335,7 +332,7 @@ agent: Pregel = (
         system_message=DEFAULT_SYSTEM_MESSAGE,
         retrieval_description=RETRIEVAL_DESCRIPTION,
         assistant_id=None,
-        thread_id=None,
+        thread_id='',
     )
     .configurable_fields(
         agent=ConfigurableField(id="agent_type", name="Agent Type"),
