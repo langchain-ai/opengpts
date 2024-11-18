@@ -64,10 +64,10 @@ class ToolConfig(TypedDict):
 
 class BaseTool(BaseModel):
     type: AvailableTools
-    name: Optional[str] = None
-    description: Optional[str] = None
-    config: Optional[ToolConfig] = None
-    multi_use: Optional[bool] = False
+    name: str
+    description: str
+    config: ToolConfig = Field(default_factory=dict)
+    multi_use: bool = False
 
 
 class ActionServerConfig(ToolConfig):

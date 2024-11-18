@@ -316,7 +316,7 @@ chat_retrieval = (
         assistant_id=ConfigurableField(
             id="assistant_id", name="Assistant ID", is_shared=True
         ),
-        thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
+        thread_id=ConfigurableField(id="thread_id", name="Thread ID", annotation=str, is_shared=True),
     )
     .with_types(
         input_type=Dict[str, Any],
@@ -345,7 +345,7 @@ agent: Pregel = (
         assistant_id=ConfigurableField(
             id="assistant_id", name="Assistant ID", is_shared=True
         ),
-        thread_id=ConfigurableField(id="thread_id", name="Thread ID", is_shared=True),
+        thread_id=ConfigurableField(id="thread_id", name="Thread ID", annotation=str, is_shared=True),
         tools=ConfigurableField(id="tools", name="Tools"),
         retrieval_description=ConfigurableField(
             id="retrieval_description", name="Retrieval Description"
