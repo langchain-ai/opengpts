@@ -36,7 +36,7 @@ setuptools = "^69.0.3"
 pdfminer-six = "^20231228"
 fireworks-ai = "^0.11.2"
 httpx = { version = "^0", extras = ["socks"] }
-unstructured = {extras = ["doc", "docx"], version = "^0.12.5"}
+unstructured = {extras = ["doc", "docx"], version = "^0"}
 pgvector = "^0.2.5"
 psycopg2-binary = "^2.9.9"
 asyncpg = "^0.29.0"
