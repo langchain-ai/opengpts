@@ -1,9 +1,9 @@
 import os
 from base64 import b64decode
 from enum import Enum
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
-from pydantic import ConfigDict, model_validator, field_validator
+from pydantic import ConfigDict, field_validator, model_validator
 from pydantic_settings import BaseSettings
 
 
@@ -23,7 +23,10 @@ class JWTSettingsBase(BaseSettings):
         if isinstance(v, str) and "," in v:
             return v.split(",")
         return v
-    model_config = ConfigDict(env_prefix="jwt_",)
+
+    model_config = ConfigDict(
+        env_prefix="jwt_",
+    )
 
 
 class JWTSettingsLocal(JWTSettingsBase):
@@ -33,13 +36,13 @@ class JWTSettingsLocal(JWTSettingsBase):
 
     @field_validator("decode_key", mode="before")
     @classmethod
-    def set_decode_key(cls, v, values):
+    def set_decode_key(cls, v, info):
         """
         Key may be a multiline string (e.g. in the case of a public key), so to
         be able to set it from env, we set it as a base64 encoded string and
         decode it here.
         """
-        decode_key_b64 = kwargs.get("decode_key_b64")
+        decode_key_b64 = info.data.get("decode_key_b64")
         if decode_key_b64:
             return b64decode(decode_key_b64).decode("utf-8")
         return v

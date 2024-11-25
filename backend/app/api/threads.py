@@ -17,6 +17,7 @@ ThreadID = Annotated[str, Path(description="The ID of the thread.")]
 
 class ThreadPutRequest(BaseModel):
     """Payload for creating a thread."""
+
     name: Annotated[str, Field(description="The name of the thread.")]
     assistant_id: Annotated[str, Field(description="The ID of the assistant to use.")]
 
