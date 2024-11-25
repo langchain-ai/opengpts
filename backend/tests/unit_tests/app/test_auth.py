@@ -20,7 +20,7 @@ from tests.unit_tests.app.helpers import get_client
 
 @app.get("/me")
 async def me(user: AuthedUser) -> dict:
-    return user
+    return user.model_dump()
 
 
 def _create_jwt(
