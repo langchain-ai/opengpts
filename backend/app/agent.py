@@ -72,7 +72,7 @@ class AgentType(str, Enum):
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."
 
-CHECKPOINTER = AsyncPostgresCheckpoint().get_instance()
+CHECKPOINTER = AsyncPostgresCheckpoint()
 
 
 def get_agent_executor(
@@ -132,7 +132,7 @@ class ConfigurableAgent(RunnableBinding):
     retrieval_description: str = RETRIEVAL_DESCRIPTION
     interrupt_before_action: bool = False
     assistant_id: Optional[str] = None
-    thread_id: Optional[str] = ''
+    thread_id: Optional[str] = ""
     user_id: Optional[str] = None
 
     def __init__(
@@ -142,7 +142,7 @@ class ConfigurableAgent(RunnableBinding):
         agent: AgentType = AgentType.GPT_35_TURBO,
         system_message: str = DEFAULT_SYSTEM_MESSAGE,
         assistant_id: Optional[str] = None,
-        thread_id: Optional[str] = '',
+        thread_id: Optional[str] = "",
         retrieval_description: str = RETRIEVAL_DESCRIPTION,
         interrupt_before_action: bool = False,
         kwargs: Optional[Mapping[str, Any]] = None,
@@ -262,7 +262,7 @@ class ConfigurableRetrieval(RunnableBinding):
     llm_type: LLMType
     system_message: str = DEFAULT_SYSTEM_MESSAGE
     assistant_id: Optional[str] = None
-    thread_id: Optional[str] = ''
+    thread_id: Optional[str] = ""
     user_id: Optional[str] = None
 
     def __init__(
@@ -271,7 +271,7 @@ class ConfigurableRetrieval(RunnableBinding):
         llm_type: LLMType = LLMType.GPT_35_TURBO,
         system_message: str = DEFAULT_SYSTEM_MESSAGE,
         assistant_id: Optional[str] = None,
-        thread_id: Optional[str] = '',
+        thread_id: Optional[str] = "",
         kwargs: Optional[Mapping[str, Any]] = None,
         config: Optional[Mapping[str, Any]] = None,
         **others: Any,
@@ -316,7 +316,9 @@ chat_retrieval = (
         assistant_id=ConfigurableField(
             id="assistant_id", name="Assistant ID", is_shared=True
         ),
-        thread_id=ConfigurableField(id="thread_id", name="Thread ID", annotation=str, is_shared=True),
+        thread_id=ConfigurableField(
+            id="thread_id", name="Thread ID", annotation=str, is_shared=True
+        ),
     )
     .with_types(
         input_type=Dict[str, Any],
@@ -332,7 +334,7 @@ agent: Pregel = (
         system_message=DEFAULT_SYSTEM_MESSAGE,
         retrieval_description=RETRIEVAL_DESCRIPTION,
         assistant_id=None,
-        thread_id='',
+        thread_id="",
     )
     .configurable_fields(
         agent=ConfigurableField(id="agent_type", name="Agent Type"),
@@ -345,7 +347,9 @@ agent: Pregel = (
         assistant_id=ConfigurableField(
             id="assistant_id", name="Assistant ID", is_shared=True
         ),
-        thread_id=ConfigurableField(id="thread_id", name="Thread ID", annotation=str, is_shared=True),
+        thread_id=ConfigurableField(
+            id="thread_id", name="Thread ID", annotation=str, is_shared=True
+        ),
         tools=ConfigurableField(id="tools", name="Tools"),
         retrieval_description=ConfigurableField(
             id="retrieval_description", name="Retrieval Description"

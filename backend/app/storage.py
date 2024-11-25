@@ -12,8 +12,11 @@ from app.schema import Assistant, Thread, User
 async def list_assistants(user_id: str) -> List[Assistant]:
     """List all assistants for the current user."""
     async with get_pg_pool().acquire() as conn:
-        records = await conn.fetch("SELECT * FROM assistant WHERE user_id = $1", user_id)
+        records = await conn.fetch(
+            "SELECT * FROM assistant WHERE user_id = $1", user_id
+        )
         return [Assistant(**record) for record in records]
+
 
 async def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
     """Get an assistant by ID."""
@@ -94,9 +97,7 @@ async def list_threads(user_id: str) -> List[Thread]:
     """List all threads for the current user."""
     async with get_pg_pool().acquire() as conn:
         records = await conn.fetch("SELECT * FROM thread WHERE user_id = $1", user_id)
-        return [
-            Thread(**record) for record in records
-        ]
+        return [Thread(**record) for record in records]
 
 
 async def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
@@ -124,7 +125,7 @@ async def get_thread_state(*, user_id: str, thread_id: str, assistant: Assistant
         }
     )
     return {
-        "values": state.values,
+        "values": None if not state.values else state.values,
         "next": state.next,
     }
 
@@ -169,22 +170,24 @@ async def get_thread_history(*, user_id: str, thread_id: str, assistant: Assista
         )
     ]
 
+
 def get_assistant_type(config: dict) -> str:
     """Extract assistant type from config, handling both old and new formats."""
     configurable = config.get("configurable", {})
-    
+
     # First try direct type key (old format)
     if "type" in configurable:
         return configurable["type"]
-    
+
     # Then try type== prefix (new format)
     type_keys = [k for k in configurable.keys() if k.startswith("type==")]
     if type_keys:
         # Get the first type== key and extract the type (before the /)
         return type_keys[0].split("/")[0].replace("type==", "")
-    
+
     # Default fallback
     return "chatbot"
+
 
 async def put_thread(
     user_id: str, thread_id: str, *, assistant_id: str, name: str
@@ -193,9 +196,7 @@ async def put_thread(
     updated_at = datetime.now(timezone.utc)
     assistant = await get_assistant(user_id, assistant_id)
     metadata = (
-        {"assistant_type": get_assistant_type(assistant.config)}
-        if assistant
-        else None
+        {"assistant_type": get_assistant_type(assistant.config)} if assistant else None
     )
     async with get_pg_pool().acquire() as conn:
         await conn.execute(
