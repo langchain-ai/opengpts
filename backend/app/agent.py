@@ -202,6 +202,8 @@ def get_chatbot(
         llm = get_openai_llm()
     elif llm_type == LLMType.GPT_4:
         llm = get_openai_llm(model="gpt-4")
+    elif llm_type == LLMType.GPT_4O:
+        llm = get_openai_llm(model="gpt-4o")
     elif llm_type == LLMType.AZURE_OPENAI:
         llm = get_openai_llm(azure=True)
     elif llm_type == LLMType.CLAUDE2:
