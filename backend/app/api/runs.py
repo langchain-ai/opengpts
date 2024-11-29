@@ -11,7 +11,7 @@ from langsmith.utils import tracing_is_enabled
 from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
 
-from app.agent import agent
+from app.agent import agent, chat_retrieval, chatbot
 from app.auth.handlers import AuthedUser
 from app.storage import get_assistant, get_thread
 from app.stream import astream_state, to_sse
@@ -51,7 +51,17 @@ async def _run_input_and_config(payload: CreateRunPayload, user_id: str):
 
     try:
         if payload.input is not None:
-            agent.get_input_schema(config).model_validate(payload.input)
+            # Get the bot type from config
+            bot_type = config["configurable"].get("type", "agent")
+            # Get the correct schema based on bot type
+            if bot_type == "chat_retrieval":
+                schema = chat_retrieval.get_input_schema()
+            elif bot_type == "chatbot":
+                schema = chatbot.get_input_schema()
+            else:  # default to agent
+                schema = agent.get_input_schema()
+            # Validate against the correct schema
+            schema.model_validate(payload.input)
     except ValidationError as e:
         raise RequestValidationError(e.errors(), body=payload)
 

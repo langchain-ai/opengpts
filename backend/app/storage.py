@@ -179,12 +179,6 @@ def get_assistant_type(config: dict) -> str:
     if "type" in configurable:
         return configurable["type"]
 
-    # Then try type== prefix (new format)
-    type_keys = [k for k in configurable.keys() if k.startswith("type==")]
-    if type_keys:
-        # Get the first type== key and extract the type (before the /)
-        return type_keys[0].split("/")[0].replace("type==", "")
-
     # Default fallback
     return "chatbot"
 

@@ -1,13 +1,11 @@
 from typing import Any, get_args
-
 from langchain_core.messages import (
-    AnyMessage,
     FunctionMessage,
     MessageLikeRepresentation,
     ToolMessage,
 )
 from langgraph.graph.message import Messages, add_messages
-
+from langchain_core.messages import _message_from_dict
 
 class LiberalFunctionMessage(FunctionMessage):
     content: Any
@@ -20,14 +18,14 @@ class LiberalToolMessage(ToolMessage):
 def _convert_pydantic_dict_to_message(
     data: MessageLikeRepresentation
 ) -> MessageLikeRepresentation:
+    """Convert a dictionary to a message object if it matches message format."""
     if (
         isinstance(data, dict)
         and "content" in data
         and isinstance(data.get("type"), str)
     ):
-        for cls in get_args(AnyMessage):
-            if data["type"] == cls(content="").type:
-                return cls(**data)
+        _type = data.pop("type")
+        return _message_from_dict({"data": data, "type": _type})
     return data
 
 

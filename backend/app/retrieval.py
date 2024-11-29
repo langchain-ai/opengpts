@@ -54,7 +54,7 @@ def get_retrieval_executor(
             if isinstance(m, HumanMessage):
                 chat_history.append(m)
         response = messages[-1].content
-        content = "\n".join([d.page_content for d in response])
+        content = "\n".join([d for d in response])
         return [
             SystemMessage(
                 content=response_prompt_template.format(
@@ -80,7 +80,7 @@ def get_retrieval_executor(
     async def invoke_retrieval(state: AgentState):
         messages = state["messages"]
         if len(messages) == 1:
-            human_input = messages[-1]["content"]
+            human_input = messages[-1].content
             return {
                 "messages": [
                     AIMessage(
