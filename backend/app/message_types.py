@@ -6,13 +6,15 @@ from langchain_core.messages import (
 )
 from langgraph.graph.message import Messages, add_messages
 from langchain_core.messages import _message_from_dict
+from pydantic import Field
+
 
 class LiberalFunctionMessage(FunctionMessage):
-    content: Any
+     content: Any = Field(default="")
 
 
 class LiberalToolMessage(ToolMessage):
-    content: Any
+    content: Any = Field(default="")
 
 
 def _convert_pydantic_dict_to_message(

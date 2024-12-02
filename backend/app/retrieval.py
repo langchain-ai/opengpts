@@ -54,7 +54,7 @@ def get_retrieval_executor(
             if isinstance(m, HumanMessage):
                 chat_history.append(m)
         response = messages[-1].content
-        content = "\n".join([d for d in response])
+        content = "\n".join([d["page_content"] for d in response])
         return [
             SystemMessage(
                 content=response_prompt_template.format(
@@ -118,6 +118,7 @@ def get_retrieval_executor(
         params = messages[-1].tool_calls[0]
         query = params["args"]["query"]
         response = await retriever.ainvoke(query)
+        response = [doc.model_dump() for doc in response]
         msg = LiberalToolMessage(
             name="retrieval", content=response, tool_call_id=params["id"]
         )
