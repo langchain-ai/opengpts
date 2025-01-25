@@ -59,14 +59,19 @@ class AsyncPostgresCheckpoint(BasePostgresSaver):
                 f"{os.environ['POSTGRES_DB']}"
             )
 
-            conn = AsyncConnectionPool(
+            pool = AsyncConnectionPool(
                 conninfo=conninfo,
                 kwargs={"autocommit": True, "prepare_threshold": 0},
+                open=False  # Don't open in constructor
             )
+            await pool.open()
 
             self.async_postgres_saver = AsyncPostgresSaver(
-                conn=conn, pipe=self.pipe, serde=self.serde
+                conn=pool, pipe=self.pipe, serde=self.serde
             )
+
+            # Setup will create/migrate the tables if they don't exist
+            await self.async_postgres_saver.setup()
 
             logger.warning("Checkpoint setup complete.")
         except Exception as e:

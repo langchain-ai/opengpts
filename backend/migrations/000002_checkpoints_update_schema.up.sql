@@ -1,41 +1,11 @@
--- Drop existing checkpoints-related tables if they exist
-ALTER TABLE IF EXISTS checkpoints RENAME TO old_checkpoints;
-DROP TABLE IF EXISTS checkpoint_writes;
-DROP TABLE IF EXISTS checkpoint_blobs;
-DROP TABLE IF EXISTS checkpoint_migrations;
+ALTER TABLE checkpoints
+    ADD COLUMN IF NOT EXISTS thread_ts TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS parent_ts TIMESTAMPTZ;
 
-CREATE TABLE IF NOT EXISTS checkpoints (
-    thread_id TEXT NOT NULL,
-    checkpoint_ns TEXT NOT NULL DEFAULT '',
-    checkpoint_id TEXT NOT NULL DEFAULT '',
-    parent_checkpoint_id TEXT,
-    type TEXT,
-    checkpoint JSONB,
-    metadata JSONB NOT NULL DEFAULT '{}',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (thread_id, checkpoint_ns, checkpoint_id)
-);
+UPDATE checkpoints
+    SET thread_ts = CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+WHERE thread_ts IS NULL;
 
--- Create checkpoint_blobs table
-CREATE TABLE IF NOT EXISTS checkpoint_blobs (
-    thread_id TEXT NOT NULL,
-    checkpoint_ns TEXT NOT NULL DEFAULT '',
-    channel TEXT NOT NULL,
-    version TEXT NOT NULL,
-    type TEXT NOT NULL,
-    blob BYTEA,
-    PRIMARY KEY (thread_id, checkpoint_ns, channel, version)
-);
-
--- Create checkpoint_writes table
-CREATE TABLE IF NOT EXISTS checkpoint_writes (
-    thread_id TEXT NOT NULL,
-    checkpoint_ns TEXT NOT NULL DEFAULT '',
-    checkpoint_id TEXT NOT NULL,
-    task_id TEXT NOT NULL,
-    idx INTEGER NOT NULL,
-    channel TEXT NOT NULL,
-    type TEXT,
-    blob BYTEA NOT NULL,
-    PRIMARY KEY (thread_id, checkpoint_ns, checkpoint_id, task_id, idx)
-);
+ALTER TABLE checkpoints
+    DROP CONSTRAINT IF EXISTS checkpoints_pkey,
+    ADD PRIMARY KEY (thread_id, thread_ts)
