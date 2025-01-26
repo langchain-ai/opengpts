@@ -124,8 +124,11 @@ async def get_thread_state(*, user_id: str, thread_id: str, assistant: Assistant
             }
         }
     )
+    # Keep original format - return values as is
+    values = state.values if state.values else None
+    
     return {
-        "values": None if not state.values else state.values,
+        "values": values,
         "next": state.next,
     }
 
@@ -138,6 +141,28 @@ async def update_thread_state(
     assistant: Assistant,
 ):
     """Add state to a thread."""
+    # Get the current state to determine the format
+    current_state = await agent.aget_state(
+        {
+            "configurable": {
+                **assistant.config["configurable"],
+                **config["configurable"],
+                "assistant_id": assistant.assistant_id,
+            }
+        }
+    )
+    
+    # If current state is a dict (retrieval agent), maintain dict structure
+    if current_state.values and isinstance(current_state.values, dict):
+        if isinstance(values, dict):
+            state_values = values
+        else:
+            # Update just the messages in the existing state
+            state_values = {**current_state.values, "messages": values}
+    else:
+        # For message-only states (tools_agent, chatbot), just use the messages
+        state_values = values if isinstance(values, dict) and "messages" in values else values
+    
     await agent.aupdate_state(
         {
             "configurable": {
@@ -146,7 +171,7 @@ async def update_thread_state(
                 "assistant_id": assistant.assistant_id,
             }
         },
-        values,
+        state_values,
     )
 
 
