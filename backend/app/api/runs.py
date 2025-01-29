@@ -4,11 +4,10 @@ from uuid import UUID
 import langsmith.client
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.exceptions import RequestValidationError
-from pydantic import ValidationError
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import RunnableConfig
 from langsmith.utils import tracing_is_enabled
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from sse_starlette import EventSourceResponse
 
 from app.agent import agent, chat_retrieval, chatbot

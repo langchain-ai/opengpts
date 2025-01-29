@@ -1,16 +1,17 @@
 from typing import Any
+
 from langchain_core.messages import (
     FunctionMessage,
     MessageLikeRepresentation,
     ToolMessage,
+    _message_from_dict,
 )
 from langgraph.graph.message import Messages, add_messages
-from langchain_core.messages import _message_from_dict
 from pydantic import Field
 
 
 class LiberalFunctionMessage(FunctionMessage):
-     content: Any = Field(default="")
+    content: Any = Field(default="")
 
 
 class LiberalToolMessage(ToolMessage):
@@ -18,7 +19,7 @@ class LiberalToolMessage(ToolMessage):
 
 
 def _convert_pydantic_dict_to_message(
-    data: MessageLikeRepresentation
+    data: MessageLikeRepresentation,
 ) -> MessageLikeRepresentation:
     """Convert a dictionary to a message object if it matches message format."""
     if (

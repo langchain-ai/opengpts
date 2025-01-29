@@ -62,7 +62,7 @@ class AsyncPostgresCheckpoint(BasePostgresSaver):
             pool = AsyncConnectionPool(
                 conninfo=conninfo,
                 kwargs={"autocommit": True, "prepare_threshold": 0},
-                open=False  # Don't open in constructor
+                open=False,  # Don't open in constructor
             )
             await pool.open()
 

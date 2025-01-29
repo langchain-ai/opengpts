@@ -5,6 +5,7 @@ import asyncpg
 import orjson
 import structlog
 from fastapi import FastAPI
+
 from app.checkpoint import AsyncPostgresCheckpoint
 
 _pg_pool = None
