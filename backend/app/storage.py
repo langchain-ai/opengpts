@@ -12,23 +12,30 @@ from app.schema import Assistant, Thread, User
 async def list_assistants(user_id: str) -> List[Assistant]:
     """List all assistants for the current user."""
     async with get_pg_pool().acquire() as conn:
-        return await conn.fetch("SELECT * FROM assistant WHERE user_id = $1", user_id)
+        records = await conn.fetch(
+            "SELECT * FROM assistant WHERE user_id = $1", user_id
+        )
+        return [Assistant(**record) for record in records]
 
 
 async def get_assistant(user_id: str, assistant_id: str) -> Optional[Assistant]:
     """Get an assistant by ID."""
     async with get_pg_pool().acquire() as conn:
-        return await conn.fetchrow(
+        record = await conn.fetchrow(
             "SELECT * FROM assistant WHERE assistant_id = $1 AND (user_id = $2 OR public IS true)",
             assistant_id,
             user_id,
         )
+        if record is None:
+            return None
+        return Assistant(**record)
 
 
 async def list_public_assistants() -> List[Assistant]:
     """List all the public assistants."""
     async with get_pg_pool().acquire() as conn:
-        return await conn.fetch(("SELECT * FROM assistant WHERE public IS true;"))
+        records = await conn.fetch("SELECT * FROM assistant WHERE public IS true")
+        return [Assistant(**record) for record in records]
 
 
 async def put_assistant(
@@ -66,14 +73,14 @@ async def put_assistant(
                 updated_at,
                 public,
             )
-    return {
-        "assistant_id": assistant_id,
-        "user_id": user_id,
-        "name": name,
-        "config": config,
-        "updated_at": updated_at,
-        "public": public,
-    }
+    return Assistant(
+        assistant_id=assistant_id,
+        user_id=user_id,
+        name=name,
+        config=config,
+        updated_at=updated_at,
+        public=public,
+    )
 
 
 async def delete_assistant(user_id: str, assistant_id: str) -> None:
@@ -89,17 +96,21 @@ async def delete_assistant(user_id: str, assistant_id: str) -> None:
 async def list_threads(user_id: str) -> List[Thread]:
     """List all threads for the current user."""
     async with get_pg_pool().acquire() as conn:
-        return await conn.fetch("SELECT * FROM thread WHERE user_id = $1", user_id)
+        records = await conn.fetch("SELECT * FROM thread WHERE user_id = $1", user_id)
+        return [Thread(**record) for record in records]
 
 
 async def get_thread(user_id: str, thread_id: str) -> Optional[Thread]:
     """Get a thread by ID."""
     async with get_pg_pool().acquire() as conn:
-        return await conn.fetchrow(
+        record = await conn.fetchrow(
             "SELECT * FROM thread WHERE thread_id = $1 AND user_id = $2",
             thread_id,
             user_id,
         )
+        if record is None:
+            return None
+        return Thread(**record)
 
 
 async def get_thread_state(*, user_id: str, thread_id: str, assistant: Assistant):
@@ -107,14 +118,17 @@ async def get_thread_state(*, user_id: str, thread_id: str, assistant: Assistant
     state = await agent.aget_state(
         {
             "configurable": {
-                **assistant["config"]["configurable"],
+                **assistant.config["configurable"],
                 "thread_id": thread_id,
-                "assistant_id": assistant["assistant_id"],
+                "assistant_id": assistant.assistant_id,
             }
         }
     )
+    # Keep original format - return values as is
+    values = state.values if state.values else None
+
     return {
-        "values": state.values,
+        "values": values,
         "next": state.next,
     }
 
@@ -127,15 +141,39 @@ async def update_thread_state(
     assistant: Assistant,
 ):
     """Add state to a thread."""
+    # Get the current state to determine the format
+    current_state = await agent.aget_state(
+        {
+            "configurable": {
+                **assistant.config["configurable"],
+                **config["configurable"],
+                "assistant_id": assistant.assistant_id,
+            }
+        }
+    )
+
+    # If current state is a dict (retrieval agent), maintain dict structure
+    if current_state.values and isinstance(current_state.values, dict):
+        if isinstance(values, dict):
+            state_values = values
+        else:
+            # Update just the messages in the existing state
+            state_values = {**current_state.values, "messages": values}
+    else:
+        # For message-only states (tools_agent, chatbot), just use the messages
+        state_values = (
+            values if isinstance(values, dict) and "messages" in values else values
+        )
+
     await agent.aupdate_state(
         {
             "configurable": {
-                **assistant["config"]["configurable"],
+                **assistant.config["configurable"],
                 **config["configurable"],
-                "assistant_id": assistant["assistant_id"],
+                "assistant_id": assistant.assistant_id,
             }
         },
-        values,
+        state_values,
     )
 
 
@@ -151,13 +189,25 @@ async def get_thread_history(*, user_id: str, thread_id: str, assistant: Assista
         async for c in agent.aget_state_history(
             {
                 "configurable": {
-                    **assistant["config"]["configurable"],
+                    **assistant.config["configurable"],
                     "thread_id": thread_id,
-                    "assistant_id": assistant["assistant_id"],
+                    "assistant_id": assistant.assistant_id,
                 }
             }
         )
     ]
+
+
+def get_assistant_type(config: dict) -> str:
+    """Extract assistant type from config, handling both old and new formats."""
+    configurable = config.get("configurable", {})
+
+    # First try direct type key (old format)
+    if "type" in configurable:
+        return configurable["type"]
+
+    # Default fallback
+    return "chatbot"
 
 
 async def put_thread(
@@ -167,9 +217,7 @@ async def put_thread(
     updated_at = datetime.now(timezone.utc)
     assistant = await get_assistant(user_id, assistant_id)
     metadata = (
-        {"assistant_type": assistant["config"]["configurable"]["type"]}
-        if assistant
-        else None
+        {"assistant_type": get_assistant_type(assistant.config)} if assistant else None
     )
     async with get_pg_pool().acquire() as conn:
         await conn.execute(
@@ -189,14 +237,14 @@ async def put_thread(
             updated_at,
             metadata,
         )
-        return {
-            "thread_id": thread_id,
-            "user_id": user_id,
-            "assistant_id": assistant_id,
-            "name": name,
-            "updated_at": updated_at,
-            "metadata": metadata,
-        }
+        return Thread(
+            thread_id=thread_id,
+            user_id=user_id,
+            assistant_id=assistant_id,
+            name=name,
+            updated_at=updated_at,
+            metadata=metadata,
+        )
 
 
 async def delete_thread(user_id: str, thread_id: str):
@@ -212,9 +260,9 @@ async def delete_thread(user_id: str, thread_id: str):
 async def get_or_create_user(sub: str) -> tuple[User, bool]:
     """Returns a tuple of the user and a boolean indicating whether the user was created."""
     async with get_pg_pool().acquire() as conn:
-        if user := await conn.fetchrow('SELECT * FROM "user" WHERE sub = $1', sub):
-            return user, False
-        user = await conn.fetchrow(
+        if record := await conn.fetchrow('SELECT * FROM "user" WHERE sub = $1', sub):
+            return User(**record), False
+        record = await conn.fetchrow(
             'INSERT INTO "user" (sub) VALUES ($1) RETURNING *', sub
         )
-        return user, True
+        return User(**record), True

@@ -24,6 +24,7 @@ from langchain_core.runnables import (
 from langchain_core.vectorstores import VectorStore
 from langchain_openai import AzureOpenAIEmbeddings, OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter, TextSplitter
+from pydantic import ConfigDict
 
 from app.ingest import ingest_blob
 from app.parsing import MIMETYPE_BASED_PARSER
@@ -110,18 +111,15 @@ class IngestRunnable(RunnableSerializable[BinaryIO, List[str]]):
     """Runnable for ingesting files into a vectorstore."""
 
     text_splitter: TextSplitter
-    """Text splitter to use for splitting the text into chunks."""
     vectorstore: VectorStore
-    """Vectorstore to ingest into."""
-    assistant_id: Optional[str]
-    thread_id: Optional[str]
+    assistant_id: Optional[str] = None
+    thread_id: Optional[str] = None
     """Ingested documents will be associated with assistant_id or thread_id.
     
     ID is used as the namespace, and is filtered on at query time.
     """
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @property
     def namespace(self) -> str:
@@ -161,12 +159,12 @@ ingest_runnable = IngestRunnable(
 ).configurable_fields(
     assistant_id=ConfigurableField(
         id="assistant_id",
-        annotation=str,
+        annotation=Optional[str],
         name="Assistant ID",
     ),
     thread_id=ConfigurableField(
         id="thread_id",
-        annotation=str,
+        annotation=Optional[str],
         name="Thread ID",
     ),
 )

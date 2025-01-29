@@ -53,10 +53,16 @@ def _migrate_test_db() -> None:
 
 
 @pytest.fixture(scope="session")
-async def pool():
+async def _init_db():
+    """Initialize the test database."""
     await _drop_test_db()  # In case previous test session was abruptly terminated
     await _create_test_db()
     _migrate_test_db()
+
+
+@pytest.fixture(scope="session")
+async def pool(_init_db):
+    """Initialize database pool with checkpointer."""
     async with lifespan(app):
         yield get_pg_pool()
     await _drop_test_db()

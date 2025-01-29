@@ -1,10 +1,10 @@
 from datetime import datetime
 from typing import Optional
 
-from typing_extensions import TypedDict
+from pydantic import BaseModel
 
 
-class User(TypedDict):
+class User(BaseModel):
     user_id: str
     """The ID of the user."""
     sub: str
@@ -13,9 +13,7 @@ class User(TypedDict):
     """The time the user was created."""
 
 
-class Assistant(TypedDict):
-    """Assistant model."""
-
+class Assistant(BaseModel):
     assistant_id: str
     """The ID of the assistant."""
     user_id: str
@@ -26,19 +24,19 @@ class Assistant(TypedDict):
     """The assistant config."""
     updated_at: datetime
     """The last time the assistant was updated."""
-    public: bool
+    public: bool = False
     """Whether the assistant is public."""
 
 
-class Thread(TypedDict):
+class Thread(BaseModel):
     thread_id: str
     """The ID of the thread."""
     user_id: str
     """The ID of the user that owns the thread."""
-    assistant_id: Optional[str]
+    assistant_id: Optional[str] = None
     """The assistant that was used in conjunction with this thread."""
     name: str
     """The name of the thread."""
     updated_at: datetime
     """The last time the thread was updated."""
-    metadata: Optional[dict]
+    metadata: Optional[dict] = None

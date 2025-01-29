@@ -45,7 +45,7 @@ def construct_chat_history(messages):
                 temp_messages = []
             collapsed_messages.append(message)
         elif isinstance(message, LiberalFunctionMessage):
-            _dict = message.dict()
+            _dict = message.model_dump()
             _dict["content"] = str(_dict["content"])
             m_c = FunctionMessage(**_dict)
             temp_messages.append(m_c)

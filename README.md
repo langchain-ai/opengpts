@@ -227,6 +227,16 @@ Navigate to [http://localhost:5173/](http://localhost:5173/) and enjoy!
 
 Refer to this [guide](tools/redis_to_postgres/README.md) for migrating data from Redis to Postgres.
 
+## Breaking Changes
+
+### Migration 5 - Checkpoint Management Update
+Version 5 of the database migrations introduces a significant change to how thread checkpoints are managed:
+- Transitions from a pickle-based checkpointing system to a new multi-table checkpoint management system (breaking change)
+- Aligns with LangGraph's new checkpoint architecture for better state management and persistence
+- **Important**: Historical threads/checkpoints (created before this migration) will not be accessible in the UI
+- Previous checkpoint data is preserved in the `old_checkpoints` table but cannot be accessed by the new system
+- This architectural change improves how thread state is stored and managed, enabling more reliable state persistence in LangGraph-based agents.
+
 ## Features
 
 As much as possible, we are striving for feature parity with OpenAI.
@@ -309,14 +319,14 @@ Then, those documents are passed in the system message to a separate call to the
 
 Compared to assistants, it is more structured (but less powerful). It ALWAYS looks up something - which is good if you 
 know you want to look things up, but potentially wasteful if the user is just trying to have a normal conversation. 
-Also importantly, this only looks up things once - so if it doesn’t find the right results then it will yield a bad 
+Also importantly, this only looks up things once - so if it doesn't find the right results then it will yield a bad 
 result (compared to an assistant, which could  decide to look things up again).
 
 ![](_static/rag.png)
 
 Despite this being a more simple architecture, it is good for a few reasons. First, because it is simpler it can work 
 pretty well with a wider variety of models (including lots of open source models). Second, if you have a use case where 
-you don’t NEED the flexibility of an assistant (eg you know users will be looking up information every time) then it 
+you don't NEED the flexibility of an assistant (eg you know users will be looking up information every time) then it 
 can be more focused. And third, compared to the final architecture below it can use external knowledge.
 
 RAGBot is implemented with [LangGraph](https://github.com/langchain-ai/langgraph) `StateGraph`. A `StateGraph` is a generalized graph that can model arbitrary state (i.e. `dict`), not just a `list` of messages.
@@ -325,7 +335,7 @@ RAGBot is implemented with [LangGraph](https://github.com/langchain-ai/langgraph
 
 The final architecture is dead simple - just a call to a language model, parameterized by a system message. This allows 
 the GPT to take on different personas and characters. This is clearly far less powerful than Assistants or RAGBots 
-(which have access to external sources of data/computation) - but it’s still valuable! A lot of popular GPTs are just 
+(which have access to external sources of data/computation) - but it's still valuable! A lot of popular GPTs are just 
 system messages at the end of the day, and CharacterAI is crushing it despite largely just being system messages as 
 well.
 

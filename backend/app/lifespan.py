@@ -6,6 +6,8 @@ import orjson
 import structlog
 from fastapi import FastAPI
 
+from app.checkpoint import AsyncPostgresCheckpoint
+
 _pg_pool = None
 
 
@@ -56,6 +58,7 @@ async def lifespan(app: FastAPI):
         port=os.environ["POSTGRES_PORT"],
         init=_init_connection,
     )
+    await AsyncPostgresCheckpoint().ensure_setup()
     yield
     await _pg_pool.close()
     _pg_pool = None

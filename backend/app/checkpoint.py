@@ -1,147 +1,117 @@
-import pickle
-from datetime import datetime
-from typing import AsyncIterator, Optional
+import os
+from typing import Any, AsyncIterator, Optional, Sequence
 
-from langchain_core.messages import BaseMessage
-from langchain_core.runnables import ConfigurableFieldSpec, RunnableConfig
-from langgraph.checkpoint.base import BaseCheckpointSaver
+import structlog
 from langgraph.checkpoint.base import (
+    ChannelVersions,
     Checkpoint,
-    CheckpointAt,
-    CheckpointThreadTs,
+    CheckpointMetadata,
     CheckpointTuple,
-    SerializerProtocol,
+    RunnableConfig,
 )
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from langgraph.checkpoint.postgres.base import BasePostgresSaver
+from langgraph.checkpoint.serde.base import SerializerProtocol
+from psycopg import AsyncPipeline
+from psycopg_pool import AsyncConnectionPool
 
-from app.lifespan import get_pg_pool
-
-
-def loads(value: bytes) -> Checkpoint:
-    loaded: Checkpoint = pickle.loads(value)
-    for key, value in loaded["channel_values"].items():
-        if isinstance(value, list) and all(isinstance(v, BaseMessage) for v in value):
-            loaded["channel_values"][key] = [v.__class__(**v.__dict__) for v in value]
-    return loaded
+logger = structlog.get_logger(__name__)
 
 
-class PostgresCheckpoint(BaseCheckpointSaver):
+class AsyncPostgresCheckpoint(BasePostgresSaver):
+    """A singleton implementation of AsyncPostgresSaver with separate setup."""
+
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(
         self,
-        *,
+        pipe: Optional[AsyncPipeline] = None,
         serde: Optional[SerializerProtocol] = None,
-        at: Optional[CheckpointAt] = None,
     ) -> None:
-        super().__init__(serde=serde, at=at)
+        if not hasattr(self, "_initialized"):
+            super().__init__(serde=serde)
+            # Initialize basic attributes
+            self.pipe = pipe
+            self.serde = serde
+            self._initialized = True
+            self._setup_complete = False
+            self.async_postgres_saver = None
 
-    @property
-    def config_specs(self) -> list[ConfigurableFieldSpec]:
-        return [
-            ConfigurableFieldSpec(
-                id="thread_id",
-                annotation=Optional[str],
-                name="Thread ID",
-                description=None,
-                default=None,
-                is_shared=True,
-            ),
-            CheckpointThreadTs,
-        ]
+    async def ensure_setup(self) -> None:
+        """Ensure the instance is set up before use."""
+        if not self._setup_complete:
+            await self.setup()
+            self._setup_complete = True
 
-    def get(self, config: RunnableConfig) -> Optional[Checkpoint]:
-        raise NotImplementedError
+    async def setup(self) -> None:
+        """Internal setup method."""
+        try:
+            conninfo = (
+                f"postgresql://{os.environ['POSTGRES_USER']}:"
+                f"{os.environ['POSTGRES_PASSWORD']}@"
+                f"{os.environ['POSTGRES_HOST']}:"
+                f"{os.environ['POSTGRES_PORT']}/"
+                f"{os.environ['POSTGRES_DB']}"
+            )
 
-    def put(self, config: RunnableConfig, checkpoint: Checkpoint) -> RunnableConfig:
-        raise NotImplementedError
+            pool = AsyncConnectionPool(
+                conninfo=conninfo,
+                kwargs={"autocommit": True, "prepare_threshold": 0},
+                open=False,  # Don't open in constructor
+            )
+            await pool.open()
 
-    async def alist(self, config: RunnableConfig) -> AsyncIterator[CheckpointTuple]:
-        async with get_pg_pool().acquire() as db, db.transaction():
-            thread_id = config["configurable"]["thread_id"]
-            async for value in db.cursor(
-                "SELECT checkpoint, thread_ts, parent_ts FROM checkpoints WHERE thread_id = $1 ORDER BY thread_ts DESC",
-                thread_id,
-            ):
-                yield CheckpointTuple(
-                    {
-                        "configurable": {
-                            "thread_id": thread_id,
-                            "thread_ts": value[1],
-                        }
-                    },
-                    loads(value[0]),
-                    {
-                        "configurable": {
-                            "thread_id": thread_id,
-                            "thread_ts": value[2],
-                        }
-                    }
-                    if value[2]
-                    else None,
-                )
+            self.async_postgres_saver = AsyncPostgresSaver(
+                conn=pool, pipe=self.pipe, serde=self.serde
+            )
+
+            # Setup will create/migrate the tables if they don't exist
+            await self.async_postgres_saver.setup()
+
+            logger.warning("Checkpoint setup complete.")
+        except Exception as e:
+            logger.error(f"Failed to set up AsyncPostgresCheckpoint: {e}")
+            raise
+
+    async def alist(
+        self,
+        config: Optional[RunnableConfig],
+        *,
+        filter: Optional[dict[str, Any]] = None,
+        before: Optional[RunnableConfig] = None,
+        limit: Optional[int] = None,
+    ) -> AsyncIterator[CheckpointTuple]:
+        """List checkpoints from the database asynchronously."""
+        return self.async_postgres_saver.alist(
+            config, filter=filter, before=before, limit=limit
+        )
 
     async def aget_tuple(self, config: RunnableConfig) -> Optional[CheckpointTuple]:
-        thread_id = config["configurable"]["thread_id"]
-        thread_ts = config["configurable"].get("thread_ts")
-        async with get_pg_pool().acquire() as conn:
-            if thread_ts:
-                if value := await conn.fetchrow(
-                    "SELECT checkpoint, parent_ts FROM checkpoints WHERE thread_id = $1 AND thread_ts = $2",
-                    thread_id,
-                    datetime.fromisoformat(thread_ts),
-                ):
-                    return CheckpointTuple(
-                        config,
-                        loads(value[0]),
-                        {
-                            "configurable": {
-                                "thread_id": thread_id,
-                                "thread_ts": value[1],
-                            }
-                        }
-                        if value[1]
-                        else None,
-                    )
-            else:
-                if value := await conn.fetchrow(
-                    "SELECT checkpoint, thread_ts, parent_ts FROM checkpoints WHERE thread_id = $1 ORDER BY thread_ts DESC LIMIT 1",
-                    thread_id,
-                ):
-                    return CheckpointTuple(
-                        {
-                            "configurable": {
-                                "thread_id": thread_id,
-                                "thread_ts": value[1],
-                            }
-                        },
-                        loads(value[0]),
-                        {
-                            "configurable": {
-                                "thread_id": thread_id,
-                                "thread_ts": value[2],
-                            }
-                        }
-                        if value[2]
-                        else None,
-                    )
+        """Get a checkpoint tuple from the database asynchronously."""
+        return await self.async_postgres_saver.aget_tuple(config)
 
-    async def aput(self, config: RunnableConfig, checkpoint: Checkpoint) -> None:
-        thread_id = config["configurable"]["thread_id"]
-        async with get_pg_pool().acquire() as conn:
-            await conn.execute(
-                """
-                INSERT INTO checkpoints (thread_id, thread_ts, parent_ts, checkpoint)
-                VALUES ($1, $2, $3, $4) 
-                ON CONFLICT (thread_id, thread_ts) 
-                DO UPDATE SET checkpoint = EXCLUDED.checkpoint;""",
-                thread_id,
-                datetime.fromisoformat(checkpoint["ts"]),
-                datetime.fromisoformat(checkpoint.get("parent_ts"))
-                if checkpoint.get("parent_ts")
-                else None,
-                pickle.dumps(checkpoint),
-            )
-        return {
-            "configurable": {
-                "thread_id": thread_id,
-                "thread_ts": checkpoint["ts"],
-            }
-        }
+    async def aput(
+        self,
+        config: RunnableConfig,
+        checkpoint: Checkpoint,
+        metadata: CheckpointMetadata,
+        new_versions: ChannelVersions,
+    ) -> RunnableConfig:
+        """Save a checkpoint to the database asynchronously."""
+        return await self.async_postgres_saver.aput(
+            config, checkpoint, metadata, new_versions
+        )
+
+    async def aput_writes(
+        self,
+        config: RunnableConfig,
+        writes: Sequence[tuple[str, Any]],
+        task_id: str,
+    ) -> None:
+        """Store intermediate writes linked to a checkpoint asynchronously."""
+        await self.async_postgres_saver.aput_writes(config, writes, task_id)
