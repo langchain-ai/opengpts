@@ -27,7 +27,7 @@ export type TYPE_NAME = (typeof TYPES)[keyof typeof TYPES]["id"];
 export const DROPZONE_CONFIG = {
   multiple: true,
   accept: {
-    "text/*": [".txt", ".htm", ".html"],
+    "text/*": [".txt", ".htm", ".html", ".md"],
     "application/pdf": [".pdf"],
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
       ".docx",
