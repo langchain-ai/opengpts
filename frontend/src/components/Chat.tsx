@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { StreamStateProps } from "../hooks/useStreamState";
+import { StreamState } from "../hooks/useStreamState";
 import { useChatMessages } from "../hooks/useChatMessages";
 import TypingBox from "./TypingBox";
 import { MessageViewer } from "./Message";
@@ -14,12 +14,14 @@ import { useMessageEditing } from "../hooks/useMessageEditing.ts";
 import { MessageEditor } from "./MessageEditor.tsx";
 import { Message } from "../types.ts";
 
-interface ChatProps extends Pick<StreamStateProps, "stream" | "stopStream"> {
+interface ChatProps {
   startStream: (
     message: MessageWithFiles | null,
     thread_id: string,
     assistantType: string,
   ) => Promise<void>;
+  stopStream?: (clear?: boolean) => void;
+  stream: StreamState;
 }
 
 function usePrevious<T>(value: T): T | undefined {
