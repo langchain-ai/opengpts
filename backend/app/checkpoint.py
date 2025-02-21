@@ -87,9 +87,10 @@ class AsyncPostgresCheckpoint(BasePostgresSaver):
         limit: Optional[int] = None,
     ) -> AsyncIterator[CheckpointTuple]:
         """List checkpoints from the database asynchronously."""
-        return self.async_postgres_saver.alist(
+        async for checkpoint in self.async_postgres_saver.alist(
             config, filter=filter, before=before, limit=limit
-        )
+        ):
+            yield checkpoint
 
     async def aget_tuple(self, config: RunnableConfig) -> Optional[CheckpointTuple]:
         """Get a checkpoint tuple from the database asynchronously."""
