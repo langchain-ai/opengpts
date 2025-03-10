@@ -47,4 +47,5 @@ def test_mimetype_guessing() -> None:
         "sample.pdf": "application/pdf",
         "sample.rtf": "application/rtf",
         "sample.txt": "text/plain",
+        "sample.md": "text/markdown",
     } == name_to_mime
