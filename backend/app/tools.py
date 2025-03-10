@@ -17,6 +17,11 @@ from langchain_community.tools.tavily_search import (
 from langchain_community.tools.tavily_search import (
     TavilySearchResults,
 )
+from langchain_community.tools.google_serper.tool import (
+    GoogleSerperRun,
+    GoogleSerperResults,
+)
+from langchain_community.utilities.google_serper import GoogleSerperAPIWrapper
 from langchain_community.utilities.arxiv import ArxivAPIWrapper
 from langchain_community.utilities.dalle_image_generator import DallEAPIWrapper
 from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
@@ -34,6 +39,8 @@ class DDGInput(BaseModel):
 class ArxivInput(BaseModel):
     query: Annotated[str, Field(description="search query to look up")]
 
+class GoogleSerperInput(BaseModel):
+    query: str = Field(description="search query to look up")
 
 class PythonREPLInput(BaseModel):
     query: Annotated[str, Field(description="python command to run")]
@@ -52,6 +59,8 @@ class AvailableTools(str, Enum):
     RETRIEVAL = "retrieval"
     ARXIV = "arxiv"
     YOU_SEARCH = "you_search"
+    SERPER = "google_serper_run"
+    SERPER_RESULT = "google_serper_results"
     SEC_FILINGS = "sec_filings_kai_ai"
     PRESS_RELEASES = "press_releases_kai_ai"
     PUBMED = "pubmed"
@@ -189,6 +198,29 @@ class TavilyAnswer(BaseTool):
         "This returns only the answer, no supporting evidence."
     )
 
+class Serper(BaseTool):
+    type: AvailableTools = Field(AvailableTools.SERPER, const=True)
+    name: str = Field("Serper.dev Google Search API", const=True)
+    description: str = Field(
+        (
+            "A low-cost Google Search API."
+            "Useful for when you need to answer questions about current events."
+            "Input should be a search query."
+        ),
+        const=True,
+    )
+
+class SerperResult(BaseTool):
+    type: AvailableTools = Field(AvailableTools.SERPER_RESULT, const=True)
+    name: str = Field("Serper.dev Google Search API (JSON)", const=True)
+    description: str = Field(
+        (
+            "A low-cost Google Search API."
+            "Useful for when you need to answer questions about current events."
+            "Input should be a search query. Output is a JSON object of the query results"
+        ),
+        const=True,
+    )
 
 class Retrieval(BaseTool):
     type: Literal[AvailableTools.RETRIEVAL] = AvailableTools.RETRIEVAL
@@ -243,6 +275,16 @@ def _get_you_search():
         "you_search",
         "Searches for documents using You.com",
     )
+
+@lru_cache(maxsize=1)
+def _get_serper_search():
+    #os.environ["SERPER_API_KEY"] = "API key from https://serper.dev/api-key"
+    return GoogleSerperRun(api_wrapper=GoogleSerperAPIWrapper(), args_schema=GoogleSerperInput)
+
+@lru_cache(maxsize=1)
+def _get_serper_search_result():
+    #os.environ["SERPER_API_KEY"] = "API key from https://serper.dev/api-key"
+    return GoogleSerperResults(api_wrapper=GoogleSerperAPIWrapper(), args_schema=GoogleSerperInput)
 
 
 @lru_cache(maxsize=1)
@@ -315,6 +357,8 @@ TOOLS = {
     AvailableTools.DDG_SEARCH: _get_duck_duck_go,
     AvailableTools.ARXIV: _get_arxiv,
     AvailableTools.YOU_SEARCH: _get_you_search,
+    AvailableTools.SERPER: _get_serper_search,
+    AvailableTools.SERPER_RESULT: _get_serper_search_result,
     AvailableTools.SEC_FILINGS: _get_sec_filings,
     AvailableTools.PRESS_RELEASES: _get_press_releases,
     AvailableTools.PUBMED: _get_pubmed,
