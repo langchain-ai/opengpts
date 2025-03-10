@@ -23,7 +23,7 @@ function App(props: { edit?: boolean }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { chats, createChat, updateChat, deleteChat } = useChatList();
   const { configs, saveConfig, deleteConfig } = useConfigList();
-  const { startStream, stopStream, stream } = useStreamState();
+  const { startStream, stopStream, streams } = useStreamState();
   const { configSchema, configDefaults } = useSchemas();
 
   const { currentChat, assistantConfig, isLoading } = useThreadAndAssistant();
@@ -92,9 +92,6 @@ function App(props: { edit?: boolean }) {
 
   const selectChat = useCallback(
     async (id: string | null) => {
-      if (currentChat) {
-        stopStream?.(true);
-      }
       if (!id) {
         const firstAssistant = configs?.[0]?.assistant_id ?? null;
         navigate(firstAssistant ? `/assistant/${firstAssistant}` : "/");
@@ -106,7 +103,7 @@ function App(props: { edit?: boolean }) {
         setSidebarOpen(false);
       }
     },
-    [currentChat, sidebarOpen, stopStream, configs, navigate],
+    [sidebarOpen, configs, navigate],
   );
 
   const selectConfig = useCallback(
@@ -144,7 +141,11 @@ function App(props: { edit?: boolean }) {
       }
     >
       {currentChat && assistantConfig && (
-        <Chat startStream={startTurn} stopStream={stopStream} stream={stream} />
+        <Chat
+          startStream={startTurn}
+          stopStream={stopStream?.bind(null, currentChat.thread_id)}
+          stream={streams[currentChat.thread_id]}
+        />
       )}
       {currentChat && !assistantConfig && (
         <OrphanChat chat={currentChat} updateChat={updateChat} />
