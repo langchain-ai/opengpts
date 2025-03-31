@@ -516,4 +516,4 @@ gcloud run deploy opengpts --source . --port 8000 --env-vars-file .env.gcp.yaml 
 ### Deploy in Kubernetes
 
 We have a Helm chart for deploying the backend to Kubernetes. You can find more information here: 
-[README.md](https://github.com/langchain-ai/helm/tree/main/charts/open-gpts)
+[README.md](https://github.com/langchain-ai/helm/blob/main/charts/open-gpts/README.md)
